@@ -199,11 +199,17 @@ serve(async (req) => {
         : "";
 
 
-    // Empty string is rejected.
+    // Empty username/password are required for login/register,
+    // but admin deleteUser uses the authenticated caller token
+    // and therefore does not send username/password.
+    //
     // Whitespace is NOT normalized.
     if (
-      username.length === 0 ||
-      password.length === 0
+      action !== "deleteUser" &&
+      (
+        username.length === 0 ||
+        password.length === 0
+      )
     ) {
       return json(
         {
@@ -769,6 +775,186 @@ serve(async (req) => {
       }
     }
 
+
+    // ========================================================
+    // ADMIN DELETE USER
+    // ========================================================
+
+    if (action === "deleteUser") {
+      const authorization =
+        req.headers.get("Authorization") ?? "";
+
+      if (!authorization.startsWith("Bearer ")) {
+        return json(
+          {
+            success: false,
+            error: "Unauthorized",
+          },
+          401,
+        );
+      }
+
+      // Verify the real logged-in caller.
+      const callerClient = createClient(
+        supabaseUrl,
+        publishableKey,
+        {
+          global: {
+            headers: {
+              Authorization: authorization,
+            },
+          },
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        },
+      );
+
+      const {
+        data: callerData,
+        error: callerError,
+      } =
+          await callerClient.auth.getUser();
+
+      if (callerError || !callerData?.user) {
+        return json(
+          {
+            success: false,
+            error: "Unauthorized",
+          },
+          401,
+        );
+      }
+
+      // Only an existing SANA admin may delete users.
+      const {
+        data: callerProfile,
+        error: callerProfileError,
+      } = await admin
+          .from("users")
+          .select("role")
+          .eq("id", callerData.user.id)
+          .maybeSingle();
+
+      if (
+        callerProfileError ||
+        callerProfile?.role?.toString().toLowerCase() !=
+            "admin"
+      ) {
+        return json(
+          {
+            success: false,
+            error: "Admin access required",
+          },
+          403,
+        );
+      }
+
+      const userId =
+          typeof body.userId === "string"
+              ? body.userId
+              : "";
+
+      if (userId.length === 0) {
+        return json(
+          {
+            success: false,
+            error: "User ID required",
+          },
+          400,
+        );
+      }
+
+      // Never allow the admin to delete the admin account.
+      if (userId === callerData.user.id) {
+        return json(
+          {
+            success: false,
+            error: "Admin account cannot be deleted",
+          },
+          400,
+        );
+      }
+
+      const {
+        data: targetProfile,
+        error: targetProfileError,
+      } = await admin
+          .from("users")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+
+      if (targetProfileError) {
+        return json(
+          {
+            success: false,
+            error: "Unable to verify target user",
+          },
+          500,
+        );
+      }
+
+      // Never allow deletion of another admin account.
+      if (
+        targetProfile?.role?.toString().toLowerCase() ==
+            "admin"
+      ) {
+        return json(
+          {
+            success: false,
+            error: "Admin account cannot be deleted",
+          },
+          400,
+        );
+      }
+
+      // Delete the real Supabase Auth identity.
+      // Foreign-key ON DELETE CASCADE removes dependent
+      // user-owned records where the database defines cascade.
+      const {
+        error: deleteAuthError,
+      } = await admin.auth.admin.deleteUser(
+        userId,
+      );
+
+      if (deleteAuthError) {
+        console.error(
+          "Admin delete user error:",
+          deleteAuthError.message,
+        );
+
+        return json(
+          {
+            success: false,
+            error: "User deletion failed",
+          },
+          500,
+        );
+      }
+
+      // Safety cleanup for profile/credential rows that
+      // may not be covered by a foreign-key cascade.
+      await admin
+          .from("user_credentials")
+          .delete()
+          .eq("user_id", userId);
+
+      await admin
+          .from("profiles")
+          .delete()
+          .eq("id", userId);
+
+      await admin
+          .from("users")
+          .delete()
+          .eq("id", userId);
+
+      return json({
+        success: true,
+      });
+    }
 
     return json(
       {
