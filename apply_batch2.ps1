@@ -37,7 +37,7 @@ static Future<void> shareMedications({
 $shareServiceContent = $shareServiceContent -replace [regex]::Escape($oldParam), $newParam
 
 # Replace the header line with language-aware version
-$oldHeader = 'reportText.writeln("📋 MediTrack Medical Record Report");'
+$oldHeader = 'reportText.writeln("📋 sana Medical Record Report");'
 $newHeader = @'
     if (languageCode == 'ar') {
       reportText.writeln('📋 تقرير السجلات الطبية');
@@ -54,7 +54,7 @@ $newHeader = @'
     } else if (languageCode == 'zh') {
       reportText.writeln('📋 医疗记录报告');
     } else {
-      reportText.writeln('📋 MediTrack Medical Record Report');
+      reportText.writeln('📋 sana Medical Record Report');
     }
 '@
 $shareServiceContent = $shareServiceContent -replace [regex]::Escape($oldHeader), $newHeader

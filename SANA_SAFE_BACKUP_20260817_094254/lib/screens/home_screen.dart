@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Get Your Own Copy'),
         content: const Text(
-          'Unlock the full source code and personal license for MediTrack / SANA.\n\nContact support or complete payment to receive your standalone copy.',
+          'Unlock the full source code and personal license for sana / SANA.\n\nContact support or complete payment to receive your standalone copy.',
         ),
         actions: [
           TextButton(

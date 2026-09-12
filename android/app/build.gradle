@@ -19,7 +19,7 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 android {
-    namespace = "com.example.meditrack"
+    namespace = "com.example.sana"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
     compileOptions {
@@ -28,7 +28,7 @@ android {
         coreLibraryDesugaringEnabled true
     }
     defaultConfig {
-        applicationId = "com.example.meditrack"
+        applicationId = "com.example.sana"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()

@@ -1,6 +1,6 @@
 {
-    "name": "meditrack",
-    "short_name": "meditrack",
+    "name": "sana",
+    "short_name": "sana",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

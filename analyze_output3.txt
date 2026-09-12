@@ -1,4 +1,4 @@
-Analyzing meditrack...                                          
+Analyzing sana...                                          
 
   error - Target of URI doesn't exist: '../models/document.dart'. Try creating the file referenced by the URI, or try using a URI for a file that does exist - lib\providers\document_provider.dart:3:8 - uri_does_not_exist
   error - The name 'DocumentModel' isn't a type, so it can't be used as a type argument. Try correcting the name to an existing type, or defining a type named 'DocumentModel' - lib\providers\document_provider.dart:7:8 - non_type_as_type_argument
@@ -34,7 +34,7 @@ warning - The '!' will have no effect because the receiver can't be null. Try re
 
 flutter : 31 issues found. (ran in 1.5s)
 At line:1 char:31
-+ ... \New folder\meditrack'; flutter analyze --no-fatal-infos 2>&1 | Out-F ...
++ ... \New folder\sana'; flutter analyze --no-fatal-infos 2>&1 | Out-F ...
 +                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (31 issues found. (ran in 1.5s):String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError

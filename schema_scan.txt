@@ -1,4 +1,4 @@
-﻿D:\sana\lib\core\routes\app_routes.dart:8: import '../../screens/documents_screen.dart';
+D:\sana\lib\core\routes\app_routes.dart:8: import '../../screens/documents_screen.dart';
 D:\sana\lib\core\routes\app_routes.dart:31: static const String documents = '/documents';
 D:\sana\lib\core\routes\app_routes.dart:44: addMedication: (_) => const AddMedicationScreen(),
 D:\sana\lib\core\routes\app_routes.dart:47: addDoctor: (_) => const AddDoctorScreen(),
@@ -959,7 +959,7 @@ D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\screens\sharing_screen.dart:568: '
 D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\screens\sharing_screen.dart:569: children: docsP.documents.isEmpty
 D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\screens\sharing_screen.dart:570: ? [const ListTile(title: Text('No documents available'))]
 D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\screens\sharing_screen.dart:571: : docsP.documents.map((d) {
-D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\services\guest_identity_service.dart:6: static const String _key = 'meditrack_guest_id';
+D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\services\guest_identity_service.dart:6: static const String _key = 'sana_guest_id';
 D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\services\inline_reminder_service.dart:7: class InlineReminderService {
 D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\services\inline_reminder_service.dart:17: static void startForMedications(
 D:\sana\SANA_FINAL_BACKUP_20260817_101406\lib\services\inline_reminder_service.dart:45: // keep rescheduling by calling startForMedications again would be heavier;
@@ -1285,7 +1285,7 @@ D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\screens\sharing_screen.dart:568
 D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\screens\sharing_screen.dart:569: children: docsP.documents.isEmpty
 D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\screens\sharing_screen.dart:570: ? [const ListTile(title: Text('No documents available'))]
 D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\screens\sharing_screen.dart:571: : docsP.documents.map((d) {
-D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\services\guest_identity_service.dart:6: static const String _key = 'meditrack_guest_id';
+D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\services\guest_identity_service.dart:6: static const String _key = 'sana_guest_id';
 D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\services\inline_reminder_service.dart:7: class InlineReminderService {
 D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\services\inline_reminder_service.dart:17: static void startForMedications(
 D:\sana\SANA_REQUESTS_BACKUP_20260817_102037\lib\services\inline_reminder_service.dart:45: // keep rescheduling by calling startForMedications again would be heavier;
@@ -1608,7 +1608,7 @@ D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\screens\sharing_screen.dart:568: '$
 D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\screens\sharing_screen.dart:569: children: docsP.documents.isEmpty
 D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\screens\sharing_screen.dart:570: ? [const ListTile(title: Text('No documents available'))]
 D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\screens\sharing_screen.dart:571: : docsP.documents.map((d) {
-D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\services\guest_identity_service.dart:6: static const String _key = 'meditrack_guest_id';
+D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\services\guest_identity_service.dart:6: static const String _key = 'sana_guest_id';
 D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\services\inline_reminder_service.dart:7: class InlineReminderService {
 D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\services\inline_reminder_service.dart:17: static void startForMedications(
 D:\sana\SANA_SAFE_BACKUP_20260817_094254\lib\services\inline_reminder_service.dart:45: // keep rescheduling by calling startForMedications again would be heavier;

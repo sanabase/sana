@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class GuestIdentityService {
   GuestIdentityService._();
 
-  static const String _key = 'meditrack_guest_id';
+  static const String _key = 'sana_guest_id';
 
   static Future<String> getGuestId() async {
     final prefs = await SharedPreferences.getInstance();

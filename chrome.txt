@@ -2,4 +2,7 @@ Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyCont
 
 flutter clean
 flutter pub get
-flutter run
+flutter run -d chrome
+
+////////force git
+cd D:\sana; git add -A; git commit -m "Force sync local Sana project"; git push origin main --force

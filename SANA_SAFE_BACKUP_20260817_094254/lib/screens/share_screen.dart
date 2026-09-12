@@ -88,7 +88,7 @@ class _ShareScreenState extends State<ShareScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('📁 MediTrack Share'),
+        title: const Text('📁 sana Share'),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
       ),

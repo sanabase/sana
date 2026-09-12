@@ -397,6 +397,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'Insurance Cards',
     'name': 'Name',
     'dosage': 'Dosage',
+    'notes': 'Notes',
     'quantity': 'Stock',
     'description': 'Description',
     'specialty': 'Specialty',
@@ -547,6 +548,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'بطاقات التأمين',
     'name': 'الاسم',
     'dosage': 'الجرعة',
+    'notes': 'ملاحظات',
     'quantity': 'المخزون',
     'description': 'الوصف',
     'specialty': 'التخصص',
@@ -698,6 +700,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'Tarjetas de seguro',
     'name': 'Nombre',
     'dosage': 'Dosis',
+    'notes': 'Notas',
     'quantity': 'Stock',
     'description': 'Descripción',
     'specialty': 'Especialidad',
@@ -851,6 +854,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'Cartes d’assurance',
     'name': 'Nom',
     'dosage': 'Dosage',
+    'notes': 'Notes',
     'quantity': 'Stock',
     'description': 'Description',
     'specialty': 'Spécialité',
@@ -1005,6 +1009,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'Versicherungskarten',
     'name': 'Name',
     'dosage': 'Dosierung',
+    'notes': 'Notizen',
     'quantity': 'Bestand',
     'description': 'Beschreibung',
     'specialty': 'Fachgebiet',
@@ -1158,6 +1163,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'Sigorta Kartları',
     'name': 'Ad',
     'dosage': 'Doz',
+    'notes': 'Notlar',
     'quantity': 'Stok',
     'description': 'Açıklama',
     'specialty': 'Uzmanlık',
@@ -1311,6 +1317,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': 'बीमा कार्ड',
     'name': 'नाम',
     'dosage': 'खुराक',
+    'notes': 'टिप्पणियाँ',
     'quantity': 'स्टॉक',
     'description': 'विवरण',
     'specialty': 'विशेषता',
@@ -1463,6 +1470,7 @@ const Map<String, Map<String, String>> _translations = {
     'insurance_cards': '保险卡',
     'name': '姓名',
     'dosage': '剂量',
+    'notes': '备注',
     'quantity': '库存',
     'description': '描述',
     'specialty': '专科',
@@ -1673,23 +1681,14 @@ class GuestIdentityService {
   static String? _cachedGuestId;
 
   static Future<String> getGuestId() async {
-    // Return cached value if available
-    if (_cachedGuestId != null && _cachedGuestId!.isNotEmpty) {
-      return _cachedGuestId!;
+    final user = Supabase.instance.client.auth.currentUser;
+
+    if (user == null) {
+      throw StateError('Supabase guest session is not initialized.');
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getString(_key)?.trim();
-
-    if (existing != null && existing.isNotEmpty) {
-      _cachedGuestId = existing;
-      return existing;
-    }
-
-    final id = 'guest_${DateTime.now().microsecondsSinceEpoch}';
-    await prefs.setString(_key, id);
-    _cachedGuestId = id;
-    return id;
+    _cachedGuestId = user.id;
+    return user.id;
   }
 
   // Optional: Clear cache when user logs out
@@ -1707,17 +1706,11 @@ void main() async {
 
   await SanaAlarmService.initialize();
 
-  final guestId = await GuestIdentityService.getGuestId();
-
   await Supabase.initialize(
     url: _supabaseUrl,
     publishableKey: _supabaseKey,
-    headers: {
-      'x-sana-guest-id': guestId,
-    },
   );
 
-  // Required for private Storage access.
   final client = Supabase.instance.client;
 
   if (client.auth.currentUser == null) {
@@ -3288,6 +3281,7 @@ class RecordSanitizer {
     'name',
     'dosage',
     'quantity',
+    'notes',
     'reminder_time',
     // 'reminder_date' - REMOVED - does not exist in medications table
     'specialty',
@@ -3878,6 +3872,8 @@ class _AddFormDialogState extends State<AddFormDialog> {
         return 'dosage';
       case 'quantity':
         return 'quantity';
+      case 'notes':
+        return 'notes';
       case 'reminder_time':
         return 'reminder_time';
       case 'reminder_date':
@@ -4682,6 +4678,8 @@ class _RecordListScreenState extends State<RecordListScreen> {
         return 'dosage';
       case 'quantity':
         return 'quantity';
+      case 'notes':
+        return 'notes';
       case 'reminder_time':
         return 'reminder_time';
       case 'reminder_date':
@@ -4743,6 +4741,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
           'name',
           'dosage',
           'quantity',
+          'notes',
           //'photo',
           'reminder_time',
           'reminder_date',
@@ -4757,6 +4756,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
           'dosage',
           'reminder_time',
           'reminder_date',
+          'notes',
           //'description'
         ];
       case 'documents':
@@ -4862,6 +4862,11 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
       cleanPayload['reminder_date'] = result['reminder_date'];
 
+      if (result['notes'] != null &&
+          result['notes'].toString().trim().isNotEmpty) {
+        cleanPayload['notes'] = result['notes'].toString().trim();
+      }
+
       if (photo != null && photo.toString().trim().isNotEmpty) {
         cleanPayload['photo_base64'] = photo.toString().trim();
       }
@@ -4880,6 +4885,11 @@ class _RecordListScreenState extends State<RecordListScreen> {
       if (result['dosage'] != null &&
           result['dosage'].toString().trim().isNotEmpty) {
         cleanPayload['dosage'] = result['dosage'].toString().trim();
+      }
+
+      if (result['notes'] != null &&
+          result['notes'].toString().trim().isNotEmpty) {
+        cleanPayload['notes'] = result['notes'].toString().trim();
       }
 
       if (result['reminder_time'] != null) {
@@ -5639,12 +5649,61 @@ class _RecordListScreenState extends State<RecordListScreen> {
                                     return date == 'daily';
                                   }
 
+                                  int reminderTimeMinutes(
+                                    Map<String, dynamic> row,
+                                  ) {
+                                    final times = SanaAlarmService.parseTimes(
+                                      row['reminder_time'],
+                                    );
+
+                                    if (times.isEmpty) {
+                                      return 24 * 60;
+                                    }
+
+                                    var earliest = 24 * 60;
+
+                                    for (final time in times) {
+                                      final parts = time.split(':');
+
+                                      if (parts.length < 2) {
+                                        continue;
+                                      }
+
+                                      final hour = int.tryParse(parts[0]);
+                                      final minute = int.tryParse(parts[1]);
+
+                                      if (hour == null || minute == null) {
+                                        continue;
+                                      }
+
+                                      final totalMinutes = hour * 60 + minute;
+
+                                      if (totalMinutes < earliest) {
+                                        earliest = totalMinutes;
+                                      }
+                                    }
+
+                                    return earliest;
+                                  }
+
                                   final dailyRows =
-                                      _rows.where(isDaily).toList();
+                                      _rows.where(isDaily).toList()
+                                        ..sort(
+                                          (a, b) =>
+                                              reminderTimeMinutes(a).compareTo(
+                                            reminderTimeMinutes(b),
+                                          ),
+                                        );
 
                                   final calendarRows = _rows
                                       .where((row) => !isDaily(row))
-                                      .toList();
+                                      .toList()
+                                    ..sort(
+                                      (a, b) =>
+                                          reminderTimeMinutes(a).compareTo(
+                                        reminderTimeMinutes(b),
+                                      ),
+                                    );
 
                                   if (_rows.isEmpty) {
                                     return Center(

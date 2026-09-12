@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -88,7 +88,7 @@ class _ShareScreenState extends State<ShareScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ðŸ“ MediTrack Share'),
+        title: const Text('ðŸ“ sana Share'),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
       ),

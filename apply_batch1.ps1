@@ -12,7 +12,7 @@ index 79cd912..a9bd4e5 100644
      <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
      <application
--        android:label="meditrack"
+-        android:label="sana"
 +        android:label="SANA"
          android:name="${applicationName}"
          android:icon="@mipmap/ic_launcher">
@@ -25,7 +25,7 @@ index fc85d50..b713f4d 100644
  	<key>CFBundleInfoDictionaryVersion</key>
  	<string>6.0</string>
  	<key>CFBundleName</key>
--	<string>meditrack</string>
+-	<string>sana</string>
 +	<string>SANA</string>
  	<key>CFBundlePackageType</key>
  	<string>APPL</string>
@@ -34,13 +34,13 @@ index fc85d50..b713f4d 100644
  	<key>UIApplicationSupportsIndirectInputEvents</key>
  	<true/>
  	<key>NSCameraUsageDescription</key>
--	<string>MediTrack needs camera access so you can take a photo of your medication.</string>
+-	<string>sana needs camera access so you can take a photo of your medication.</string>
 +	<string>SANA needs camera access so you can take a photo of your medication.</string>
  	<key>NSPhotoLibraryUsageDescription</key>
--	<string>MediTrack needs photo library access so you can attach medication photos and documents.</string>
+-	<string>sana needs photo library access so you can attach medication photos and documents.</string>
 +	<string>SANA needs photo library access so you can attach medication photos and documents.</string>
  	<key>NSMicrophoneUsageDescription</key>
--	<string>MediTrack needs microphone access for voice features.</string>
+-	<string>sana needs microphone access for voice features.</string>
 +	<string>SANA needs microphone access for voice features.</string>
  </dict>
  </plist>
@@ -48,11 +48,11 @@ diff --git a/lib/app.dart b/lib/app.dart
 index b715766..f90d19a 100644
 --- a/lib/app.dart
 +++ b/lib/app.dart
-@@ -19,7 +19,7 @@ class _MediTrackAppState extends State<MediTrackApp> {
+@@ -19,7 +19,7 @@ class _sanaAppState extends State<sanaApp> {
      return Consumer2<SettingsProvider, LanguageProvider>(
        builder: (context, settings, language, child) {
          return MaterialApp(
--          title: 'MediTrack',
+-          title: 'sana',
 +          title: 'SANA',
            debugShowCheckedModeBanner: false,
            themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -139,7 +139,7 @@ index 117b5aa..3dc8146 100644
        builder: (ctx) => AlertDialog(
          title: const Text('Get Your Own Copy'),
          content: const Text(
--          'Unlock the full source code and personal license for MediTrack / SANA.\n\nContact support or complete payment to receive your standalone copy.',
+-          'Unlock the full source code and personal license for sana / SANA.\n\nContact support or complete payment to receive your standalone copy.',
 +          'Unlock the full source code and personal license for SANA.\n\nContact support or complete payment to receive your standalone copy.',
          ),
          actions: [
@@ -295,7 +295,7 @@ index ec840e0..4f5509b 100644
  
      return Scaffold(
        appBar: AppBar(
--        title: const Text('📁 MediTrack Share'),
+-        title: const Text('📁 sana Share'),
 +        title: const Text('📁 SANA Share'),
          backgroundColor: Colors.teal,
          foregroundColor: Colors.white,
@@ -308,7 +308,7 @@ index 9d11620..04051e7 100644
              ),
              const SizedBox(height: 24),
              const Text(
--              'MediTrack',
+-              'sana',
 +              'SANA',
                style: TextStyle(
                  fontSize: 32,
@@ -321,12 +321,12 @@ index 42c7682..6a3abbd 100644
    if (use_header_bar) {
      GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
      gtk_widget_show(GTK_WIDGET(header_bar));
--    gtk_header_bar_set_title(header_bar, "meditrack");
+-    gtk_header_bar_set_title(header_bar, "sana");
 +    gtk_header_bar_set_title(header_bar, "SANA");
      gtk_header_bar_set_show_close_button(header_bar, TRUE);
      gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
    } else {
--    gtk_window_set_title(window, "meditrack");
+-    gtk_window_set_title(window, "sana");
 +    gtk_window_set_title(window, "SANA");
    }
  
@@ -339,14 +339,14 @@ index ab123c7..6c59eb2 100644
          BLOCK "040904e4"
          BEGIN
              VALUE "CompanyName", "com.example" "\0"
--            VALUE "FileDescription", "meditrack" "\0"
+-            VALUE "FileDescription", "sana" "\0"
 +            VALUE "FileDescription", "SANA" "\0"
              VALUE "FileVersion", VERSION_AS_STRING "\0"
--            VALUE "InternalName", "meditrack" "\0"
+-            VALUE "InternalName", "sana" "\0"
 +            VALUE "InternalName", "SANA" "\0"
              VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-             VALUE "OriginalFilename", "meditrack.exe" "\0"
--            VALUE "ProductName", "meditrack" "\0"
+             VALUE "OriginalFilename", "sana.exe" "\0"
+-            VALUE "ProductName", "sana" "\0"
 +            VALUE "ProductName", "SANA" "\0"
              VALUE "ProductVersion", VERSION_AS_STRING "\0"
          END

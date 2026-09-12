@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Meditrack</string>
+	<string>sana</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>meditrack</string>
+	<string>sana</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,10 +46,10 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>MediTrack needs camera access so you can take a photo of your medication.</string>
+	<string>sana needs camera access so you can take a photo of your medication.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>MediTrack needs photo library access so you can attach medication photos and documents.</string>
+	<string>sana needs photo library access so you can attach medication photos and documents.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>MediTrack needs microphone access for voice features.</string>
+	<string>sana needs microphone access for voice features.</string>
 </dict>
 </plist>

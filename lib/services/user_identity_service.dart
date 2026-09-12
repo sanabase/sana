@@ -1,35 +1,28 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GuestIdentityService {
-  static const String _key = 'sana_guest_user_id';
-
   /// Shared guest ID used by DataScopeService.
+  /// With the new architecture, guest identity is the Supabase
+  /// anonymous user's UUID. There is no local guest ID anymore.
   static Future<String?> get sharedGuestId async {
-    final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString(_key);
+    final user = Supabase.instance.client.auth.currentUser;
 
-    if (value == null || value.trim().isEmpty) {
+    if (user == null) {
       return null;
     }
 
-    return value;
+    return user.id;
   }
 
-  /// Returns the existing guest ID or creates one.
+  /// Returns the Supabase guest UUID.
   static Future<String> getGuestId() async {
-    final prefs = await SharedPreferences.getInstance();
+    final user = Supabase.instance.client.auth.currentUser;
 
-    final existing = prefs.getString(_key);
-
-    if (existing != null && existing.trim().isNotEmpty) {
-      return existing;
+    if (user == null) {
+      throw StateError('No Supabase session exists for guest user');
     }
 
-    final id = 'guest_${DateTime.now().microsecondsSinceEpoch}';
-
-    await prefs.setString(_key, id);
-
-    return id;
+    return user.id;
   }
 
   /// Compatibility alias.
@@ -57,8 +50,9 @@ class GuestIdentityService {
     return getGuestId();
   }
 
+  /// No local state exists to clear under the new architecture.
+  /// Signing out of Supabase Auth is what invalidates a guest.
   static Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
+    await Supabase.instance.client.auth.signOut();
   }
 }

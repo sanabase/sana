@@ -1,4 +1,4 @@
-package com.example.meditrack
+package com.example.sana
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,10 +15,10 @@ class SanaAlarmSoundService : Service() {
 
     companion object {
         const val ACTION_START =
-            "com.example.meditrack.action.START_ALARM"
+            "com.example.sana.action.START_ALARM"
 
         const val ACTION_STOP =
-            "com.example.meditrack.action.STOP_ALARM"
+            "com.example.sana.action.STOP_ALARM"
 
         private const val CHANNEL_ID =
             "sana_alarm_service"
@@ -60,7 +60,7 @@ class SanaAlarmSoundService : Service() {
                 CHANNEL_ID
             )
                 .setSmallIcon(
-                    com.example.meditrack.R.mipmap.ic_launcher
+                    com.example.sana.R.mipmap.ic_launcher
                 )
                 .setContentTitle("SANA")
                 .setContentText("Medication alarm")

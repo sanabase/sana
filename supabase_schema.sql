@@ -1,4 +1,4 @@
--- MediTrack schema
+-- sana schema
 -- Run this in your Supabase project's SQL editor.
 -- Safe to re-run: every statement uses IF NOT EXISTS / OR REPLACE.
 

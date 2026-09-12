@@ -6,20 +6,20 @@ import 'core/routes/app_routes.dart';
 import 'providers/settings_provider.dart';
 import 'providers/language_provider.dart';
 
-class MediTrackApp extends StatefulWidget {
-  const MediTrackApp({super.key});
+class sanaApp extends StatefulWidget {
+  const sanaApp({super.key});
 
   @override
-  State<MediTrackApp> createState() => _MediTrackAppState();
+  State<sanaApp> createState() => _sanaAppState();
 }
 
-class _MediTrackAppState extends State<MediTrackApp> {
+class _sanaAppState extends State<sanaApp> {
   @override
   Widget build(BuildContext context) {
     return Consumer2<SettingsProvider, LanguageProvider>(
       builder: (context, settings, language, child) {
         return MaterialApp(
-          title: 'MediTrack',
+          title: 'sana',
           debugShowCheckedModeBanner: false,
           themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           theme: ThemeData(
