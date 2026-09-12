@@ -1,0 +1,5 @@
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue ; flutter run -d chrome --web-port=5001 --dds-port=5002
+
+flutter clean
+flutter pub get
+flutter run
