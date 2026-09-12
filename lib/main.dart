@@ -1,4 +1,4 @@
-// ============================================
+// 23===========================================
 // SANA - COMPLETE WORKING CODE v20.10 (FIXED ONLY)
 // FIXED: Tap payment, guest_id removed, Namespace, reminder_date
 // YOUR ORIGINAL CODE PRESERVED
@@ -46,7 +46,7 @@ class SanaAlarmService {
 
   static final MethodChannel _alarmChannel = MethodChannel('sana/alarm');
 
-  static const String _channelId = 'sana_medication_alarm';
+  static const String _channelId = 'sana_medication_alarm_v2';
 
   static Future<void> initialize() async {
     tz.initializeTimeZones();
@@ -327,10 +327,10 @@ class SanaAlarmService {
         priority: Priority.max,
         category: AndroidNotificationCategory.alarm,
         audioAttributesUsage: AudioAttributesUsage.alarm,
-        playSound: false,
+        ongoing: true,
+        playSound: true,
         enableVibration: false,
         fullScreenIntent: true,
-        ongoing: true,
         autoCancel: false,
         actions: [
           AndroidNotificationAction(
@@ -1677,24 +1677,13 @@ class LanguageButtons extends StatelessWidget {
 // ============================================
 
 class GuestIdentityService {
-  static const String _key = 'sana_guest_user_id';
-  static String? _cachedGuestId;
-
+  // No guest identity exists in this architecture.
+  // Callers still invoke these methods, so they remain as no-ops.
   static Future<String> getGuestId() async {
-    final user = Supabase.instance.client.auth.currentUser;
-
-    if (user == null) {
-      throw StateError('Supabase guest session is not initialized.');
-    }
-
-    _cachedGuestId = user.id;
-    return user.id;
+    return '';
   }
 
-  // Optional: Clear cache when user logs out
-  static void clearCache() {
-    _cachedGuestId = null;
-  }
+  static void clearCache() {}
 }
 
 // ============================================
@@ -4598,7 +4587,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
     try {
       final query = _client.from('medications').select();
       final dynamic response = widget.guestMode
-          ? await query.eq('guest_id', widget.ownerId)
+          ? await query.isFilter('user_id', null)
           : await query.eq('user_id', widget.ownerId);
 
       final List<dynamic> list = response as List<dynamic>;
@@ -4633,7 +4622,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
       final tableName = _table;
       final query = _client.from(tableName).select();
       final dynamic response = widget.guestMode
-          ? await query.eq('guest_id', widget.ownerId)
+          ? await query.isFilter('user_id', null)
           : await query.eq('user_id', widget.ownerId);
 
       if (mounted) {
@@ -4803,7 +4792,6 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
     final cleanPayload = <String, dynamic>{
       'user_id': widget.guestMode ? null : widget.ownerId,
-      'guest_id': widget.guestMode ? widget.ownerId : null,
     };
 
     // Helper to extract photos across forms
@@ -5043,7 +5031,6 @@ class _RecordListScreenState extends State<RecordListScreen> {
       final cleanPayload = RecordSanitizer.sanitize(payload);
 
       cleanPayload['user_id'] = widget.guestMode ? null : widget.ownerId;
-      cleanPayload['guest_id'] = widget.guestMode ? widget.ownerId : null;
 
       await _client.from(_table).insert(cleanPayload);
       await _load();
@@ -5091,7 +5078,6 @@ class _RecordListScreenState extends State<RecordListScreen> {
       final cleanPayload = RecordSanitizer.sanitize(payload);
 
       cleanPayload['user_id'] = widget.guestMode ? null : widget.ownerId;
-      cleanPayload['guest_id'] = widget.guestMode ? widget.ownerId : null;
 
       await _client.from(_table).insert(cleanPayload);
       await _load();
@@ -5156,7 +5142,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
       final query = _client.from(_table).delete().eq('id', id);
 
       if (widget.guestMode) {
-        await query.eq('guest_id', widget.ownerId);
+        await query.isFilter('user_id', null);
       } else {
         await query.eq('user_id', widget.ownerId);
       }
@@ -5207,6 +5193,8 @@ class _RecordListScreenState extends State<RecordListScreen> {
       'user_id',
       'guest_id',
       'created_at',
+      'updated_at',
+      'is_active',
       'photo',
       'photo_base64',
       'photo_url',
@@ -6357,7 +6345,7 @@ class _ShareScreenState extends State<ShareScreen> {
       try {
         final query = _client.from(table).select();
         final dynamic response = widget.guestMode
-            ? await query.eq('guest_id', widget.ownerId)
+            ? await query.isFilter('user_id', null)
             : await query.eq('user_id', widget.ownerId);
 
         final List<dynamic> list = response as List<dynamic>;
@@ -6555,6 +6543,8 @@ class _ShareScreenState extends State<ShareScreen> {
       'file_type',
       'file_url',
       'medication_id',
+      'updated_at',
+      'is_active',
     };
 
     for (final entry in row.entries) {
@@ -6895,8 +6885,7 @@ class _ShareScreenState extends State<ShareScreen> {
                                           ),
                                           borderRadius:
                                               BorderRadius.circular(10),
-                                          color: Colors.teal.shade50
-                                              .withValues(alpha: 0.3),
+                                          color: Colors.white,
                                         ),
                                         child: Column(
                                           crossAxisAlignment:
