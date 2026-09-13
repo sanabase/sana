@@ -1,4 +1,4 @@
-﻿class Doctor {
+class Doctor {
   final String id;
   final String name;
   final String? specialty;
@@ -27,7 +27,9 @@
       phone: _nullableString(
         map['phone'] ?? map['phoneNumber'],
       ),
-      address: _nullableString(map['address']),
+      address: _nullableString(
+        map['address'],
+      ),
       userId: _nullableString(
         map['user_id'] ?? map['userId'],
       ),
@@ -84,9 +86,12 @@
   }
 
   static String? _nullableString(dynamic value) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
 
     final result = value.toString().trim();
+
     return result.isEmpty ? null : result;
   }
 }

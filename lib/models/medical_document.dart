@@ -1,4 +1,5 @@
-﻿class MedicalDocument {
+﻿//cat > lib/models/medical_document.dart <<'EOF'
+class MedicalDocument {
   final String? id;
   final String? userId;
   final String? guestId;
@@ -10,7 +11,7 @@
   final DateTime createdAt;
   final bool isPublic;
 
-  MedicalDocument({
+  const MedicalDocument({
     this.id,
     this.userId,
     this.guestId,
@@ -27,7 +28,7 @@
     return {
       'id': id,
       'user_id': userId,
-      'user_id': guestId,
+      'guest_id': guestId,
       'name': name,
       'storage_path': storagePath,
       'file_url': fileUrl,
@@ -41,16 +42,21 @@
   factory MedicalDocument.fromMap(Map<String, dynamic> map) {
     return MedicalDocument(
       id: map['id']?.toString(),
-      userId: map['user_id'],
-      guestId: map['user_id'],
-      name: map['name'] ?? '',
-      storagePath: map['storage_path'] ?? '',
-      fileUrl: map['file_url'] ?? '',
-      fileType: map['file_type'] ?? '',
-      date: DateTime.tryParse(map['date']?.toString() ?? '') ?? DateTime.now(),
-      createdAt: DateTime.tryParse(map['created_at']?.toString() ?? '') ??
+      userId: map['user_id']?.toString(),
+      guestId: map['guest_id']?.toString(),
+      name: map['name']?.toString() ?? '',
+      storagePath: map['storage_path']?.toString() ?? '',
+      fileUrl: map['file_url']?.toString() ?? '',
+      fileType: map['file_type']?.toString() ?? '',
+      date: DateTime.tryParse(
+            map['date']?.toString() ?? '',
+          ) ??
           DateTime.now(),
-      isPublic: map['is_public'] ?? false,
+      createdAt: DateTime.tryParse(
+            map['created_at']?.toString() ?? '',
+          ) ??
+          DateTime.now(),
+      isPublic: map['is_public'] == true,
     );
   }
 }

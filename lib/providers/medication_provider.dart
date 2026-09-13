@@ -1,6 +1,7 @@
-﻿import 'dart:convert';
+import 'dart:async';
+import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,6 +18,8 @@ class MedicationProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+
+  StreamSubscription<AuthState>? _authSubscription;
 
   List<Medication> get medications => List.unmodifiable(_medications);
 
@@ -37,11 +40,37 @@ class MedicationProvider extends ChangeNotifier {
   User? get _currentUser => _supabase?.auth.currentUser;
 
   MedicationProvider() {
+    _authSubscription = _supabase?.auth.onAuthStateChange.listen(
+      _handleAuthStateChange,
+      onError: (Object error, StackTrace stackTrace) {
+        debugPrint(
+          'Medication auth listener error: '
+          '$error\n$stackTrace',
+        );
+      },
+    );
+
     loadMedications();
   }
 
   // ============================================================
-  // MEDICATIONS
+  // AUTH
+  // ============================================================
+
+  Future<void> _handleAuthStateChange(
+    AuthState authState,
+  ) async {
+    _medications.clear();
+    _logs.clear();
+    _errorMessage = null;
+
+    notifyListeners();
+
+    await loadMedications();
+  }
+
+  // ============================================================
+  // LOAD MEDICATIONS
   // ============================================================
 
   Future<void> loadMedications() async {
@@ -50,20 +79,12 @@ class MedicationProvider extends ChangeNotifier {
     }
 
     _setLoading(true);
-    _clearError();
+    _errorMessage = null;
 
     _medications.clear();
     _logs.clear();
 
     try {
-      final user = _currentUser;
-
-      if (user == null) {
-        await _loadLocalMedications();
-        await _loadLocalLogs();
-        return;
-      }
-
       final client = _supabase;
 
       if (client == null) {
@@ -72,47 +93,50 @@ class MedicationProvider extends ChangeNotifier {
         return;
       }
 
-      // ----------------------------------------------------------
-      // Load only this user's medications.
-      // ----------------------------------------------------------
+      final user = _currentUser;
 
-      final medicationResponse = await client
-          .from('medications')
-          .select()
-          .eq('user_id', user.id)
-          .order('created_at', ascending: false);
+      if (user == null) {
+        // Guest:
+        // Only public medications.
+        final response = await client
+            .from('medications')
+            .select()
+            .isFilter('user_id', null)
+            .order(
+              'name',
+              ascending: true,
+            );
 
-      for (final item in medicationResponse) {
-        try {
-          final medication = Medication.fromMap(
-            Map<String, dynamic>.from(item),
-          );
+        _addMedications(
+          response,
+          userId: null,
+        );
+      } else {
+        // Authenticated:
+        // Public medications + own private medications.
+        final response = await client
+            .from('medications')
+            .select()
+            .or(
+              'user_id.is.null,user_id.eq.${user.id}',
+            )
+            .order(
+              'name',
+              ascending: true,
+            );
 
-          if (medication.id.isEmpty) {
-            continue;
-          }
-
-          _medications.add(medication);
-        } catch (error) {
-          debugPrint(
-            'Invalid medication record: $error',
-          );
-        }
+        _addMedications(
+          response,
+          userId: user.id,
+        );
       }
 
-      // ----------------------------------------------------------
-      // Load history belonging to this user's medications.
-      //
-      // medication_logs does not currently have a user_id column,
-      // so history is safely obtained through the medication IDs.
-      // ----------------------------------------------------------
+      await _saveMedicationsToLocal();
 
-      await _loadCloudLogs(
+      await _loadMedicationHistoryInternal(
         client,
-        user.id,
       );
 
-      await _saveMedicationsToLocal();
       await _saveLogsToLocal();
     } catch (error, stackTrace) {
       debugPrint(
@@ -120,11 +144,11 @@ class MedicationProvider extends ChangeNotifier {
         '$error\n$stackTrace',
       );
 
-      _setError(
-        'Unable to load your medications.',
-      );
+      _errorMessage = 'Unable to load medications.';
 
-      // Offline/cache fallback.
+      _medications.clear();
+      _logs.clear();
+
       await _loadLocalMedications();
       await _loadLocalLogs();
     } finally {
@@ -132,17 +156,64 @@ class MedicationProvider extends ChangeNotifier {
     }
   }
 
+  void _addMedications(
+    dynamic response, {
+    required String? userId,
+  }) {
+    if (response is! List) {
+      return;
+    }
+
+    for (final item in response) {
+      if (item is! Map) {
+        continue;
+      }
+
+      try {
+        final medication = Medication.fromMap(
+          Map<String, dynamic>.from(item),
+        );
+
+        if (medication.id.isEmpty) {
+          continue;
+        }
+
+        // Guest: public only.
+        if (userId == null) {
+          if (medication.userId.isNotEmpty) {
+            continue;
+          }
+        }
+
+        // Authenticated: public OR own private.
+        if (userId != null) {
+          if (medication.userId.isNotEmpty && medication.userId != userId) {
+            continue;
+          }
+        }
+
+        final exists = _medications.any(
+          (item) => item.id == medication.id,
+        );
+
+        if (!exists) {
+          _medications.add(medication);
+        }
+      } catch (error) {
+        debugPrint(
+          'Invalid medication: $error',
+        );
+      }
+    }
+  }
+
+  // ============================================================
+  // ADD
+  // ============================================================
+
   Future<void> addMedication(
     Medication medication,
   ) async {
-    final user = _currentUser;
-
-    if (user == null) {
-      throw StateError(
-        'You must be signed in to save a medication.',
-      );
-    }
-
     final client = _supabase;
 
     if (client == null) {
@@ -151,12 +222,27 @@ class MedicationProvider extends ChangeNotifier {
       );
     }
 
-    // Always force the authenticated user's ID.
-    final medicationToSave = medication.copyWith(
-      userId: user.id,
-    );
+    final user = _currentUser;
 
-    _clearError();
+    late Medication medicationToSave;
+
+    if (user == null) {
+      // Guest creates public medication.
+      medicationToSave = medication.copyWith(
+        userId: '',
+      );
+    } else {
+      // Prevent assigning another user's ID.
+      if (medication.userId.isNotEmpty && medication.userId != user.id) {
+        throw StateError(
+          'This medication belongs to another user.',
+        );
+      }
+
+      medicationToSave = medication.copyWith(
+        userId: medication.userId.isEmpty ? '' : user.id,
+      );
+    }
 
     try {
       await client.from('medications').upsert(
@@ -194,17 +280,13 @@ class MedicationProvider extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // UPDATE
+  // ============================================================
+
   Future<void> updateMedication(
     Medication medication,
   ) async {
-    final user = _currentUser;
-
-    if (user == null) {
-      throw StateError(
-        'You must be signed in to update a medication.',
-      );
-    }
-
     final client = _supabase;
 
     if (client == null) {
@@ -213,37 +295,108 @@ class MedicationProvider extends ChangeNotifier {
       );
     }
 
-    final medicationToSave = medication.copyWith(
-      userId: user.id,
+    final index = _medications.indexWhere(
+      (item) => item.id == medication.id,
     );
 
-    _clearError();
+    if (index < 0) {
+      throw StateError(
+        'Medication was not found.',
+      );
+    }
+
+    final existing = _medications[index];
+    final user = _currentUser;
+
+    // Guest can only edit public medication.
+    if (user == null) {
+      if (existing.userId.isNotEmpty) {
+        throw StateError(
+          'Private medications cannot be edited in guest mode.',
+        );
+      }
+
+      final updated = medication.copyWith(
+        userId: '',
+      );
+
+      await _updateMedication(
+        client,
+        updated,
+        publicRecord: true,
+      );
+
+      return;
+    }
+
+    // Cannot edit another user's private medication.
+    if (existing.userId.isNotEmpty && existing.userId != user.id) {
+      throw StateError(
+        'You cannot edit another user\'s medication.',
+      );
+    }
+
+    final updated = medication.copyWith(
+      userId: existing.userId.isEmpty ? '' : user.id,
+    );
+
+    await _updateMedication(
+      client,
+      updated,
+      publicRecord: existing.userId.isEmpty,
+    );
+  }
+
+  Future<void> _updateMedication(
+    SupabaseClient client,
+    Medication medication, {
+    required bool publicRecord,
+  }) async {
+    _errorMessage = null;
 
     try {
-      await client
+      var query = client
           .from('medications')
           .update(
-            medicationToSave.toSupabaseMap(),
+            medication.toSupabaseMap(),
           )
           .eq(
             'id',
-            medicationToSave.id,
-          )
-          .eq(
-            'user_id',
-            user.id,
+            medication.id,
           );
 
+      if (publicRecord) {
+        query = query.isFilter(
+          'user_id',
+          null,
+        );
+      } else {
+        final user = _currentUser;
+
+        if (user == null) {
+          throw StateError(
+            'Authentication required.',
+          );
+        }
+
+        query = query.eq(
+          'user_id',
+          user.id,
+        );
+      }
+
+      await query;
+
       final index = _medications.indexWhere(
-        (item) => item.id == medicationToSave.id,
+        (item) => item.id == medication.id,
       );
 
       if (index >= 0) {
-        _medications[index] = medicationToSave;
+        _medications[index] = medication;
       } else {
         _medications.insert(
           0,
-          medicationToSave,
+          medication,
         );
       }
 
@@ -264,17 +417,13 @@ class MedicationProvider extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // DELETE
+  // ============================================================
+
   Future<void> deleteMedication(
     String id,
   ) async {
-    final user = _currentUser;
-
-    if (user == null) {
-      throw StateError(
-        'You must be signed in to delete a medication.',
-      );
-    }
-
     final client = _supabase;
 
     if (client == null) {
@@ -284,7 +433,7 @@ class MedicationProvider extends ChangeNotifier {
     }
 
     final index = _medications.indexWhere(
-      (medication) => medication.id == id,
+      (item) => item.id == id,
     );
 
     if (index < 0) {
@@ -292,28 +441,53 @@ class MedicationProvider extends ChangeNotifier {
     }
 
     final medication = _medications[index];
-
-    if (medication.userId != user.id) {
-      throw StateError(
-        'You cannot delete another user\'s medication.',
-      );
-    }
-
-    _clearError();
+    final user = _currentUser;
 
     try {
-      await client
-          .from('medications')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
+      var query = client.from('medications').delete().eq(
+            'id',
+            id,
+          );
+
+      // Guest.
+      if (user == null) {
+        if (medication.userId.isNotEmpty) {
+          throw StateError(
+            'Private medications cannot be deleted in guest mode.',
+          );
+        }
+
+        query = query.isFilter(
+          'user_id',
+          null,
+        );
+      }
+
+      // Authenticated.
+      else {
+        if (medication.userId.isNotEmpty && medication.userId != user.id) {
+          throw StateError(
+            'You cannot delete another user\'s medication.',
+          );
+        }
+
+        if (medication.userId.isEmpty) {
+          query = query.isFilter(
+            'user_id',
+            null,
+          );
+        } else {
+          query = query.eq(
+            'user_id',
+            user.id,
+          );
+        }
+      }
+
+      await query;
 
       _medications.removeAt(index);
 
-      // The database schema uses ON DELETE SET NULL for
-      // medication_logs, so history remains permanent.
-      //
-      // Remove the medication from the active list only.
       await _saveMedicationsToLocal();
 
       notifyListeners();
@@ -336,24 +510,17 @@ class MedicationProvider extends ChangeNotifier {
   // ============================================================
 
   Future<void> loadMedicationHistory() async {
-    final user = _currentUser;
-
-    if (user == null) {
-      await _loadLocalLogs();
-      return;
-    }
-
     final client = _supabase;
 
     if (client == null) {
       await _loadLocalLogs();
+      notifyListeners();
       return;
     }
 
     try {
-      await _loadCloudLogs(
+      await _loadMedicationHistoryInternal(
         client,
-        user.id,
       );
 
       await _saveLogsToLocal();
@@ -366,23 +533,61 @@ class MedicationProvider extends ChangeNotifier {
       );
 
       await _loadLocalLogs();
+
       notifyListeners();
     }
   }
+
+  Future<void> _loadMedicationHistoryInternal(
+    SupabaseClient client,
+  ) async {
+    _logs.clear();
+
+    final medicationIds = _medications
+        .map((medication) => medication.id)
+        .where((id) => id.isNotEmpty)
+        .toList();
+
+    if (medicationIds.isEmpty) {
+      return;
+    }
+
+    final response = await client
+        .from('medication_logs')
+        .select()
+        .inFilter(
+          'medication_id',
+          medicationIds,
+        )
+        .order(
+          'taken_at',
+          ascending: false,
+        );
+
+    for (final item in response) {
+      try {
+        final log = MedicationLog.fromMap(
+          Map<String, dynamic>.from(item),
+        );
+
+        _logs.add(log);
+      } catch (error) {
+        debugPrint(
+          'Invalid medication log: $error',
+        );
+      }
+    }
+  }
+
+  // ============================================================
+  // RECORD STATUS
+  // ============================================================
 
   Future<void> recordMedicationStatus({
     required Medication medication,
     required String status,
     DateTime? takenAt,
   }) async {
-    final user = _currentUser;
-
-    if (user == null) {
-      throw StateError(
-        'You must be signed in to record medication history.',
-      );
-    }
-
     final client = _supabase;
 
     if (client == null) {
@@ -399,10 +604,24 @@ class MedicationProvider extends ChangeNotifier {
       );
     }
 
-    if (medication.userId != user.id) {
-      throw StateError(
-        'This medication does not belong to the current user.',
-      );
+    final user = _currentUser;
+
+    // Guest can only record public medication.
+    if (user == null) {
+      if (medication.userId.isNotEmpty) {
+        throw StateError(
+          'Private medication history cannot be changed in guest mode.',
+        );
+      }
+    }
+
+    // Authenticated user can record public or own medication.
+    else {
+      if (medication.userId.isNotEmpty && medication.userId != user.id) {
+        throw StateError(
+          'This medication belongs to another user.',
+        );
+      }
     }
 
     final log = MedicationLog(
@@ -467,66 +686,7 @@ class MedicationProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // CLOUD LOG LOADING
-  // ============================================================
-
-  Future<void> _loadCloudLogs(
-    SupabaseClient client,
-    String userId,
-  ) async {
-    _logs.clear();
-
-    final medicationIds = _medications
-        .where(
-          (medication) =>
-              medication.userId == userId && medication.id.isNotEmpty,
-        )
-        .map(
-          (medication) => medication.id,
-        )
-        .toList();
-
-    // If the user has no medications, there cannot be
-    // any history belonging to active medications.
-    //
-    // Older logs for deleted medications intentionally remain
-    // permanent in the database because medication deletion uses
-    // ON DELETE SET NULL.
-    if (medicationIds.isEmpty) {
-      return;
-    }
-
-    // Supabase/PostgREST supports filtering an ID against
-    // multiple values with the "in" operator.
-    final response = await client
-        .from('medication_logs')
-        .select()
-        .inFilter(
-          'medication_id',
-          medicationIds,
-        )
-        .order(
-          'taken_at',
-          ascending: false,
-        );
-
-    for (final item in response) {
-      try {
-        final log = MedicationLog.fromMap(
-          Map<String, dynamic>.from(item),
-        );
-
-        _logs.add(log);
-      } catch (error) {
-        debugPrint(
-          'Invalid medication log: $error',
-        );
-      }
-    }
-  }
-
-  // ============================================================
-  // LOCAL CACHE
+  // LOCAL MEDICATIONS
   // ============================================================
 
   Future<void> _loadLocalMedications() async {
@@ -566,11 +726,18 @@ class MedicationProvider extends ChangeNotifier {
             continue;
           }
 
-          // Never show another user's cached medication.
-          if (user != null &&
-              medication.userId.isNotEmpty &&
-              medication.userId != user.id) {
-            continue;
+          // Guest.
+          if (user == null) {
+            if (medication.userId.isNotEmpty) {
+              continue;
+            }
+          }
+
+          // Authenticated.
+          else {
+            if (medication.userId.isNotEmpty && medication.userId != user.id) {
+              continue;
+            }
           }
 
           final exists = _medications.any(
@@ -578,9 +745,7 @@ class MedicationProvider extends ChangeNotifier {
           );
 
           if (!exists) {
-            _medications.add(
-              medication,
-            );
+            _medications.add(medication);
           }
         } catch (error) {
           debugPrint(
@@ -595,6 +760,10 @@ class MedicationProvider extends ChangeNotifier {
       );
     }
   }
+
+  // ============================================================
+  // LOCAL LOGS
+  // ============================================================
 
   Future<void> _loadLocalLogs() async {
     try {
@@ -616,11 +785,8 @@ class MedicationProvider extends ChangeNotifier {
 
       _logs.clear();
 
-      final medicationIds = _medications
-          .map(
-            (medication) => medication.id,
-          )
-          .toSet();
+      final medicationIds =
+          _medications.map((medication) => medication.id).toSet();
 
       for (final item in decoded) {
         if (item is! Map) {
@@ -632,8 +798,6 @@ class MedicationProvider extends ChangeNotifier {
             Map<String, dynamic>.from(item),
           );
 
-          // Only load cached history associated with
-          // medications currently known to this user.
           if (medicationIds.isNotEmpty &&
               !medicationIds.contains(
                 log.medicationId,
@@ -650,27 +814,26 @@ class MedicationProvider extends ChangeNotifier {
       }
 
       _logs.sort(
-        (a, b) => b.takenAt.compareTo(
-          a.takenAt,
-        ),
+        (a, b) => b.takenAt.compareTo(a.takenAt),
       );
     } catch (error, stackTrace) {
       debugPrint(
-        'Failed to load local medication logs: '
+        'Failed to load local logs: '
         '$error\n$stackTrace',
       );
     }
   }
 
+  // ============================================================
+  // SAVE MEDICATIONS
+  // ============================================================
+
   Future<void> _saveMedicationsToLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final data = _medications
-          .map(
-            (medication) => medication.toMap(),
-          )
-          .toList();
+      final data =
+          _medications.map((medication) => medication.toMap()).toList();
 
       await prefs.setString(
         _medicationsStorageKey,
@@ -683,15 +846,15 @@ class MedicationProvider extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // SAVE LOGS
+  // ============================================================
+
   Future<void> _saveLogsToLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final data = _logs
-          .map(
-            (log) => log.toMap(),
-          )
-          .toList();
+      final data = _logs.map((log) => log.toMap()).toList();
 
       await prefs.setString(
         _logsStorageKey,
@@ -717,22 +880,13 @@ class MedicationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _clearError() {
-    if (_errorMessage == null) {
-      return;
-    }
-
-    _errorMessage = null;
-    notifyListeners();
-  }
-
   void _setError(String message) {
     _errorMessage = message;
     notifyListeners();
   }
 
   // ============================================================
-  // CLEANUP
+  // CLEAR LOCAL DATA
   // ============================================================
 
   Future<void> clearLocalData() async {
@@ -754,5 +908,15 @@ class MedicationProvider extends ChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  // ============================================================
+  // CLEANUP
+  // ============================================================
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

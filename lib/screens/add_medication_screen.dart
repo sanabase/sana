@@ -1,4 +1,6 @@
-﻿import 'dart:typed_data';
+﻿import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +22,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
 
   final _nameController = TextEditingController();
   final _dosageController = TextEditingController();
-  final _quantityController = TextEditingController(text: '1');
 
   DateTime _selectedDate = DateTime.now();
 
@@ -60,6 +61,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     '11:00 PM',
   ];
 
+  // ============================================================
+  // PHOTO
+  // ============================================================
+
   Future<void> _pickPhoto() async {
     if (_isSaving) {
       return;
@@ -76,8 +81,9 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       }
 
       final file = result.files.single;
+      final bytes = file.bytes;
 
-      if (file.bytes == null || file.bytes!.isEmpty) {
+      if (bytes == null || bytes.isEmpty) {
         _showMessage(
           'The selected image could not be read.',
           isError: true,
@@ -86,7 +92,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       }
 
       setState(() {
-        _photoBytes = file.bytes;
+        _photoBytes = bytes;
         _photoName = file.name;
       });
     } catch (error, stackTrace) {
@@ -105,6 +111,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       );
     }
   }
+
+  // ============================================================
+  // DATE
+  // ============================================================
 
   Future<void> _pickDate() async {
     if (_isSaving) {
@@ -130,6 +140,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     });
   }
 
+  // ============================================================
+  // SAVE
+  // ============================================================
+
   Future<void> _saveMedication() async {
     if (_isSaving) {
       return;
@@ -147,50 +161,47 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       return;
     }
 
-    final quantity = int.tryParse(
-      _quantityController.text.trim(),
-    );
-
-    if (quantity == null || quantity <= 0) {
-      _showMessage(
-        'Quantity must be greater than zero.',
-        isError: true,
-      );
-      return;
-    }
-
-    final repeatValue = _repeatChoice == 'Select Date'
-        ? 'Date: ${_selectedDate.day}/'
-            '${_selectedDate.month}/'
-            '${_selectedDate.year}'
-        : 'Daily';
-
-    final medication = Medication(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-
-      // MedicationProvider replaces this with the
-      // authenticated user's ID before saving.
-      userId: '',
-
-      name: _nameController.text.trim(),
-      dosage: _dosageController.text.trim(),
-      quantity: quantity,
-      reminderTimes: List<String>.from(_selectedTimes),
-      repeatType: repeatValue,
-
-      // Do not store the image as a base64/data URL
-      // inside the medication database row.
-      //
-      // The selected image remains available here for
-      // the future private-storage photo flow.
-      photoUrl: null,
-    );
-
     setState(() {
       _isSaving = true;
     });
 
     try {
+      // The current Medication model supports one String field
+      // called reminderTime.
+      //
+      // Keep all selected times in that field separated by commas.
+      final reminderTime = _selectedTimes.join(', ');
+
+      // Convert selected image to Base64 because the current
+      // Medication model uses photoBase64.
+      String? photoBase64;
+
+      if (_photoBytes != null && _photoBytes!.isNotEmpty) {
+        photoBase64 = base64Encode(_photoBytes!);
+      }
+
+      final medication = Medication(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+
+        // MedicationProvider can replace this with the
+        // authenticated user's ID before saving.
+        userId: '',
+
+        // Empty guestId means the provider can handle it
+        // according to the current authentication logic.
+        guestId: '',
+
+        name: _nameController.text.trim(),
+
+        dosage: _dosageController.text.trim(),
+
+        reminderTime: reminderTime,
+
+        photoBase64: photoBase64,
+
+        ringtonePath: null,
+      );
+
       await context.read<MedicationProvider>().addMedication(medication);
 
       if (!mounted) {
@@ -221,6 +232,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     }
   }
 
+  // ============================================================
+  // MESSAGE
+  // ============================================================
+
   void _showMessage(
     String message, {
     bool isError = false,
@@ -233,13 +248,23 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     );
   }
 
+  // ============================================================
+  // PHOTO BUTTON TEXT
+  // ============================================================
+
   String _photoButtonText(String fallback) {
-    if (_photoName == null || _photoName!.trim().isEmpty) {
+    final name = _photoName;
+
+    if (name == null || name.trim().isEmpty) {
       return fallback;
     }
 
-    return _photoName!;
+    return name;
   }
+
+  // ============================================================
+  // UI
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +275,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     String title = 'Add Medication';
     String nameLabel = 'Medication Name *';
     String dosageLabel = 'Dosage (e.g. 500mg) *';
-    String qtyLabel = 'Quantity *';
     String repeatLabel = 'Repeat Pattern';
     String dailyOpt = 'Daily';
     String dateOpt = 'Select Date';
@@ -259,82 +283,75 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     String saveBtn = 'Save Medication';
 
     if (code == 'ar') {
-      title = 'Ø¥Ø¶Ø§ÙØ© Ø¯ÙˆØ§Ø¡';
-      nameLabel = 'Ø§Ø³Ù… Ø§Ù„Ø¯ÙˆØ§Ø¡ *';
-      dosageLabel = 'Ø§Ù„Ø¬Ø±Ø¹Ø© (Ù…Ø«Ø§Ù„ 500 Ù…Ù„Ø¬Ù…) *';
-      qtyLabel = 'Ø§Ù„ÙƒÙ…ÙŠØ© *';
-      repeatLabel = 'Ù†Ù…Ø· Ø§Ù„ØªÙƒØ±Ø§Ø±';
-      dailyOpt = 'ÙŠÙˆÙ…ÙŠØ§Ù‹';
-      dateOpt = 'ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ØªØ§Ø±ÙŠØ®';
-      timesLabel = 'Ø§Ø®ØªØ± Ø£ÙˆÙ‚Ø§Øª Ø§Ù„ØªØ°ÙƒÙŠØ±';
-      photoBtn = 'Ø¥Ø¶Ø§ÙØ© ØµÙˆØ±Ø© Ø§Ù„Ø¯ÙˆØ§Ø¡';
-      saveBtn = 'Ø­ÙØ¸ Ø§Ù„Ø¯ÙˆØ§Ø¡';
+      title = 'إضافة دواء';
+      nameLabel = 'اسم الدواء *';
+      dosageLabel = 'الجرعة (مثال 500 ملغ) *';
+      repeatLabel = 'نمط التكرار';
+      dailyOpt = 'يومياً';
+      dateOpt = 'تحديد التاريخ';
+      timesLabel = 'اختر أوقات التذكير';
+      photoBtn = 'إضافة صورة الدواء';
+      saveBtn = 'حفظ الدواء';
     } else if (code == 'es') {
-      title = 'AÃ±adir Medicamento';
+      title = 'Añadir Medicamento';
       nameLabel = 'Nombre del Medicamento *';
       dosageLabel = 'Dosis (ej. 500mg) *';
-      qtyLabel = 'Cantidad *';
-      repeatLabel = 'PatrÃ³n de RepeticiÃ³n';
+      repeatLabel = 'Patrón de Repetición';
       dailyOpt = 'Diario';
       dateOpt = 'Seleccionar Fecha';
       timesLabel = 'Seleccionar Horarios';
-      photoBtn = 'AÃ±adir Foto del Medicamento';
+      photoBtn = 'Añadir Foto del Medicamento';
       saveBtn = 'Guardar Medicamento';
     } else if (code == 'fr') {
-      title = 'Ajouter un MÃ©dicament';
-      nameLabel = 'Nom du MÃ©dicament *';
+      title = 'Ajouter un Médicament';
+      nameLabel = 'Nom du Médicament *';
       dosageLabel = 'Dosage (ex. 500mg) *';
-      qtyLabel = 'QuantitÃ© *';
-      repeatLabel = 'RÃ©pÃ©tition';
+      repeatLabel = 'Répétition';
       dailyOpt = 'Quotidien';
-      dateOpt = 'SÃ©lectionner une Date';
+      dateOpt = 'Sélectionner une Date';
       timesLabel = 'Horaires de Rappel';
-      photoBtn = 'Ajouter Photo du MÃ©dicament';
+      photoBtn = 'Ajouter Photo du Médicament';
       saveBtn = 'Enregistrer';
     } else if (code == 'de') {
-      title = 'Medikament hinzufÃ¼gen';
+      title = 'Medikament hinzufügen';
       nameLabel = 'Medikamentenname *';
       dosageLabel = 'Dosierung (z.B. 500mg) *';
-      qtyLabel = 'Menge *';
       repeatLabel = 'Wiederholung';
-      dailyOpt = 'TÃ¤glich';
-      dateOpt = 'Datum WÃ¤hlen';
-      timesLabel = 'Erinnerungszeiten wÃ¤hlen';
-      photoBtn = 'Medikamentenfoto hinzufÃ¼gen';
+      dailyOpt = 'Täglich';
+      dateOpt = 'Datum Wählen';
+      timesLabel = 'Erinnerungszeiten wählen';
+      photoBtn = 'Medikamentenfoto hinzufügen';
       saveBtn = 'Speichern';
     } else if (code == 'tr') {
-      title = 'Ä°laÃ§ Ekle';
-      nameLabel = 'Ä°laÃ§ AdÄ± *';
-      dosageLabel = 'Doz (Ã¶rn. 500mg) *';
-      qtyLabel = 'Miktar *';
-      repeatLabel = 'Tekrar DÃ¼zeni';
-      dailyOpt = 'GÃ¼nlÃ¼k';
-      dateOpt = 'Tarih SeÃ§';
-      timesLabel = 'HatÄ±rlatma ZamanlarÄ±nÄ± SeÃ§in';
-      photoBtn = 'Ä°laÃ§ FotoÄŸrafÄ± Ekle';
-      saveBtn = 'Ä°lacÄ± Kaydet';
+      title = 'İlaç Ekle';
+      nameLabel = 'İlaç Adı *';
+      dosageLabel = 'Doz (örn. 500mg) *';
+      repeatLabel = 'Tekrar Düzeni';
+      dailyOpt = 'Günlük';
+      dateOpt = 'Tarih Seç';
+      timesLabel = 'Hatırlatma Zamanlarını Seçin';
+      photoBtn = 'İlaç Fotoğrafı Ekle';
+      saveBtn = 'İlacı Kaydet';
     } else if (code == 'hi') {
-      title = 'à¤¦à¤µà¤¾ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
-      nameLabel = 'à¤¦à¤µà¤¾ à¤•à¤¾ à¤¨à¤¾à¤® *';
-      dosageLabel = 'à¤–à¥à¤°à¤¾à¤• (à¤œà¥ˆà¤¸à¥‡ 500mg) *';
-      qtyLabel = 'à¤®à¤¾à¤¤à¥à¤°à¤¾ *';
-      repeatLabel = 'à¤¦à¥‹à¤¹à¤°à¤¾à¤µ à¤ªà¥ˆà¤Ÿà¤°à¥à¤¨';
-      dailyOpt = 'à¤¦à¥ˆà¤¨à¤¿à¤•';
-      dateOpt = 'à¤¤à¤¿à¤¥à¤¿ à¤šà¥à¤¨à¥‡à¤‚';
-      timesLabel = 'à¤…à¤²à¤¾à¤°à¥à¤® à¤¸à¤®à¤¯ à¤šà¥à¤¨à¥‡à¤‚';
-      photoBtn = 'à¤¦à¤µà¤¾ à¤•à¥€ à¤¤à¤¸à¥à¤µà¥€à¤° à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
-      saveBtn = 'à¤¦à¤µà¤¾ à¤¸à¤¹à¥‡à¤œà¥‡à¤‚';
+      title = 'दवा जोड़ें';
+      nameLabel = 'दवा का नाम *';
+      dosageLabel = 'खुराक (जैसे 500mg) *';
+      repeatLabel = 'दोहराव पैटर्न';
+      dailyOpt = 'दैनिक';
+      dateOpt = 'तिथि चुनें';
+      timesLabel = 'रिमाइंडर समय चुनें';
+      photoBtn = 'दवा की तस्वीर जोड़ें';
+      saveBtn = 'दवा सहेजें';
     } else if (code == 'zh') {
-      title = 'æ·»åŠ è¯ç‰©';
-      nameLabel = 'è¯ç‰©åç§° *';
-      dosageLabel = 'å‰‚é‡ (ä¾‹å¦‚ 500mg) *';
-      qtyLabel = 'æ•°é‡ *';
-      repeatLabel = 'é‡å¤æ¨¡å¼';
-      dailyOpt = 'æ¯å¤©';
-      dateOpt = 'é€‰æ‹©æ—¥æœŸ';
-      timesLabel = 'é€‰æ‹©æé†’æ—¶é—´';
-      photoBtn = 'æ·»åŠ è¯ç‰©ç…§ç‰‡';
-      saveBtn = 'ä¿å­˜è¯ç‰©';
+      title = '添加药物';
+      nameLabel = '药物名称 *';
+      dosageLabel = '剂量（例如 500mg）*';
+      repeatLabel = '重复模式';
+      dailyOpt = '每天';
+      dateOpt = '选择日期';
+      timesLabel = '选择提醒时间';
+      photoBtn = '添加药物照片';
+      saveBtn = '保存药物';
     }
 
     return Scaffold(
@@ -350,6 +367,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // --------------------------------------------------
+              // NAME
+              // --------------------------------------------------
+
               TextFormField(
                 controller: _nameController,
                 enabled: !_isSaving,
@@ -369,11 +390,17 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 12),
+
+              // --------------------------------------------------
+              // DOSAGE
+              // --------------------------------------------------
+
               TextFormField(
                 controller: _dosageController,
                 enabled: !_isSaving,
-                textInputAction: TextInputAction.next,
+                textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
                   labelText: dosageLabel,
                   border: const OutlineInputBorder(),
@@ -389,31 +416,13 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _quantityController,
-                enabled: !_isSaving,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: qtyLabel,
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(
-                    Icons.numbers,
-                  ),
-                ),
-                validator: (value) {
-                  final quantity = int.tryParse(
-                    value?.trim() ?? '',
-                  );
 
-                  if (quantity == null || quantity <= 0) {
-                    return 'Enter a valid quantity';
-                  }
-
-                  return null;
-                },
-              ),
               const SizedBox(height: 16),
+
+              // --------------------------------------------------
+              // PHOTO
+              // --------------------------------------------------
+
               Row(
                 children: [
                   Expanded(
@@ -424,9 +433,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                         color: Colors.teal,
                       ),
                       label: Text(
-                        _photoButtonText(
-                          photoBtn,
-                        ),
+                        _photoButtonText(photoBtn),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -451,7 +458,13 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   ],
                 ],
               ),
+
               const SizedBox(height: 16),
+
+              // --------------------------------------------------
+              // REPEAT
+              // --------------------------------------------------
+
               Text(
                 repeatLabel,
                 style: const TextStyle(
@@ -459,7 +472,9 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   fontSize: 15,
                 ),
               ),
+
               const SizedBox(height: 8),
+
               Row(
                 children: [
                   Expanded(
@@ -505,7 +520,13 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
+
+              // --------------------------------------------------
+              // REMINDER TIMES
+              // --------------------------------------------------
+
               Text(
                 timesLabel,
                 style: const TextStyle(
@@ -513,7 +534,9 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   fontSize: 15,
                 ),
               ),
+
               const SizedBox(height: 8),
+
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -532,14 +555,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                               setState(() {
                                 if (value) {
                                   if (!_selectedTimes.contains(time)) {
-                                    _selectedTimes.add(
-                                      time,
-                                    );
+                                    _selectedTimes.add(time);
                                   }
                                 } else {
-                                  _selectedTimes.remove(
-                                    time,
-                                  );
+                                  _selectedTimes.remove(time);
                                 }
                               });
                             },
@@ -547,7 +566,13 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                   },
                 ).toList(),
               ),
+
               const SizedBox(height: 24),
+
+              // --------------------------------------------------
+              // SAVE
+              // --------------------------------------------------
+
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -582,11 +607,15 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     );
   }
 
+  // ============================================================
+  // DISPOSE
+  // ============================================================
+
   @override
   void dispose() {
     _nameController.dispose();
     _dosageController.dispose();
-    _quantityController.dispose();
+
     super.dispose();
   }
 }

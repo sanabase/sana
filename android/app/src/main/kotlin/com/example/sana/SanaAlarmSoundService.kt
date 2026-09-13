@@ -1,4 +1,4 @@
-package com.example.sana
+﻿package com.example.sana
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 class SanaAlarmSoundService : Service() {
 
     companion object {
+
         const val ACTION_START =
             "com.example.sana.action.START_ALARM"
 
@@ -23,7 +24,8 @@ class SanaAlarmSoundService : Service() {
         private const val CHANNEL_ID =
             "sana_alarm_service"
 
-        private const val NOTIFICATION_ID = 9701
+        private const val NOTIFICATION_ID =
+            9701
     }
 
     private var player: MediaPlayer? = null
@@ -40,7 +42,10 @@ class SanaAlarmSoundService : Service() {
     ): Int {
 
         when (intent?.action) {
-            ACTION_START -> startAlarm()
+
+            ACTION_START -> {
+                startAlarm()
+            }
 
             ACTION_STOP -> {
                 stopAlarm()
@@ -71,16 +76,20 @@ class SanaAlarmSoundService : Service() {
                 .setPriority(
                     NotificationCompat.PRIORITY_MAX
                 )
+                .setSilent(true)
                 .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+
             startForeground(
                 NOTIFICATION_ID,
                 notification,
                 android.content.pm.ServiceInfo
                     .FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
             )
+
         } else {
+
             startForeground(
                 NOTIFICATION_ID,
                 notification
@@ -126,25 +135,30 @@ class SanaAlarmSoundService : Service() {
     }
 
     private fun stopAlarm() {
+
         try {
             player?.stop()
-        } catch (_) {
+        } catch (_: Exception) {
         }
 
         player?.release()
         player = null
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
             stopForeground(
                 STOP_FOREGROUND_REMOVE
             )
+
         } else {
+
             @Suppress("DEPRECATION")
             stopForeground(true)
         }
     }
 
     private fun createChannel() {
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
             val manager =
@@ -152,12 +166,18 @@ class SanaAlarmSoundService : Service() {
                     NotificationManager::class.java
                 )
 
-            manager.createNotificationChannel(
+            val channel =
                 NotificationChannel(
                     CHANNEL_ID,
                     "SANA Alarm",
                     NotificationManager.IMPORTANCE_HIGH
                 )
+
+            channel.setSound(null, null)
+            channel.enableVibration(false)
+
+            manager.createNotificationChannel(
+                channel
             )
         }
     }

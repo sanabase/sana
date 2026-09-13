@@ -1,11 +1,10 @@
-﻿class InsuranceCard {
+class InsuranceCard {
   final String? id;
   final String providerName;
   final String policyNumber;
   final String? frontImageUrl;
   final String? backImageUrl;
   final String? userId;
-  final String? guestId;
   final String? createdAt;
 
   const InsuranceCard({
@@ -15,7 +14,6 @@
     this.frontImageUrl,
     this.backImageUrl,
     this.userId,
-    this.guestId,
     this.createdAt,
   });
 
@@ -47,18 +45,16 @@
       userId: _nullableString(
         map['user_id'] ?? map['userId'],
       ),
-      guestId: _nullableString(
-        map['guest_id'] ?? map['guestId'],
-      ),
       createdAt: _nullableString(
         map['created_at'] ?? map['createdAt'],
       ),
     );
   }
 
+  /// ONLY fields that actually belong to the Supabase
+  /// insurance_cards table.
   Map<String, dynamic> toSupabaseMap({
-    String? userId,
-    String? guestId,
+    required String userId,
   }) {
     final map = <String, dynamic>{
       'provider_name': providerName,
@@ -66,9 +62,9 @@
       'front_image_url': frontImageUrl,
       'back_image_url': backImageUrl,
       'user_id': userId,
-      'guest_id': guestId,
     };
 
+    // Don't send id if Supabase generates it.
     if (id != null && id!.trim().isNotEmpty) {
       map['id'] = id;
     }
@@ -88,7 +84,6 @@
       'front_image_url': frontImageUrl,
       'back_image_url': backImageUrl,
       'user_id': userId,
-      'guest_id': guestId,
       'created_at': createdAt,
     };
   }
@@ -102,7 +97,6 @@
     String? frontImageUrl,
     String? backImageUrl,
     String? userId,
-    String? guestId,
     String? createdAt,
   }) {
     return InsuranceCard(
@@ -112,7 +106,6 @@
       frontImageUrl: frontImageUrl ?? this.frontImageUrl,
       backImageUrl: backImageUrl ?? this.backImageUrl,
       userId: userId ?? this.userId,
-      guestId: guestId ?? this.guestId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -131,9 +124,12 @@
   }
 
   static String? _nullableString(dynamic value) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
 
     final result = value.toString().trim();
+
     return result.isEmpty ? null : result;
   }
 }

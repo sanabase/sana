@@ -166,7 +166,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
   List<Map<String, dynamic>> _rows = [];
   bool _loading = true;
 
-  String get _table => widget.type == 'reminders' ? 'medications' : widget.type;
+  String get _table => widget.type;
 
   @override
   void initState() {
@@ -355,7 +355,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
     final photo = row['photo_url'] ?? row['front_image_url'];
     final base64Photo = row['photo_base64'];
     final url = row['file_url'];
-    final String language = languageNotifier.value;
+    languageNotifier.value;
 
     await showDialog<void>(
       context: context,

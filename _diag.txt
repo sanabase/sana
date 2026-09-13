@@ -1,0 +1,186 @@
+﻿=== pubspec.yaml ===
+  supabase_flutter: ^2.9.1
+  flutter_local_notifications: 22.2.0
+  timezone: 0.11.1
+  flutter_timezone: ^4.1.1
+  image_picker: ^1.2.0
+  share_plus: ^11.1.0
+
+=== android/app/build.gradle ===
+    namespace = "com.example.sana"
+    compileSdk = flutter.compileSdkVersion
+        applicationId = "com.example.sana"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        release {
+            signingConfig = signingConfigs.debug
+
+=== android/build.gradle ===
+        classpath 'com.android.tools.build:gradle:8.9.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0"
+
+=== settings.gradle ===
+    def flutterSdkPath = localProperties.getProperty("flutter.sdk")
+    assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+    includeBuild("${flutterSdkPath}/packages/flutter_tools/gradle")
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "com.android.application" version "8.9.1" apply false
+    id "org.jetbrains.kotlin.android" version "2.1.0" apply false
+
+=== AndroidManifest.xml ===
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <application
+        android:label="sana"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
+
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- flutter_local_notifications: notification actions -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
+            android:exported="false" />
+
+        <!-- flutter_local_notifications: scheduled notifications -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
+
+        <!-- flutter_local_notifications: restore scheduled notifications after reboot/update -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+
+        </receiver>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
+    </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
+
+</manifest>
+
+=== MainActivity ===
+package com.example.sana
+
+import android.content.Intent
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+class MainActivity: FlutterActivity() {
+
+    private val channelName = "sana/alarm"
+
+    override fun configureFlutterEngine(
+        flutterEngine: FlutterEngine
+    ) {
+        super.configureFlutterEngine(flutterEngine)
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            channelName
+        ).setMethodCallHandler { call, result ->
+
+            when (call.method) {
+                "startAlarmSound" -> {
+                    val intent = Intent(
+                        this,
+                        SanaAlarmSoundService::class.java
+                    ).setAction(
+                        SanaAlarmSoundService.ACTION_START
+                    )
+
+                    startForegroundService(intent)
+
+                    result.success(null)
+                }
+
+                "stopAlarmSound" -> {
+                    val intent = Intent(
+                        this,
+                        SanaAlarmSoundService::class.java
+                    ).setAction(
+                        SanaAlarmSoundService.ACTION_STOP
+                    )
+
+                    startService(intent)
+
+                    result.success(null)
+                }
+
+                else -> result.notImplemented()
+            }
+        }
+    }
+}
+
+=== proguard-rules.pro ===
+proguard-rules.pro not found
+
+=== gradle.properties ===
+org.gradle.jvmargs=-Xmx4G
+android.useAndroidX=true
+android.enableJetifier=true
+org.gradle.java.home=C:/Program Files/Microsoft/jdk-17.0.20.8-hotspot
+# This builtInKotlin flag was added automatically by Flutter migrator
+android.builtInKotlin=false
+# This newDsl flag was added automatically by Flutter migrator
+android.newDsl=false
+
+kotlin.incremental=false
+kotlin.compiler.execution.strategy=in-process
+org.gradle.jvmargs=-Xmx2048m

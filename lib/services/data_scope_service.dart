@@ -1,6 +1,6 @@
 ﻿import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'user_identity_service.dart';
+import 'guest_identity_service.dart';
 
 enum DataScopeMode {
   guest,
@@ -38,13 +38,13 @@ class DataScopeService {
   static String? get userId => _db.auth.currentUser?.id;
 
   static Future<String> ownerId() async {
-    final currentUser = _db.auth.currentUser;
+    final user = _db.auth.currentUser;
 
-    if (currentUser == null) {
-      return GuestIdentityService.getGuestId();
+    if (user != null) {
+      return user.id;
     }
 
-    return currentUser.id;
+    return GuestIdentityService.getGuestId();
   }
 
   static Future<String?> guestId() async {
@@ -56,25 +56,25 @@ class DataScopeService {
   }
 
   static Future<Map<String, dynamic>> scope() async {
-    final currentUser = _db.auth.currentUser;
+    final user = _db.auth.currentUser;
 
-    if (currentUser == null) {
+    if (user == null) {
+      final guestId = await GuestIdentityService.getGuestId();
+
       return {
         'mode': DataScopeMode.guest.name,
-        'user_id': GuestIdentityService.sharedGuestId,
+        'user_id': null,
+        'guest_id': guestId,
       };
     }
 
     return {
       'mode':
           isAdmin ? DataScopeMode.admin.name : DataScopeMode.activeUser.name,
-      'user_id': currentUser.id,
+      'user_id': user.id,
+      'guest_id': null,
     };
   }
 
-  static Future<void> reset() async {
-    // Scope is resolved directly from the current Supabase
-    // authentication session, so no persistent scope state
-    // needs to be cleared here.
-  }
+  static Future<void> reset() async {}
 }
