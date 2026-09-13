@@ -7274,8 +7274,15 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   final _client = Supabase.instance.client;
+  final ScrollController _horizontalController = ScrollController();
   List<Map<String, dynamic>> _users = [];
   bool _loading = true;
+
+  @override
+  void dispose() {
+    _horizontalController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -7509,7 +7516,10 @@ class _AdminScreenState extends State<AdminScreen> {
                       height: constraints.maxHeight,
                       child: Scrollbar(
                         thumbVisibility: true,
+                        controller: _horizontalController,
+                        scrollbarOrientation: ScrollbarOrientation.bottom,
                         child: SingleChildScrollView(
+                          controller: _horizontalController,
                           scrollDirection: Axis.horizontal,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.vertical,
