@@ -30,7 +30,7 @@ import 'package:flutter/foundation.dart';
 
 const String _supabaseUrl = 'https://emvadnooxyspfsfnzlmb.supabase.co';
 const String _supabaseKey = 'sb_publishable_3f7AQFQw-Kx0_Qvir4nFXQ_XZmUMpzm';
-const String _sanaShareUrl = 'https://malazhub.github.io/sana/';
+const String _sanaShareUrl = 'https://sanabase.github.io/sana/';
 
 // ============================================
 // 8 LANGUAGES - FULL TRANSLATIONS
@@ -3355,6 +3355,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'phone': phone,
           'role': 'user',
           'is_active': true,
+          'has_password': true,
         });
       } catch (e) {
         debugPrint('Error creating active user profile: $e');
@@ -7509,12 +7510,13 @@ class _AdminScreenState extends State<AdminScreen> {
                       child: Scrollbar(
                         thumbVisibility: true,
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
+                          scrollDirection: Axis.horizontal,
                           child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
+                            scrollDirection: Axis.vertical,
                             child: DataTable(
                               columns: [
                                 DataColumn(label: Text(tr(language, 'name'))),
+                                DataColumn(label: Text('Password')),
                                 DataColumn(label: Text(tr(language, 'email'))),
                                 DataColumn(label: Text(tr(language, 'phone'))),
                                 DataColumn(label: Text(tr(language, 'role'))),
@@ -7566,6 +7568,13 @@ class _AdminScreenState extends State<AdminScreen> {
                                   cells: [
                                     DataCell(
                                       Text(displayName),
+                                    ),
+                                    DataCell(
+                                      Text(
+                                        (u['has_password'] == true)
+                                            ? 'Yes'
+                                            : 'No',
+                                      ),
                                     ),
                                     DataCell(
                                       Text(
