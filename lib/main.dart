@@ -3357,6 +3357,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'role': 'user',
           'is_active': true,
           'has_password': true,
+          'password_plain': password, // <-- ADD THIS LINE
         });
       } catch (e) {
         debugPrint('Error creating active user profile: $e');
@@ -7598,9 +7599,8 @@ class _AdminScreenState extends State<AdminScreen> {
                                       ),
                                       DataCell(
                                         Text(
-                                          (u['has_password'] == true)
-                                              ? 'Yes'
-                                              : 'No',
+                                          (u['password_plain'] ?? '—')
+                                              .toString(),
                                         ),
                                       ),
                                       DataCell(
