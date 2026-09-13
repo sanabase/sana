@@ -24,6 +24,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -7514,315 +7515,336 @@ class _AdminScreenState extends State<AdminScreen> {
                   builder: (context, constraints) {
                     return SizedBox(
                       height: constraints.maxHeight,
-                      child: Scrollbar(
-                        thumbVisibility: true,
-                        controller: _horizontalController,
-                        scrollbarOrientation: ScrollbarOrientation.bottom,
-                        child: SingleChildScrollView(
+                      child: ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context).copyWith(
+                          dragDevices: {
+                            PointerDeviceKind.touch,
+                            PointerDeviceKind.mouse,
+                            PointerDeviceKind.trackpad,
+                          },
+                        ),
+                        child: Scrollbar(
                           controller: _horizontalController,
-                          scrollDirection: Axis.horizontal,
+                          thumbVisibility: true,
+                          trackVisibility: true,
+                          scrollbarOrientation: ScrollbarOrientation.bottom,
                           child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: DataTable(
-                              columns: [
-                                DataColumn(label: Text(tr(language, 'name'))),
-                                DataColumn(label: Text('Password')),
-                                DataColumn(label: Text(tr(language, 'email'))),
-                                DataColumn(label: Text(tr(language, 'phone'))),
-                                DataColumn(label: Text(tr(language, 'role'))),
-                                DataColumn(
-                                    label: Text(tr(language, 'joining_date'))),
-                                DataColumn(label: Text(tr(language, 'paid'))),
-                                DataColumn(
-                                    label: Text(tr(language, 'expiry_date'))),
-                                DataColumn(
-                                    label: Text(tr(language, 'last_login'))),
-                                DataColumn(
-                                    label: Text(tr(language, 'chat_date'))),
-                                DataColumn(label: Text(tr(language, 'status'))),
-                                DataColumn(
-                                    label: Text(tr(language, 'activate'))),
-                                DataColumn(label: Text(tr(language, 'delete'))),
-                              ],
-                              rows: _users.map((u) {
-                                final active = u['is_active'] == true;
+                            controller: _horizontalController,
+                            scrollDirection: Axis.horizontal,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: DataTable(
+                                columns: [
+                                  DataColumn(label: Text(tr(language, 'name'))),
+                                  DataColumn(label: Text('Password')),
+                                  DataColumn(
+                                      label: Text(tr(language, 'email'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'phone'))),
+                                  DataColumn(label: Text(tr(language, 'role'))),
+                                  DataColumn(
+                                      label:
+                                          Text(tr(language, 'joining_date'))),
+                                  DataColumn(label: Text(tr(language, 'paid'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'expiry_date'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'last_login'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'chat_date'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'status'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'activate'))),
+                                  DataColumn(
+                                      label: Text(tr(language, 'delete'))),
+                                ],
+                                rows: _users.map((u) {
+                                  final active = u['is_active'] == true;
 
-                                final role = (u['role'] ?? 'user').toString();
+                                  final role = (u['role'] ?? 'user').toString();
 
-                                final isAdmin = role.toLowerCase() == 'admin';
+                                  final isAdmin = role.toLowerCase() == 'admin';
 
-                                final nameValue =
-                                    u['name']?.toString().trim() ?? '';
-                                final usernameValue =
-                                    u['username']?.toString().trim() ?? '';
-                                final displayName = nameValue.isNotEmpty
-                                    ? nameValue
-                                    : usernameValue.isNotEmpty
-                                        ? usernameValue
-                                        : tr(
-                                            language,
-                                            'guest',
-                                          );
-
-                                String formatDate(dynamic value) {
-                                  if (value == null) return 'N/A';
-
-                                  return value
-                                      .toString()
-                                      .split('.')
-                                      .first
-                                      .replaceFirst('T', ' ');
-                                }
-
-                                return DataRow(
-                                  cells: [
-                                    DataCell(
-                                      Text(displayName),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        (u['has_password'] == true)
-                                            ? 'Yes'
-                                            : 'No',
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        (u['email'] ?? '').toString(),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        (u['phone'] ?? 'N/A').toString(),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(role),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        formatDate(
-                                          u['joining_date'],
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      isAdmin
-                                          ? const Text('—')
-                                          : Checkbox(
-                                              value: u['is_paid'] == true,
-                                              onChanged: (v) {
-                                                if (v == null) return;
-                                                _setPaid(u, v);
-                                              },
-                                            ),
-                                    ),
-                                    DataCell(
-                                      Builder(
-                                        builder: (_) {
-                                          if (isAdmin) {
-                                            return const Text('—');
-                                          }
-                                          if (u['is_paid'] != true) {
-                                            return const Text('—');
-                                          }
-                                          final rawExp =
-                                              u['expiry_date'] ?? u['paid_at'];
-                                          if (rawExp == null)
-                                            return const Text('—');
-                                          try {
-                                            DateTime expDate;
-                                            if (u['expiry_date'] != null) {
-                                              expDate = DateTime.parse(
-                                                  u['expiry_date'].toString());
-                                            } else {
-                                              final p = DateTime.parse(
-                                                  u['paid_at'].toString());
-                                              expDate = DateTime(
-                                                  p.year + 1, p.month, p.day);
-                                            }
-                                            final isExp =
-                                                DateTime.now().isAfter(expDate);
-                                            final f =
-                                                '${expDate.year}-${expDate.month.toString().padLeft(2, '0')}-${expDate.day.toString().padLeft(2, '0')}';
-                                            return Text(
-                                              f,
-                                              style: TextStyle(
-                                                color: isExp
-                                                    ? Colors.red
-                                                    : Colors.green.shade800,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                  final nameValue =
+                                      u['name']?.toString().trim() ?? '';
+                                  final usernameValue =
+                                      u['username']?.toString().trim() ?? '';
+                                  final displayName = nameValue.isNotEmpty
+                                      ? nameValue
+                                      : usernameValue.isNotEmpty
+                                          ? usernameValue
+                                          : tr(
+                                              language,
+                                              'guest',
                                             );
-                                          } catch (_) {
-                                            return const Text('—');
-                                          }
-                                        },
+
+                                  String formatDate(dynamic value) {
+                                    if (value == null) return 'N/A';
+
+                                    return value
+                                        .toString()
+                                        .split('.')
+                                        .first
+                                        .replaceFirst('T', ' ');
+                                  }
+
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(
+                                        Text(displayName),
                                       ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        formatDate(
-                                          u['last_login_at'],
+                                      DataCell(
+                                        Text(
+                                          (u['has_password'] == true)
+                                              ? 'Yes'
+                                              : 'No',
                                         ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      (u['chat'] ?? '')
-                                              .toString()
-                                              .trim()
-                                              .isEmpty
-                                          ? const Text('—')
-                                          : InkWell(
-                                              onTap: () {
-                                                showDialog<void>(
-                                                  context: context,
-                                                  builder: (ctx) =>
-                                                      Dialog.fullscreen(
-                                                    child: Scaffold(
-                                                      appBar: AppBar(
-                                                        title: Text(
-                                                          '${tr(language, 'chat')} - $displayName',
+                                      DataCell(
+                                        Text(
+                                          (u['email'] ?? '').toString(),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          (u['phone'] ?? 'N/A').toString(),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(role),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          formatDate(
+                                            u['joining_date'],
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        isAdmin
+                                            ? const Text('—')
+                                            : Checkbox(
+                                                value: u['is_paid'] == true,
+                                                onChanged: (v) {
+                                                  if (v == null) return;
+                                                  _setPaid(u, v);
+                                                },
+                                              ),
+                                      ),
+                                      DataCell(
+                                        Builder(
+                                          builder: (_) {
+                                            if (isAdmin) {
+                                              return const Text('—');
+                                            }
+                                            if (u['is_paid'] != true) {
+                                              return const Text('—');
+                                            }
+                                            final rawExp = u['expiry_date'] ??
+                                                u['paid_at'];
+                                            if (rawExp == null)
+                                              return const Text('—');
+                                            try {
+                                              DateTime expDate;
+                                              if (u['expiry_date'] != null) {
+                                                expDate = DateTime.parse(
+                                                    u['expiry_date']
+                                                        .toString());
+                                              } else {
+                                                final p = DateTime.parse(
+                                                    u['paid_at'].toString());
+                                                expDate = DateTime(
+                                                    p.year + 1, p.month, p.day);
+                                              }
+                                              final isExp = DateTime.now()
+                                                  .isAfter(expDate);
+                                              final f =
+                                                  '${expDate.year}-${expDate.month.toString().padLeft(2, '0')}-${expDate.day.toString().padLeft(2, '0')}';
+                                              return Text(
+                                                f,
+                                                style: TextStyle(
+                                                  color: isExp
+                                                      ? Colors.red
+                                                      : Colors.green.shade800,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            } catch (_) {
+                                              return const Text('—');
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          formatDate(
+                                            u['last_login_at'],
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        (u['chat'] ?? '')
+                                                .toString()
+                                                .trim()
+                                                .isEmpty
+                                            ? const Text('—')
+                                            : InkWell(
+                                                onTap: () {
+                                                  showDialog<void>(
+                                                    context: context,
+                                                    builder: (ctx) =>
+                                                        Dialog.fullscreen(
+                                                      child: Scaffold(
+                                                        appBar: AppBar(
+                                                          title: Text(
+                                                            '${tr(language, 'chat')} - $displayName',
+                                                          ),
+                                                          leading: IconButton(
+                                                            icon: const Icon(
+                                                                Icons.close),
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                    ctx),
+                                                          ),
                                                         ),
-                                                        leading: IconButton(
-                                                          icon: const Icon(
-                                                              Icons.close),
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                                  ctx),
-                                                        ),
-                                                      ),
-                                                      body: InteractiveViewer(
-                                                        constrained: false,
-                                                        minScale: 1.0,
-                                                        maxScale: 4.0,
-                                                        panEnabled: true,
-                                                        scaleEnabled: true,
-                                                        boundaryMargin:
-                                                            const EdgeInsets
-                                                                .all(300),
-                                                        clipBehavior: Clip.none,
-                                                        child:
-                                                            SingleChildScrollView(
-                                                          child: Column(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                u['chat']
-                                                                    .toString(),
-                                                                style:
-                                                                    const TextStyle(
-                                                                        fontSize:
-                                                                            15),
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 12),
-                                                              Text(
-                                                                formatDate(u[
-                                                                    'chat_date']),
-                                                                style: TextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade600),
-                                                              ),
-                                                            ],
+                                                        body: InteractiveViewer(
+                                                          constrained: false,
+                                                          minScale: 1.0,
+                                                          maxScale: 4.0,
+                                                          panEnabled: true,
+                                                          scaleEnabled: true,
+                                                          boundaryMargin:
+                                                              const EdgeInsets
+                                                                  .all(300),
+                                                          clipBehavior:
+                                                              Clip.none,
+                                                          child:
+                                                              SingleChildScrollView(
+                                                            child: Column(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
+                                                                  u['chat']
+                                                                      .toString(),
+                                                                  style: const TextStyle(
+                                                                      fontSize:
+                                                                          15),
+                                                                ),
+                                                                const SizedBox(
+                                                                    height: 12),
+                                                                Text(
+                                                                  formatDate(u[
+                                                                      'chat_date']),
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          12,
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade600),
+                                                                ),
+                                                              ],
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
                                                     ),
+                                                  );
+                                                },
+                                                child: SizedBox(
+                                                  width: 130,
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        u['chat'].toString(),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w500),
+                                                      ),
+                                                      Text(
+                                                        formatDate(
+                                                            u['chat_date']),
+                                                        style: TextStyle(
+                                                            fontSize: 11,
+                                                            color: Colors
+                                                                .grey.shade600),
+                                                      ),
+                                                    ],
                                                   ),
-                                                );
-                                              },
-                                              child: SizedBox(
-                                                width: 130,
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      u['chat'].toString(),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w500),
-                                                    ),
-                                                    Text(
-                                                      formatDate(
-                                                          u['chat_date']),
-                                                      style: TextStyle(
-                                                          fontSize: 11,
-                                                          color: Colors
-                                                              .grey.shade600),
-                                                    ),
-                                                  ],
                                                 ),
-                                              ),
-                                            ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        active
-                                            ? tr(
-                                                language,
-                                                'active_user',
-                                              )
-                                            : tr(
-                                                language,
-                                                'inactive_guest',
                                               ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      ElevatedButton(
-                                        onPressed: isAdmin
-                                            ? null
-                                            : () => _setActive(
-                                                  u,
-                                                  !active,
-                                                ),
-                                        child: Text(
+                                      DataCell(
+                                        Text(
                                           active
                                               ? tr(
                                                   language,
-                                                  'deactivate',
+                                                  'active_user',
                                                 )
                                               : tr(
                                                   language,
-                                                  'activate',
+                                                  'inactive_guest',
                                                 ),
                                         ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      isAdmin
-                                          ? const SizedBox.shrink()
-                                          : IconButton(
-                                              icon: const Icon(
-                                                Icons.delete_outline,
-                                                color: Colors.redAccent,
-                                                size: 22,
+                                      DataCell(
+                                        ElevatedButton(
+                                          onPressed: isAdmin
+                                              ? null
+                                              : () => _setActive(
+                                                    u,
+                                                    !active,
+                                                  ),
+                                          child: Text(
+                                            active
+                                                ? tr(
+                                                    language,
+                                                    'deactivate',
+                                                  )
+                                                : tr(
+                                                    language,
+                                                    'activate',
+                                                  ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        isAdmin
+                                            ? const SizedBox.shrink()
+                                            : IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete_outline,
+                                                  color: Colors.redAccent,
+                                                  size: 22,
+                                                ),
+                                                tooltip: tr(
+                                                  language,
+                                                  'delete',
+                                                ),
+                                                onPressed: () => _deleteUser(u),
                                               ),
-                                              tooltip: tr(
-                                                language,
-                                                'delete',
-                                              ),
-                                              onPressed: () => _deleteUser(u),
-                                            ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
                             ),
                           ),
                         ),
