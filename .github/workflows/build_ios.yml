@@ -20,8 +20,14 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Configure iOS Pods
+        run: |
+          flutter build ios --config-only
+          cd ios
+          pod install
+
       - name: Build iOS
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --verbose
 
       - name: Upload iOS Runner Artifact
         uses: actions/upload-artifact@v4
