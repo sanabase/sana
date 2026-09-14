@@ -22,15 +22,15 @@ jobs:
 
       - name: Configure iOS Pods
         run: |
-          flutter build ios --config-only
+          flutter build ios --config-only --no-codesign
           cd ios
           pod install
 
       - name: Build iOS
-        run: flutter build ios --release --no-codesign --verbose
+        run: flutter build ios --simulator --no-codesign --verbose
 
       - name: Upload iOS Runner Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SANA-iOS-Runner
-          path: build/ios/iphoneos/Runner.app
+          path: build/ios/iphonesimulator/Runner.app
