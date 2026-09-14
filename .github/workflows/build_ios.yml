@@ -1,4 +1,4 @@
-name: Build SANA iOS - Cloud Validation
+﻿name: Build SANA iOS - Cloud Validation
 
 on:
   workflow_dispatch:
@@ -10,6 +10,17 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: |
+          XCODE_PATH="$(find /Applications -maxdepth 1 -type d -name 'Xcode_16*.app' | sort -V | tail -n 1)"
+          if [ -z "$XCODE_PATH" ]; then
+            echo "Xcode 16 was not found."
+            ls -1 /Applications | grep -i '^Xcode' || true
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          xcodebuild -version
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
