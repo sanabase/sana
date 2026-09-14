@@ -36,8 +36,34 @@ const String _sanaShareUrl = 'https://sanabase.github.io/sana/';
 // ============================================
 // 8 LANGUAGES - FULL TRANSLATIONS
 // ============================================
+const List<String> _supportedLangCodes = <String>[
+  'en',
+  'ar',
+  'es',
+  'fr',
+  'de',
+  'tr',
+  'hi',
+  'zh',
+];
 
-final ValueNotifier<String> languageNotifier = ValueNotifier<String>('en');
+String _detectStartupLanguage() {
+  try {
+    final deviceLanguage =
+        ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase();
+
+    if (_supportedLangCodes.contains(deviceLanguage)) {
+      return deviceLanguage;
+    }
+  } catch (_) {
+    // Fall back to English if the platform language cannot be read.
+  }
+
+  return 'en';
+}
+
+final ValueNotifier<String> languageNotifier =
+    ValueNotifier<String>(_detectStartupLanguage());
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -616,6 +642,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'View',
     'close': 'Close',
     'share': 'Share',
+    'install_app': 'Install App',
     'help': 'Help',
     'call': 'Call',
     'chat': 'Chat',
@@ -754,7 +781,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Share Documents',
     'manual_title': 'SANA Medical Pocket Book',
     'manual_content':
-        '1. Manage your health records securely in one place.\n2. Add and track daily prescriptions and dosages in Medications.\n3. Keep your doctor contact info and specialty notes handy.\n4. Save your preferred pharmacies with phone and location.\n5. Set multi-time dosage reminders with alerts.\n6. Store medical documents and lab reports with photos.\n7. Keep front and back photos of your insurance cards.\n8. Select and share records with your doctors anytime.',
+        '1. Securely manage your health records on the web, and access your data any time, anywhere and from any device.\n2. Add and track daily prescriptions and dosages in Medications.\n3. Keep your doctor contact info and specialty notes handy.\n4. Save your preferred pharmacies with phone and location.\n5. Set multi-time dosage reminders with alerts.\n6. Store medical documents and lab reports with photos.\n7. Keep front and back photos of your insurance cards.\n8. Select and share records with your doctors anytime.\n9. Install the application on your device to get all features and activate medication alarms.\n10. Get your own private, dedicated copy that is invisible to anyone else.',
     'taken': 'Taken',
     'alarm': 'Medication Alarm',
     'daily_reminders': 'Daily Reminders',
@@ -767,6 +794,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'عرض',
     'close': 'إغلاق',
     'share': 'مشاركة',
+    'install_app': 'تثبيت التطبيق',
     'help': 'مساعدة',
     'call': 'اتصال',
     'chat': 'محادثة',
@@ -906,7 +934,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'مشاركة المستندات',
     'manual_title': 'دليل سانا الطبي للجيب',
     'manual_content':
-        '1. إدارة سجلاتك الطبية بأمان في مكان واحد.\n2. إضافة وتتبع الأدوية اليومية والجرعات.\n3. الاحتفاظ بأرقام الأطباء وتخصصاتهم.\n4. حفظ الصيدليات المفضلة مع العناوين والهواتف.\n5. تعيين تذكيرات بمواعيد تناول الدواء.\n6. حفظ المستندات والتقارير الطبية مع الصور.\n7. حفظ صور بطاقات التأمين من الأمام والخلف.\n8. تحديد ومشاركة السجلات مع الأطباء بسهولة.',
+        '1. أدر سجلاتك الصحية بأمان عبر الويب، وتمكّن من الوصول إلى بياناتك في أي وقت ومن أي مكان ومن أي جهاز.\n2. إضافة وتتبع الأدوية اليومية والجرعات.\n3. الاحتفاظ بأرقام الأطباء وتخصصاتهم.\n4. حفظ الصيدليات المفضلة مع العناوين والهواتف.\n5. تعيين تذكيرات بمواعيد تناول الدواء مع التنبيهات.\n6. حفظ المستندات والتقارير الطبية مع الصور.\n7. حفظ صور بطاقات التأمين من الأمام والخلف.\n8. تحديد ومشاركة السجلات مع أطبائك في أي وقت.\n9. ثبّت التطبيق على جهازك للحصول على جميع الميزات وتفعيل منبهات الأدوية.\n10. احصل على نسختك الخاصة والمخصصة، والتي لا يمكن لأي شخص آخر رؤيتها.',
     'taken': 'تم تناول الدواء',
     'alarm': 'منبه الدواء',
     'daily_reminders': 'التذكيرات اليومية',
@@ -919,6 +947,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'Ver',
     'close': 'Cerrar',
     'share': 'Compartir',
+    'install_app': 'Instalar aplicación',
     'help': 'Ayuda',
     'call': 'Llamar',
     'chat': 'Chat',
@@ -1060,7 +1089,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Compartir documentos',
     'manual_title': 'Guía médica de bolsillo SANA',
     'manual_content':
-        '1. Gestione su salud de forma segura en un solo lugar.\n2. Registre medicamentos diarios y dosis exactas.\n3. Guarde contactos y especialidades de sus médicos.\n4. Guarde farmacias con dirección y teléfono.\n5. Configure recordatorios con múltiples horarios.\n6. Guarde documentos e informes médicos con fotos.\n7. Guarde fotos del anverso y reverso de tarjetas de seguro.\n8. Seleccione y comparta sus registros con su médico.',
+        '1. Gestione de forma segura sus registros de salud en la web y acceda a sus datos en cualquier momento, desde cualquier lugar y desde cualquier dispositivo.\n2. Registre medicamentos diarios y dosis exactas.\n3. Guarde contactos y especialidades de sus médicos.\n4. Guarde farmacias con dirección y teléfono.\n5. Configure recordatorios con múltiples horarios y alertas.\n6. Guarde documentos e informes médicos con fotos.\n7. Guarde fotos del anverso y reverso de tarjetas de seguro.\n8. Seleccione y comparta sus registros con su médico en cualquier momento.\n9. Instale la aplicación en su dispositivo para obtener todas las funciones y activar las alarmas de medicación.\n10. Obtenga su propia copia privada y dedicada, invisible para cualquier otra persona.',
     'taken': 'Tomado',
     'alarm': 'Alarma de medicamento',
     'daily_reminders': 'Recordatorios diarios',
@@ -1073,6 +1102,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'Voir',
     'close': 'Fermer',
     'share': 'Partager',
+    'install_app': 'Installer l\'application',
     'help': 'Aide',
     'call': 'Appeler',
     'chat': 'Discussion',
@@ -1215,7 +1245,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Partager les documents',
     'manual_title': 'Guide médical de poche SANA',
     'manual_content':
-        '1. Gérez vos dossiers de santé en toute sécurité au même endroit.\n2. Ajoutez et suivez les médicaments quotidiens et les dosages.\n3. Conservez les coordonnées et spécialités de vos médecins.\n4. Enregistrez vos pharmacies préférées avec adresses et téléphones.\n5. Configurez des rappels pour les heures de prise des médicaments.\n6. Conservez les documents et rapports médicaux avec des photos.\n7. Conservez les photos recto et verso de vos cartes d’assurance.\n8. Sélectionnez et partagez facilement vos dossiers avec vos médecins.',
+        '1. Gérez vos dossiers de santé en toute sécurité sur le web et accédez à vos données à tout moment, où que vous soyez et depuis n\'importe quel appareil.\n2. Ajoutez et suivez les médicaments quotidiens et les dosages.\n3. Conservez les coordonnées et spécialités de vos médecins.\n4. Enregistrez vos pharmacies préférées avec adresses et téléphones.\n5. Configurez des rappels pour les heures de prise des médicaments avec alertes.\n6. Conservez les documents et rapports médicaux avec des photos.\n7. Conservez les photos recto et verso de vos cartes d\'assurance.\n8. Sélectionnez et partagez facilement vos dossiers avec vos médecins à tout moment.\n9. Installez l\'application sur votre appareil pour bénéficier de toutes les fonctionnalités et activer les alarmes de médicaments.\n10. Obtenez votre propre copie privée et dédiée, invisible pour toute autre personne.',
     'taken': 'Pris',
     'alarm': 'Alarme de médicament',
     'daily_reminders': 'Rappels quotidiens',
@@ -1228,6 +1258,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'Anzeigen',
     'close': 'Schließen',
     'share': 'Teilen',
+    'install_app': 'App installieren',
     'help': 'Hilfe',
     'call': 'Anrufen',
     'chat': 'Chat',
@@ -1369,7 +1400,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Dokumente teilen',
     'manual_title': 'SANA Medizinisches Taschenbuch',
     'manual_content':
-        '1. Verwalten Sie Ihre Gesundheitsdaten sicher an einem Ort.\n2. Verfolgen Sie tägliche Medikamente und Dosierungen.\n3. Speichern Sie Kontaktdaten Ihrer Ärzte und Fachgebiete.\n4. Speichern Sie Apotheken mit Adresse und Telefonnummer.\n5. Stellen Sie Erinnerungen für die Medikamenteneinnahme ein.\n6. Speichern Sie medizinische Dokumente und Berichte mit Fotos.\n7. Speichern Sie Vorder- und Rückseite Ihrer Versicherungskarten.\n8. Wählen Sie Datensätze aus und teilen Sie diese mit Ihrem Arzt.',
+        '1. Verwalten Sie Ihre Gesundheitsdaten sicher im Web und greifen Sie jederzeit, überall und von jedem Gerät auf Ihre Daten zu.\n2. Verfolgen Sie tägliche Medikamente und Dosierungen.\n3. Speichern Sie Kontaktdaten Ihrer Ärzte und Fachgebiete.\n4. Speichern Sie Apotheken mit Adresse und Telefonnummer.\n5. Stellen Sie Erinnerungen für die Medikamenteneinnahme mit Alarm ein.\n6. Speichern Sie medizinische Dokumente und Berichte mit Fotos.\n7. Speichern Sie Vorder- und Rückseite Ihrer Versicherungskarten.\n8. Wählen Sie Datensätze aus und teilen Sie diese jederzeit mit Ihrem Arzt.\n9. Installieren Sie die App auf Ihrem Gerät, um alle Funktionen zu nutzen und Medikamentenalarme zu aktivieren.\n10. Erhalten Sie Ihre eigene private, persönliche Kopie, die für niemand anderen sichtbar ist.',
     'taken': 'Eingenommen',
     'alarm': 'Medikamenten-Alarm',
     'daily_reminders': 'Tägliche Erinnerungen',
@@ -1382,6 +1413,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'Görüntüle',
     'close': 'Kapat',
     'share': 'Paylaş',
+    'install_app': 'Uygulamayı yükle',
     'help': 'Yardım',
     'call': 'Ara',
     'chat': 'Sohbet',
@@ -1523,7 +1555,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Belgeleri Paylaş',
     'manual_title': 'SANA Cep Sağlık Rehberi',
     'manual_content':
-        '1. Sağlık kayıtlarınızı tek bir yerden güvenle yönetin.\n2. Günlük ilaçlarınızı ve dozajlarınızı takip edin.\n3. Doktor iletişim ve uzmanlık bilgilerini kaydedin.\n4. Eczaneleri telefon ve adres bilgileriyle saklayın.\n5. Çoklu saat seçenekleriyle ilaç hatırlatıcıları kurun.\n6. Tıbbi rapor ve belgelerinizi fotoğraflarla kaydedin.\n7. Sigorta kartlarınızın ön ve arka fotoğraflarını saklayın.\n8. Kayıtlarınızı seçerek dilediğiniz zaman doktorunuzla paylaşın.',
+        '1. Sağlık kayıtlarınızı web üzerinde güvenle yönetin ve verilerinize her zaman, her yerden ve herhangi bir cihazdan erişin.\n2. Günlük ilaçlarınızı ve dozajlarınızı takip edin.\n3. Doktor iletişim ve uzmanlık bilgilerini kaydedin.\n4. Eczaneleri telefon ve adres bilgileriyle saklayın.\n5. Uyarılarla birlikte çoklu saat seçenekleriyle ilaç hatırlatıcıları kurun.\n6. Tıbbi rapor ve belgelerinizi fotoğraflarla kaydedin.\n7. Sigorta kartlarınızın ön ve arka fotoğraflarını saklayın.\n8. Kayıtlarınızı seçerek dilediğiniz zaman doktorunuzla paylaşın.\n9. Tüm özellikleri kullanmak ve ilaç alarmlarını etkinleştirmek için uygulamayı cihazınıza yükleyin.\n10. Başka hiç kimsenin göremeyeceği, size özel ve bağımsız bir kopyanızı edinin.',
     'taken': 'Alındı',
     'alarm': 'İlaç Alarmı',
     'daily_reminders': 'Günlük Hatırlatıcılar',
@@ -1536,6 +1568,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': 'देखें',
     'close': 'बंद करें',
     'share': 'साझा करें',
+    'install_app': 'ऐप इंस्टॉल करें',
     'help': 'मदद',
     'call': 'कॉल करें',
     'chat': 'चैट',
@@ -1676,7 +1709,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'दस्तावेज़ साझा करें',
     'manual_title': 'साना मेडिकल पॉकेट बुक',
     'manual_content':
-        '1. अपने स्वास्थ्य रिकॉर्ड को एक ही स्थान पर सुरक्षित रखें।\n2. दैनिक दवाइयाँ और उनकी खुराक आसानी से ट्रैक करें।\n3. अपने डॉक्टरों के संपर्क और विशेषता नोट रखें।\n4. अपनी पसंदीदा फार्मेसी का पता और फोन सेव करें।\n5. समय पर दवा लेने के लिए रिमाइंडर सेट करें।\n6. मेडिकल दस्तावेज़ और रिपोर्ट फोटो के साथ रखें।\n7. बीमा कार्ड की आगे और पीछे की फोटो सुरक्षित रखें।\n8. डॉक्टर के साथ कभी भी जरूरी रिकॉर्ड चुनें और साझा करें.',
+        '1. वेब पर अपने स्वास्थ्य रिकॉर्ड को सुरक्षित रूप से प्रबंधित करें और किसी भी समय, कहीं से भी और किसी भी डिवाइस से अपने डेटा तक पहुँचें।\n2. दैनिक दवाइयाँ और उनकी खुराक आसानी से ट्रैक करें।\n3. अपने डॉक्टरों के संपर्क और विशेषता नोट रखें।\n4. अपनी पसंदीदा फार्मेसी का पता और फोन सेव करें।\n5. अलर्ट के साथ दवा लेने के लिए कई समय के रिमाइंडर सेट करें।\n6. मेडिकल दस्तावेज़ और रिपोर्ट फोटो के साथ रखें।\n7. बीमा कार्ड की आगे और पीछे की फोटो सुरक्षित रखें।\n8. डॉक्टर के साथ कभी भी जरूरी रिकॉर्ड चुनें और साझा करें।\n9. सभी सुविधाएँ प्राप्त करने और दवा के अलार्म सक्रिय करने के लिए अपने डिवाइस पर ऐप इंस्टॉल करें।\n10. अपनी निजी और समर्पित प्रति प्राप्त करें, जिसे कोई अन्य व्यक्ति नहीं देख सकता।',
     'taken': 'दवा ले ली',
     'alarm': 'दवा का अलार्म',
     'daily_reminders': 'दैनिक अनुस्मारक',
@@ -1689,6 +1722,7 @@ const Map<String, Map<String, String>> _translations = {
     'view': '查看',
     'close': '关闭',
     'share': '分享',
+    'install_app': '安装应用',
     'help': '帮助',
     'call': '呼叫',
     'chat': '聊天',
@@ -1826,7 +1860,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': '分享文档',
     'manual_title': 'SANA 随身健康手册',
     'manual_content':
-        '1. 在一个地方安全管理您的所有健康记录。\n2. 轻松添加并跟踪每日药物用量和频率。\n3. 保存医生专科信息与联系方式。\n4. 保存常用药房地址与联系电话。\n5. 设置多时间段服药提醒。\n6. 拍摄并保存医疗报告与检查单。\n7. 保存医保卡正面和反面照片。\n8. 随时勾选并向医生分享您的健康档案。',
+        '1. 在网页端安全管理您的健康记录，并随时随地通过任何设备访问您的数据。\n2. 轻松添加并跟踪每日药物用量和频率。\n3. 保存医生专科信息与联系方式。\n4. 保存常用药房地址与联系电话。\n5. 设置多时间段带提示的服药提醒。\n6. 拍摄并保存医疗报告与检查单。\n7. 保存医保卡正面和反面照片。\n8. 随时勾选并向医生分享您的健康档案。\n9. 将应用程序安装到您的设备上，以获得全部功能并启用服药提醒和闹钟。\n10. 获取属于您自己的私密专属副本，任何其他人都无法看到。',
     'taken': '已服药',
     'alarm': '服药提醒',
     'daily_reminders': '每日提醒',
@@ -1955,6 +1989,7 @@ class SanaApp extends StatelessWidget {
     return ValueListenableBuilder<String>(
       valueListenable: languageNotifier,
       builder: (context, language, _) => MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'SANA',
         debugShowCheckedModeBanner: false,
         locale: Locale(language),
@@ -2238,6 +2273,139 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  void _showAdaptiveInstallDialog() {
+    final language = languageNotifier.value;
+
+    final bool isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final bool isAndroid = defaultTargetPlatform == TargetPlatform.android;
+
+    String title;
+    String instructions;
+
+    if (kIsWeb && isIos) {
+      title = switch (language) {
+        'ar' => 'تثبيت SANA على iPhone',
+        'es' => 'Instalar SANA en iPhone',
+        'fr' => 'Installer SANA sur iPhone',
+        'de' => 'SANA auf dem iPhone installieren',
+        'tr' => 'SANA’yı iPhone’a yükle',
+        'hi' => 'iPhone पर SANA इंस्टॉल करें',
+        'zh' => '在 iPhone 上安装 SANA',
+        _ => 'Install SANA on iPhone',
+      };
+
+      instructions = switch (language) {
+        'ar' =>
+          'افتح SANA في Safari، اضغط على زر المشاركة، ثم اختر "إضافة إلى الشاشة الرئيسية".',
+        'es' =>
+          'Abra SANA en Safari, pulse Compartir y seleccione "Añadir a pantalla de inicio".',
+        'fr' =>
+          'Ouvrez SANA dans Safari, appuyez sur Partager, puis choisissez « Sur l’écran d’accueil ».',
+        'de' =>
+          'Öffnen Sie SANA in Safari, tippen Sie auf Teilen und wählen Sie „Zum Home-Bildschirm“.',
+        'tr' =>
+          'SANA’yı Safari’de açın, Paylaş’a dokunun ve “Ana Ekrana Ekle” seçeneğini seçin.',
+        'hi' =>
+          'SANA को Safari में खोलें, शेयर बटन दबाएँ और "होम स्क्रीन में जोड़ें" चुनें।',
+        'zh' => '在 Safari 中打开 SANA，点击“分享”，然后选择“添加到主屏幕”。',
+        _ =>
+          'Open SANA in Safari, tap Share, then choose “Add to Home Screen”.',
+      };
+    } else if (kIsWeb && isAndroid) {
+      title = switch (language) {
+        'ar' => 'تثبيت SANA على Android',
+        'es' => 'Instalar SANA en Android',
+        'fr' => 'Installer SANA sur Android',
+        'de' => 'SANA auf Android installieren',
+        'tr' => 'SANA’yı Android’e yükle',
+        'hi' => 'Android पर SANA इंस्टॉल करें',
+        'zh' => '在 Android 上安装 SANA',
+        _ => 'Install SANA on Android',
+      };
+
+      instructions = switch (language) {
+        'ar' =>
+          'في Chrome افتح قائمة ⋮ ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+        'es' =>
+          'En Chrome, abra el menú ⋮ y seleccione "Instalar aplicación" o "Añadir a pantalla de inicio".',
+        'fr' =>
+          'Dans Chrome, ouvrez le menu ⋮ puis choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».',
+        'de' =>
+          'Öffnen Sie in Chrome das Menü ⋮ und wählen Sie „App installieren“ oder „Zum Startbildschirm hinzufügen“.',
+        'tr' =>
+          'Chrome’da ⋮ menüsünü açın ve “Uygulamayı yükle” veya “Ana ekrana ekle” seçeneğini seçin.',
+        'hi' =>
+          'Chrome में ⋮ मेनू खोलें और "ऐप इंस्टॉल करें" या "होम स्क्रीन में जोड़ें" चुनें।',
+        'zh' => '在 Chrome 中打开 ⋮ 菜单，然后选择“安装应用”或“添加到主屏幕”。',
+        _ =>
+          'In Chrome, open the ⋮ menu and choose “Install app” or “Add to Home screen”.',
+      };
+    } else if (isIos) {
+      title = tr(language, 'install_app');
+
+      instructions = switch (language) {
+        'ar' =>
+          'هذه نسخة iOS الأصلية. يرجى تثبيت SANA من App Store أو TestFlight.',
+        'es' =>
+          'Esta es la versión iOS. Instale SANA desde App Store o TestFlight.',
+        'fr' =>
+          'Pour la version iOS native, installez SANA depuis l’App Store ou TestFlight.',
+        'de' =>
+          'Installieren Sie die native iOS-Version von SANA über den App Store oder TestFlight.',
+        'tr' =>
+          'Yerel iOS sürümü için SANA’yı App Store veya TestFlight üzerinden yükleyin.',
+        'hi' =>
+          'iOS के मूल ऐप के लिए SANA को App Store या TestFlight से इंस्टॉल करें।',
+        'zh' => '原生 iOS 版本请从 App Store 或 TestFlight 安装 SANA。',
+        _ =>
+          'Install the native iOS version of SANA from the App Store or TestFlight.',
+      };
+    } else if (isAndroid) {
+      title = tr(language, 'install_app');
+
+      instructions = switch (language) {
+        'ar' => 'ثبّت نسخة Android المتوافقة من SANA.',
+        'es' => 'Instale la versión Android compatible de SANA.',
+        'fr' => 'Installez la version Android compatible de SANA.',
+        'de' => 'Installieren Sie die kompatible Android-Version von SANA.',
+        'tr' => 'SANA’nın uyumlu Android sürümünü yükleyin.',
+        'hi' => 'SANA का संगत Android संस्करण इंस्टॉल करें।',
+        'zh' => '安装兼容的 SANA Android 版本。',
+        _ => 'Install the compatible Android version of SANA.',
+      };
+    } else {
+      title = tr(language, 'install_app');
+
+      instructions = switch (language) {
+        'ar' => 'استخدم خيار التثبيت الموجود في المتصفح.',
+        'es' => 'Use la opción de instalación disponible en su navegador.',
+        'fr' =>
+          'Utilisez l’option d’installation disponible dans votre navigateur.',
+        'de' => 'Verwenden Sie die Installationsoption Ihres Browsers.',
+        'tr' => 'Tarayıcınızdaki yükleme seçeneğini kullanın.',
+        'hi' => 'अपने ब्राउज़र में उपलब्ध इंस्टॉल विकल्प का उपयोग करें।',
+        'zh' => '使用浏览器提供的安装选项。',
+        _ => 'Use the installation option provided by your browser.',
+      };
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(instructions),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(tr(language, 'close')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _shareApp() async {
     final language = languageNotifier.value;
     final message = '${tr(language, 'share_app_message')}\n\n$_sanaShareUrl';
@@ -2436,6 +2604,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 4),
                             ),
+                            InkWell(
+                              onTap: _showAdaptiveInstallDialog,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      tr(language, 'install_app'),
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.install_mobile,
+                                      size: 26,
+                                      color: Colors.teal,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
                             InkWell(
                               onTap: _shareApp,
                               borderRadius: BorderRadius.circular(8),
@@ -6441,23 +6639,32 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
       _taken = true;
     });
 
+    // Keep the existing alarm ring/voice implementation unchanged.
     await SanaAlarmService.stopAlarmSound(
       notificationId: widget.notificationId,
     );
 
+    // Cancel the native alarm that is currently firing.
     await SanaAlarmService.cancelNativeAlarm(
       widget.notificationId,
     );
 
+    // A one-time reminder must not fire again.
     if (!widget.daily) {
       await SanaAlarmService.cancelReminder(
         widget.reminderId,
       );
     }
 
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    if (!mounted) return;
+
+    // Return completely to the application's first/home route.
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).popUntil(
+      (route) => route.isFirst,
+    );
   }
 
   @override

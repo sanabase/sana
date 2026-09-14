@@ -1,0 +1,30 @@
+name: Build SANA iOS - Cloud Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload iOS Runner Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SANA-iOS-Runner
+          path: build/ios/iphoneos/Runner.app
