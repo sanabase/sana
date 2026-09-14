@@ -1,4 +1,4 @@
-name: Build SANA iOS - Cloud Validation
+﻿name: Build SANA iOS - Cloud Validation
 
 on:
   workflow_dispatch:
@@ -25,10 +25,11 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Pin workmanager_apple for compatibility test
+      - name: Pin iOS plugin versions for compatibility test
         run: |
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  workmanager_apple: 0.9.4" >> pubspec.yaml
+          echo "  connectivity_plus: 6.1.5" >> pubspec.yaml
 
       - name: Install Dependencies
         run: flutter pub get
@@ -39,7 +40,7 @@ jobs:
           cd ios
           pod install
 
-      - name: Build iOS
+      - name: Build iOS Simulator
         run: flutter build ios --simulator --no-codesign --verbose
 
       - name: Upload iOS Runner Artifact
