@@ -32,7 +32,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-        run: flutter build web --release --base-href /sana/
+        run: flutter build web --release --base-href /sana/ --no-wasm-dry-run
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
@@ -49,3 +49,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
