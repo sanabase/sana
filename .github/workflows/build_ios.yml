@@ -14,12 +14,9 @@ jobs:
       - name: Select Xcode 16
         run: |
           XCODE_PATH="$(find /Applications -maxdepth 1 -type d -name 'Xcode_16*.app' | sort -V | tail -n 1)"
-          if [ -z "$XCODE_PATH" ]; then
-            echo "Xcode 16 was not found."
-            ls -1 /Applications | grep -i '^Xcode' || true
-            exit 1
+          if [ -n "$XCODE_PATH" ]; then
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           fi
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
 
       - name: Setup Flutter
@@ -38,7 +35,18 @@ jobs:
           pod install
 
       - name: Build iOS
-        run: flutter build ios --simulator --no-codesign --verbose
+        id: build_step
+        run: |
+          set -o pipefail
+          flutter build ios --simulator --no-codesign --verbose 2>&1 | tee build_output.log
+
+      - name: Capture Failure Diagnostics
+        if: failure()
+        run: |
+          echo "### iOS Build Failure Diagnostics" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -C 5 -i -E "(error:|BUILD FAILED|The following build commands failed)" build_output.log | head -n 80 >> $GITHUB_STEP_SUMMARY || tail -n 60 build_output.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload iOS Runner Artifact
         uses: actions/upload-artifact@v4
