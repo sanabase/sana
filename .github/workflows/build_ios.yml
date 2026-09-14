@@ -1,4 +1,4 @@
-﻿name: Build SANA iOS - Cloud Validation
+name: Build SANA iOS - Cloud Validation
 
 on:
   workflow_dispatch:
@@ -25,6 +25,14 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Pin workmanager_apple for compatibility test
+        run: |
+          cat << 'EOF' >> pubspec.yaml
+
+dependency_overrides:
+  workmanager_apple: 0.9.4
+EOF
+
       - name: Install Dependencies
         run: flutter pub get
 
@@ -35,18 +43,7 @@ jobs:
           pod install
 
       - name: Build iOS
-        id: build_step
-        run: |
-          set -o pipefail
-          flutter build ios --simulator --no-codesign --verbose 2>&1 | tee build_output.log
-
-      - name: Capture Failure Diagnostics
-        if: failure()
-        run: |
-          echo "### iOS Build Failure Diagnostics" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          grep -C 5 -i -E "(error:|BUILD FAILED|The following build commands failed)" build_output.log | head -n 80 >> $GITHUB_STEP_SUMMARY || tail -n 60 build_output.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+        run: flutter build ios --simulator --no-codesign --verbose
 
       - name: Upload iOS Runner Artifact
         uses: actions/upload-artifact@v4
