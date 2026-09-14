@@ -27,11 +27,8 @@ jobs:
 
       - name: Pin workmanager_apple for compatibility test
         run: |
-          cat << 'EOF' >> pubspec.yaml
-
-dependency_overrides:
-  workmanager_apple: 0.9.4
-EOF
+          echo "dependency_overrides:" >> pubspec.yaml
+          echo "  workmanager_apple: 0.9.4" >> pubspec.yaml
 
       - name: Install Dependencies
         run: flutter pub get
