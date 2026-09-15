@@ -1,3 +1,16 @@
+Public Key:
+BJiPHnMa402Ih_cOgVJwvHriFGLCZPWsgktG-QNLooTZZTaqrHLjVJQ-ODA-CrVZ7PUj2VyEP2EPrP2GTotAgaU
+
+Private Key:
+iRGn-MvGP6nH4eCEUZuHxdrB1HyMLP-Jg6xl1iymEoI
+
+======================================
+
+
+
+
+
+
 Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue ; flutter run -d chrome --web-port=5001 --dds-port=5002
 
 flutter clean

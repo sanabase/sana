@@ -42,5 +42,16 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Register the SANA service worker for Web Push.
+    // There is no other service worker in this project, so there is
+    // no conflict with Flutter's web bootstrap.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sana_sw.js', { scope: '/sana/' })
+          .catch((e) => console.warn('SANA SW registration failed:', e));
+      });
+    }
+  </script>
 </body>
 </html>

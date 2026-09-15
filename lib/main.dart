@@ -25,6 +25,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'sana_web_push.dart';
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -82,10 +83,8 @@ class SanaAlarmService {
   static DateTime? _lastNativeAlarmAt;
 
   static Future<void> initialize() async {
-    tz.initializeTimeZones();
-
-    // The web platform has no native Android alarm channel.
-    // Skip native initialization entirely to avoid a pre-runApp crash.
+    // On the web, medication reminders are delivered by
+    // Supabase Cron + Web Push. No native initialization needed.
     if (kIsWeb) {
       return;
     }
@@ -429,6 +428,12 @@ class SanaAlarmService {
     final times = parseTimes(row['reminder_time']);
 
     if (times.isEmpty) {
+      return;
+    }
+
+    if (kIsWeb) {
+      // Web reminders are delivered by Supabase Cron + Web Push.
+      // Nothing to schedule on the device.
       return;
     }
 
@@ -1987,11 +1992,18 @@ void main() async {
     await client.auth.signInAnonymously();
   }
 
-  runApp(const SanaApp());
+  // Explicit deep-link: ?reminder=<id> opens the alarm screen.
+  String? pendingReminderId;
+  if (kIsWeb) {
+    pendingReminderId = Uri.base.queryParameters['reminder'];
+  }
+
+  runApp(SanaApp(pendingReminderId: pendingReminderId));
 }
 
 class SanaApp extends StatelessWidget {
-  const SanaApp({super.key});
+  final String? pendingReminderId;
+  const SanaApp({super.key, this.pendingReminderId});
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
@@ -2015,7 +2027,13 @@ class SanaApp extends StatelessWidget {
         home: Directionality(
           textDirection:
               language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-          child: const HomeScreen(),
+          child: (pendingReminderId != null && pendingReminderId!.isNotEmpty)
+              ? SanaAlarmScreen(
+                  reminderId: pendingReminderId!,
+                  notificationId: 0,
+                  daily: false,
+                )
+              : const HomeScreen(),
         ),
       ),
     );
@@ -2709,9 +2727,27 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     ),
                                                     const SizedBox(height: 16),
                                                     InkWell(
-                                                      onTap: () {
+                                                      onTap: () async {
                                                         Navigator.of(ctx).pop();
-                                                        _showAdaptiveInstallDialog();
+                                                        if (kIsWeb) {
+                                                          final ok = await SanaWebPush.enable(
+                                                            Supabase.instance.client,
+                                                          );
+                                                          if (context.mounted) {
+                                                            ScaffoldMessenger.of(context)
+                                                                .showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                  ok
+                                                                      ? tr(language, 'reminders_enabled')
+                                                                      : tr(language, 'reminders_not_enabled'),
+                                                                ),
+                                                              ),
+                                                            );
+                                                          }
+                                                        } else {
+                                                          _showAdaptiveInstallDialog();
+                                                        }
                                                       },
                                                       borderRadius:
                                                           BorderRadius.circular(
@@ -2742,7 +2778,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           children: [
                                                             const Icon(
                                                               Icons
-                                                                  .install_mobile,
+                                                                  .notifications_active,
                                                               color:
                                                                   Colors.teal,
                                                             ),
@@ -2752,7 +2788,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                               child: Text(
                                                                 tr(
                                                                   language,
-                                                                  'install_app',
+                                                                  'enable_reminders',
                                                                 ),
                                                                 style: const TextStyle(
                                                                     color: Colors
