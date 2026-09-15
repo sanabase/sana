@@ -1,6 +1,6 @@
 // lib/sana_web_push.dart
 //
-// SANA Web Push subsystem ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â one codebase, no native install.
+// SANA Web Push subsystem â€” one codebase, no native install.
 // On non-web platforms, every method is a no-op.
 
 import 'dart:convert';
@@ -108,7 +108,30 @@ class SanaWebPush {
       debugPrint('SanaWebPush disable error: $e');
     }
   }
+  static String? browserTimeZone() {
+    if (!kIsWeb) return null;
+    try {
+      final intl = globalContext.getProperty('Intl'.toJS);
+      if (intl == null) return null;
 
+      final dateTimeFormat =
+          (intl as JSObject).getProperty('DateTimeFormat'.toJS);
+      if (dateTimeFormat == null) return null;
+
+      final formatter =
+          (dateTimeFormat as JSFunction).callAsConstructor<JSObject>();
+
+      final options =
+          formatter.callMethod<JSObject>('resolvedOptions'.toJS);
+
+      final timeZone =
+          options.getProperty<JSString?>('timeZone'.toJS);
+
+      return timeZone?.toDart;
+    } catch (_) {
+      return null;
+    }
+  }
   static JSAny _urlB64ToUint8Array(String s) {
     final pad = '=' * ((4 - s.length % 4) % 4);
     final bytes = base64Decode(
