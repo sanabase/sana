@@ -34,8 +34,10 @@ jobs:
       - name: Build Flutter Web
         run: flutter build web --release --base-href /sana/ --no-wasm-dry-run
 
-      - name: Copy native installers
-        run: cp -r docs/downloads build/web/downloads
+      - name: Copy native installers and service worker
+        run: |
+          cp -r docs/downloads build/web/downloads
+          cp web/sana_sw.js build/web/sana_sw.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
