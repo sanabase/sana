@@ -2281,45 +2281,45 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  static const String _sanaApkUrl =
+      'https://sanabase.github.io/sana/downloads/sana.apk';
+
+  static const String _sanaIosUrl = 'https://sanabase.github.io/sana/';
+
+  static const String _sanaWindowsUrl =
+      'https://sanabase.github.io/sana/downloads/sana-windows.zip';
+
+  static const String _sanaMacosUrl =
+      'https://sanabase.github.io/sana/downloads/sana-macos.zip';
+
+  static const String _sanaLinuxUrl =
+      'https://sanabase.github.io/sana/downloads/sana-linux.tar.gz';
+
+  Future<void> _launchDirect(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    }
+  }
+
   void _showAdaptiveInstallDialog() {
     final language = languageNotifier.value;
 
     final bool isIos = defaultTargetPlatform == TargetPlatform.iOS;
     final bool isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final bool isWindows = defaultTargetPlatform == TargetPlatform.windows;
+    final bool isMacos = defaultTargetPlatform == TargetPlatform.macOS;
+    final bool isLinux = defaultTargetPlatform == TargetPlatform.linux;
 
     String title;
     String instructions;
 
-    if (kIsWeb && isIos) {
-      title = switch (language) {
-        'ar' => 'تثبيت SANA على iPhone',
-        'es' => 'Instalar SANA en iPhone',
-        'fr' => 'Installer SANA sur iPhone',
-        'de' => 'SANA auf dem iPhone installieren',
-        'tr' => 'SANA’yı iPhone’a yükle',
-        'hi' => 'iPhone पर SANA इंस्टॉल करें',
-        'zh' => '在 iPhone 上安装 SANA',
-        _ => 'Install SANA on iPhone',
-      };
-
-      instructions = switch (language) {
-        'ar' =>
-          'افتح SANA في Safari، اضغط على زر المشاركة، ثم اختر "إضافة إلى الشاشة الرئيسية".',
-        'es' =>
-          'Abra SANA en Safari, pulse Compartir y seleccione "Añadir a pantalla de inicio".',
-        'fr' =>
-          'Ouvrez SANA dans Safari, appuyez sur Partager, puis choisissez « Sur l’écran d’accueil ».',
-        'de' =>
-          'Öffnen Sie SANA in Safari, tippen Sie auf Teilen und wählen Sie „Zum Home-Bildschirm“.',
-        'tr' =>
-          'SANA’yı Safari’de açın, Paylaş’a dokunun ve “Ana Ekrana Ekle” seçeneğini seçin.',
-        'hi' =>
-          'SANA को Safari में खोलें, शेयर बटन दबाएँ और "होम स्क्रीन में जोड़ें" चुनें।',
-        'zh' => '在 Safari 中打开 SANA，点击“分享”，然后选择“添加到主屏幕”。',
-        _ =>
-          'Open SANA in Safari, tap Share, then choose “Add to Home Screen”.',
-      };
-    } else if (kIsWeb && isAndroid) {
+    if (isAndroid) {
       title = switch (language) {
         'ar' => 'تثبيت SANA على Android',
         'es' => 'Instalar SANA en Android',
@@ -2333,67 +2333,144 @@ class _HomeScreenState extends State<HomeScreen> {
 
       instructions = switch (language) {
         'ar' =>
-          'في Chrome افتح قائمة ⋮ ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+          'سيتم فتح رابط تنزيل ملف APK الأصلي لتطبيق SANA. بعد التنزيل، اضغط على الملف لتثبيته.',
         'es' =>
-          'En Chrome, abra el menú ⋮ y seleccione "Instalar aplicación" o "Añadir a pantalla de inicio".',
+          'Se abrirá el enlace de descarga del APK nativo de SANA. Tras descargarlo, pulse el archivo para instalarlo.',
         'fr' =>
-          'Dans Chrome, ouvrez le menu ⋮ puis choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».',
+          'Le lien de téléchargement de l’APK natif de SANA va s’ouvrir. Après téléchargement, appuyez sur le fichier pour l’installer.',
         'de' =>
-          'Öffnen Sie in Chrome das Menü ⋮ und wählen Sie „App installieren“ oder „Zum Startbildschirm hinzufügen“.',
+          'Der Download-Link für die native SANA-APK wird geöffnet. Nach dem Download tippen Sie auf die Datei, um sie zu installieren.',
         'tr' =>
-          'Chrome’da ⋮ menüsünü açın ve “Uygulamayı yükle” veya “Ana ekrana ekle” seçeneğini seçin.',
+          'SANA yerel APK indirme bağlantısı açılacak. İndirdikten sonra dosyaya dokunarak yükleyin.',
         'hi' =>
-          'Chrome में ⋮ मेनू खोलें और "ऐप इंस्टॉल करें" या "होम स्क्रीन में जोड़ें" चुनें।',
-        'zh' => '在 Chrome 中打开 ⋮ 菜单，然后选择“安装应用”或“添加到主屏幕”。',
+          'SANA का मूल APK डाउनलोड लिंक खुलेगा। डाउनलोड के बाद फ़ाइल पर टैप करके इंस्टॉल करें।',
+        'zh' => '将打开 SANA 原生 APK 下载链接。下载后点击文件进行安装。',
         _ =>
-          'In Chrome, open the ⋮ menu and choose “Install app” or “Add to Home screen”.',
+          'The native SANA APK download link will open. After downloading, tap the file to install it.',
       };
     } else if (isIos) {
-      title = tr(language, 'install_app');
+      title = switch (language) {
+        'ar' => 'تثبيت SANA على iPhone / iPad',
+        'es' => 'Instalar SANA en iPhone / iPad',
+        'fr' => 'Installer SANA sur iPhone / iPad',
+        'de' => 'SANA auf iPhone / iPad installieren',
+        'tr' => 'SANA’yı iPhone / iPad’e yükle',
+        'hi' => 'iPhone / iPad पर SANA इंस्टॉल करें',
+        'zh' => '在 iPhone / iPad 上安装 SANA',
+        _ => 'Install SANA on iPhone / iPad',
+      };
 
       instructions = switch (language) {
         'ar' =>
-          'هذه نسخة iOS الأصلية. يرجى تثبيت SANA من App Store أو TestFlight.',
+          'سيتم فتح صفحة تثبيت SANA لنظام iOS. اتبع التعليمات على الشاشة.',
         'es' =>
-          'Esta es la versión iOS. Instale SANA desde App Store o TestFlight.',
+          'Se abrirá la página de instalación de SANA para iOS. Siga las instrucciones en pantalla.',
         'fr' =>
-          'Pour la version iOS native, installez SANA depuis l’App Store ou TestFlight.',
+          'La page d’installation SANA pour iOS va s’ouvrir. Suivez les instructions à l’écran.',
         'de' =>
-          'Installieren Sie die native iOS-Version von SANA über den App Store oder TestFlight.',
+          'Die SANA-Installationsseite für iOS wird geöffnet. Folgen Sie den Anweisungen auf dem Bildschirm.',
         'tr' =>
-          'Yerel iOS sürümü için SANA’yı App Store veya TestFlight üzerinden yükleyin.',
+          'SANA iOS yükleme sayfası açılacak. Ekrandaki yönergeleri izleyin.',
         'hi' =>
-          'iOS के मूल ऐप के लिए SANA को App Store या TestFlight से इंस्टॉल करें।',
-        'zh' => '原生 iOS 版本请从 App Store 或 TestFlight 安装 SANA。',
+          'SANA का iOS इंस्टॉलेशन पृष्ठ खुलेगा। स्क्रीन पर दिए निर्देशों का पालन करें।',
+        'zh' => '将打开 SANA 的 iOS 安装页面。请按屏幕提示操作。',
         _ =>
-          'Install the native iOS version of SANA from the App Store or TestFlight.',
+          'The SANA iOS installation page will open. Follow the on-screen instructions.',
       };
-    } else if (isAndroid) {
-      title = tr(language, 'install_app');
+    } else if (isWindows) {
+      title = switch (language) {
+        'ar' => 'تثبيت SANA على Windows',
+        'es' => 'Instalar SANA en Windows',
+        'fr' => 'Installer SANA sur Windows',
+        'de' => 'SANA auf Windows installieren',
+        'tr' => 'SANA’yı Windows’a yükle',
+        'hi' => 'Windows पर SANA इंस्टॉल करें',
+        'zh' => '在 Windows 上安装 SANA',
+        _ => 'Install SANA on Windows',
+      };
 
       instructions = switch (language) {
-        'ar' => 'ثبّت نسخة Android المتوافقة من SANA.',
-        'es' => 'Instale la versión Android compatible de SANA.',
-        'fr' => 'Installez la version Android compatible de SANA.',
-        'de' => 'Installieren Sie die kompatible Android-Version von SANA.',
-        'tr' => 'SANA’nın uyumlu Android sürümünü yükleyin.',
-        'hi' => 'SANA का संगत Android संस्करण इंस्टॉल करें।',
-        'zh' => '安装兼容的 SANA Android 版本。',
-        _ => 'Install the compatible Android version of SANA.',
+        'ar' =>
+          'سيتم فتح رابط تنزيل SANA لنظام Windows. فك الضغط ثم شغّل التطبيق.',
+        'es' =>
+          'Se abrirá el enlace de descarga de SANA para Windows. Descomprima y ejecute la aplicación.',
+        'fr' =>
+          'Le lien de téléchargement SANA pour Windows va s’ouvrir. Décompressez puis lancez l’application.',
+        'de' =>
+          'Der SANA-Download-Link für Windows wird geöffnet. Entpacken Sie das Archiv und starten Sie die App.',
+        'tr' =>
+          'SANA Windows indirme bağlantısı açılacak. Arşivi açın ve uygulamayı başlatın.',
+        'hi' =>
+          'SANA का Windows डाउनलोड लिंक खुलेगा। फ़ाइल निकालें और ऐप चलाएँ।',
+        'zh' => '将打开 SANA 的 Windows 下载链接。解压后运行应用程序。',
+        _ =>
+          'The SANA Windows download link will open. Unzip and run the application.',
+      };
+    } else if (isMacos) {
+      title = switch (language) {
+        'ar' => 'تثبيت SANA على macOS',
+        'es' => 'Instalar SANA en macOS',
+        'fr' => 'Installer SANA sur macOS',
+        'de' => 'SANA auf macOS installieren',
+        'tr' => 'SANA’yı macOS’a yükle',
+        'hi' => 'macOS पर SANA इंस्टॉल करें',
+        'zh' => '在 macOS 上安装 SANA',
+        _ => 'Install SANA on macOS',
+      };
+
+      instructions = switch (language) {
+        'ar' =>
+          'سيتم فتح رابط تنزيل SANA لنظام macOS. فك الضغط ثم شغّل التطبيق.',
+        'es' =>
+          'Se abrirá el enlace de descarga de SANA para macOS. Descomprima y ejecute la aplicación.',
+        'fr' =>
+          'Le lien de téléchargement SANA pour macOS va s’ouvrir. Décompressez puis lancez l’application.',
+        'de' =>
+          'Der SANA-Download-Link für macOS wird geöffnet. Entpacken Sie das Archiv und starten Sie die App.',
+        'tr' =>
+          'SANA macOS indirme bağlantısı açılacak. Arşivi açın ve uygulamayı başlatın.',
+        'hi' => 'SANA का macOS डाउनलोड लिंक खुलेगा। फ़ाइल निकालें और ऐप चलाएँ।',
+        'zh' => '将打开 SANA 的 macOS 下载链接。解压后运行应用程序。',
+        _ =>
+          'The SANA macOS download link will open. Unzip and run the application.',
+      };
+    } else if (isLinux) {
+      title = switch (language) {
+        'ar' => 'تثبيت SANA على Linux',
+        'es' => 'Instalar SANA en Linux',
+        'fr' => 'Installer SANA sur Linux',
+        'de' => 'SANA auf Linux installieren',
+        'tr' => 'SANA’yı Linux’a yükle',
+        'hi' => 'Linux पर SANA इंस्टॉल करें',
+        'zh' => '在 Linux 上安装 SANA',
+        _ => 'Install SANA on Linux',
+      };
+
+      instructions = switch (language) {
+        'ar' => 'سيتم فتح رابط تنزيل SANA لنظام Linux.',
+        'es' => 'Se abrirá el enlace de descarga de SANA para Linux.',
+        'fr' => 'Le lien de téléchargement SANA pour Linux va s’ouvrir.',
+        'de' => 'Der SANA-Download-Link für Linux wird geöffnet.',
+        'tr' => 'SANA Linux indirme bağlantısı açılacak.',
+        'hi' => 'SANA का Linux डाउनलोड लिंक खुलेगा।',
+        'zh' => '将打开 SANA 的 Linux 下载链接。',
+        _ => 'The SANA Linux download link will open.',
       };
     } else {
       title = tr(language, 'install_app');
 
       instructions = switch (language) {
-        'ar' => 'استخدم خيار التثبيت الموجود في المتصفح.',
-        'es' => 'Use la opción de instalación disponible en su navegador.',
+        'ar' => 'سيتم توجيهك إلى التثبيت المناسب لجهازك.',
+        'es' => 'Se le dirigirá a la instalación adecuada para su dispositivo.',
         'fr' =>
-          'Utilisez l’option d’installation disponible dans votre navigateur.',
-        'de' => 'Verwenden Sie die Installationsoption Ihres Browsers.',
-        'tr' => 'Tarayıcınızdaki yükleme seçeneğini kullanın.',
-        'hi' => 'अपने ब्राउज़र में उपलब्ध इंस्टॉल विकल्प का उपयोग करें।',
-        'zh' => '使用浏览器提供的安装选项。',
-        _ => 'Use the installation option provided by your browser.',
+          'Vous serez redirigé vers l’installation adaptée à votre appareil.',
+        'de' =>
+          'Sie werden zur passenden Installation für Ihr Gerät weitergeleitet.',
+        'tr' => 'Cihazınıza uygun kurulum sayfasına yönlendirileceksiniz.',
+        'hi' => 'आपको आपके डिवाइस के अनुकूल इंस्टॉलेशन पर ले जाया जाएगा।',
+        'zh' => '将引导您进入适合您设备的安装页面。',
+        _ =>
+          'You will be directed to the appropriate installation for your device.',
       };
     }
 
@@ -2407,6 +2484,38 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(tr(language, 'close')),
+            ),
+            FilledButton.icon(
+              icon: const Icon(Icons.download),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+
+                if (isAndroid) {
+                  _launchDirect(_sanaApkUrl);
+                } else if (isIos) {
+                  _launchDirect(_sanaIosUrl);
+                } else if (isWindows) {
+                  _launchDirect(_sanaWindowsUrl);
+                } else if (isMacos) {
+                  _launchDirect(_sanaMacosUrl);
+                } else if (isLinux) {
+                  _launchDirect(_sanaLinuxUrl);
+                } else {
+                  _launchDirect(_sanaIosUrl);
+                }
+              },
+              label: Text(
+                switch (language) {
+                  'ar' => 'ابدأ التثبيت',
+                  'es' => 'Instalar ahora',
+                  'fr' => 'Installer maintenant',
+                  'de' => 'Jetzt installieren',
+                  'tr' => 'Şimdi yükle',
+                  'hi' => 'अभी इंस्टॉल करें',
+                  'zh' => '立即安装',
+                  _ => 'Install now',
+                },
+              ),
             ),
           ],
         );
@@ -2596,6 +2705,67 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       style: const TextStyle(
                                                         fontSize: 14,
                                                         height: 1.5,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    InkWell(
+                                                      onTap: () {
+                                                        Navigator.of(ctx).pop();
+                                                        _showAdaptiveInstallDialog();
+                                                      },
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          vertical: 12,
+                                                          horizontal: 16,
+                                                        ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.teal
+                                                              .withValues(
+                                                                  alpha: 0.1),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                          border: Border.all(
+                                                              color:
+                                                                  Colors.teal),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            const Icon(
+                                                              Icons
+                                                                  .install_mobile,
+                                                              color:
+                                                                  Colors.teal,
+                                                            ),
+                                                            const SizedBox(
+                                                                width: 8),
+                                                            Flexible(
+                                                              child: Text(
+                                                                tr(
+                                                                  language,
+                                                                  'install_app',
+                                                                ),
+                                                                style: const TextStyle(
+                                                                    color: Colors
+                                                                        .teal,
+                                                                    fontSize:
+                                                                        16,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
