@@ -84,6 +84,14 @@ class SanaAlarmService {
   static Future<void> initialize() async {
     tz.initializeTimeZones();
 
+    // The web platform has no native Android alarm channel.
+    // Skip native initialization entirely to avoid a pre-runApp crash.
+    if (kIsWeb) {
+      return;
+    }
+
+    tz.initializeTimeZones();
+
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
 
     tz.setLocalLocation(

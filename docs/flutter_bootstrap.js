@@ -36,8 +36,12 @@ if (!window._flutter) {
 _flutter.buildConfig = {"engineRevision":"0cd610717bde95fd88343c64f81c11ba4e5c0010","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
 
+const isAndroid = /Android/i.test(navigator.userAgent);
+
 _flutter.loader.load({
-  config: {
-    canvasKitForceCpuOnly: true,
-  },
+  config: isAndroid
+      ? {
+          canvasKitForceCpuOnly: true,
+        }
+      : {},
 });

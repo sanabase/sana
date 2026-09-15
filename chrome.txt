@@ -5,4 +5,4 @@ flutter pub get
 flutter run -d chrome
 
 ////////force git
-cd D:\sana; git add -A; git commit -m "Force sync $(Get-Date -Format yyyyMMdd_HHmmss)"; git push origin HEAD:main --force
+cd D:\sana; flutter clean; flutter pub get; flutter build web --release --base-href /sana/; if (Test-Path .\docs) { Remove-Item .\docs -Recurse -Force }; Copy-Item .\build\web .\docs -Recurse; git add -A; git commit -m "mobile web startup fix $(Get-Date -Format yyyyMMdd_HHmmss)"; git push origin HEAD --force
