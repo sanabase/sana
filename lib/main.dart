@@ -2598,67 +2598,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         height: 1.5,
                                                       ),
                                                     ),
-                                                    const SizedBox(height: 16),
-                                                    InkWell(
-                                                      onTap: () {
-                                                        Navigator.of(ctx).pop();
-                                                        _showAdaptiveInstallDialog();
-                                                      },
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                          vertical: 12,
-                                                          horizontal: 16,
-                                                        ),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.teal
-                                                              .withValues(
-                                                                  alpha: 0.1),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                          border: Border.all(
-                                                              color:
-                                                                  Colors.teal),
-                                                        ),
-                                                        child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            const Icon(
-                                                              Icons
-                                                                  .install_mobile,
-                                                              color:
-                                                                  Colors.teal,
-                                                            ),
-                                                            const SizedBox(
-                                                                width: 8),
-                                                            Flexible(
-                                                              child: Text(
-                                                                tr(
-                                                                  language,
-                                                                  'install_app',
-                                                                ),
-                                                                style: const TextStyle(
-                                                                    color: Colors
-                                                                        .teal,
-                                                                    fontSize:
-                                                                        16,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
                                                   ],
                                                 ),
                                               ),
