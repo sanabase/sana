@@ -789,7 +789,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Share Documents',
     'manual_title': 'SANA Medical Pocket Book',
     'manual_content':
-        '1. Securely manage your health records on the web, and access your data any time, anywhere and from any device.\n2. Add and track daily prescriptions and dosages in Medications.\n3. Keep your doctor contact info and specialty notes handy.\n4. Save your preferred pharmacies with phone and location.\n5. Set multi-time dosage reminders with alerts.\n6. Store medical documents and lab reports with photos.\n7. Keep front and back photos of your insurance cards.\n8. Select and share records with your doctors anytime.\n9. Install the application on your device to get all features and activate medication alarms.\n10. Get your own private, dedicated copy that is invisible to anyone else.',
+        '1. Securely manage your health records on the web, and access your data any time, anywhere and from any device.\n2. Add and track daily prescriptions and dosages in Medications.\n3. Keep your doctor contact info and specialty notes handy.\n4. Save your preferred pharmacies with phone and location.\n5. Set multi-time dosage reminders with alerts.\n6. Store medical documents and lab reports with photos.\n7. Keep front and back photos of your insurance cards.\n8. Select and share records with your doctors anytime.\n9. Install the application on your device to get all features and activate medication alarms.\n10. Get your own private, dedicated copy that is invisible to anyone else.\n11. Install App: tap the button below to detect your device and receive the correct installation instructions.',
     'taken': 'Taken',
     'alarm': 'Medication Alarm',
     'daily_reminders': 'Daily Reminders',
@@ -942,7 +942,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'مشاركة المستندات',
     'manual_title': 'دليل سانا الطبي للجيب',
     'manual_content':
-        '1. أدر سجلاتك الصحية بأمان عبر الويب، وتمكّن من الوصول إلى بياناتك في أي وقت ومن أي مكان ومن أي جهاز.\n2. إضافة وتتبع الأدوية اليومية والجرعات.\n3. الاحتفاظ بأرقام الأطباء وتخصصاتهم.\n4. حفظ الصيدليات المفضلة مع العناوين والهواتف.\n5. تعيين تذكيرات بمواعيد تناول الدواء مع التنبيهات.\n6. حفظ المستندات والتقارير الطبية مع الصور.\n7. حفظ صور بطاقات التأمين من الأمام والخلف.\n8. تحديد ومشاركة السجلات مع أطبائك في أي وقت.\n9. ثبّت التطبيق على جهازك للحصول على جميع الميزات وتفعيل منبهات الأدوية.\n10. احصل على نسختك الخاصة والمخصصة، والتي لا يمكن لأي شخص آخر رؤيتها.',
+        '1. أدر سجلاتك الصحية بأمان عبر الويب، وتمكّن من الوصول إلى بياناتك في أي وقت ومن أي مكان ومن أي جهاز.\n2. إضافة وتتبع الأدوية اليومية والجرعات.\n3. الاحتفاظ بأرقام الأطباء وتخصصاتهم.\n4. حفظ الصيدليات المفضلة مع العناوين والهواتف.\n5. تعيين تذكيرات بمواعيد تناول الدواء مع التنبيهات.\n6. حفظ المستندات والتقارير الطبية مع الصور.\n7. حفظ صور بطاقات التأمين من الأمام والخلف.\n8. تحديد ومشاركة السجلات مع أطبائك في أي وقت.\n9. ثبّت التطبيق على جهازك للحصول على جميع الميزات وتفعيل منبهات الأدوية.\n10. احصل على نسختك الخاصة والمخصصة، والتي لا يمكن لأي شخص آخر رؤيتها.\n11. تثبيت التطبيق: اضغط على الزر أدناه لتحديد نوع جهازك والحصول على تعليمات التثبيت الصحيحة.',
     'taken': 'تم تناول الدواء',
     'alarm': 'منبه الدواء',
     'daily_reminders': 'التذكيرات اليومية',
@@ -1097,7 +1097,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Compartir documentos',
     'manual_title': 'Guía médica de bolsillo SANA',
     'manual_content':
-        '1. Gestione de forma segura sus registros de salud en la web y acceda a sus datos en cualquier momento, desde cualquier lugar y desde cualquier dispositivo.\n2. Registre medicamentos diarios y dosis exactas.\n3. Guarde contactos y especialidades de sus médicos.\n4. Guarde farmacias con dirección y teléfono.\n5. Configure recordatorios con múltiples horarios y alertas.\n6. Guarde documentos e informes médicos con fotos.\n7. Guarde fotos del anverso y reverso de tarjetas de seguro.\n8. Seleccione y comparta sus registros con su médico en cualquier momento.\n9. Instale la aplicación en su dispositivo para obtener todas las funciones y activar las alarmas de medicación.\n10. Obtenga su propia copia privada y dedicada, invisible para cualquier otra persona.',
+        '1. Gestione de forma segura sus registros de salud en la web y acceda a sus datos en cualquier momento, desde cualquier lugar y desde cualquier dispositivo.\n2. Registre medicamentos diarios y dosis exactas.\n3. Guarde contactos y especialidades de sus médicos.\n4. Guarde farmacias con dirección y teléfono.\n5. Configure recordatorios con múltiples horarios y alertas.\n6. Guarde documentos e informes médicos con fotos.\n7. Guarde fotos del anverso y reverso de tarjetas de seguro.\n8. Seleccione y comparta sus registros con su médico en cualquier momento.\n9. Instale la aplicación en su dispositivo para obtener todas las funciones y activar las alarmas de medicación.\n10. Obtenga su propia copia privada y dedicada, invisible para cualquier otra persona.\n11. Instalar aplicación: pulse el botón de abajo para detectar su dispositivo y recibir las instrucciones correctas.',
     'taken': 'Tomado',
     'alarm': 'Alarma de medicamento',
     'daily_reminders': 'Recordatorios diarios',
@@ -1253,7 +1253,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Partager les documents',
     'manual_title': 'Guide médical de poche SANA',
     'manual_content':
-        '1. Gérez vos dossiers de santé en toute sécurité sur le web et accédez à vos données à tout moment, où que vous soyez et depuis n\'importe quel appareil.\n2. Ajoutez et suivez les médicaments quotidiens et les dosages.\n3. Conservez les coordonnées et spécialités de vos médecins.\n4. Enregistrez vos pharmacies préférées avec adresses et téléphones.\n5. Configurez des rappels pour les heures de prise des médicaments avec alertes.\n6. Conservez les documents et rapports médicaux avec des photos.\n7. Conservez les photos recto et verso de vos cartes d\'assurance.\n8. Sélectionnez et partagez facilement vos dossiers avec vos médecins à tout moment.\n9. Installez l\'application sur votre appareil pour bénéficier de toutes les fonctionnalités et activer les alarmes de médicaments.\n10. Obtenez votre propre copie privée et dédiée, invisible pour toute autre personne.',
+        '1. Gérez vos dossiers de santé en toute sécurité sur le web et accédez à vos données à tout moment, où que vous soyez et depuis n\'importe quel appareil.\n2. Ajoutez et suivez les médicaments quotidiens et les dosages.\n3. Conservez les coordonnées et spécialités de vos médecins.\n4. Enregistrez vos pharmacies préférées avec adresses et téléphones.\n5. Configurez des rappels pour les heures de prise des médicaments avec alertes.\n6. Conservez les documents et rapports médicaux avec des photos.\n7. Conservez les photos recto et verso de vos cartes d\'assurance.\n8. Sélectionnez et partagez facilement vos dossiers avec vos médecins à tout moment.\n9. Installez l\'application sur votre appareil pour bénéficier de toutes les fonctionnalités et activer les alarmes de médicaments.\n10. Obtenez votre propre copie privée et dédiée, invisible pour toute autre personne.\n11. Installer l’application : appuyez sur le bouton ci-dessous pour détecter votre appareil et recevoir les instructions correctes.',
     'taken': 'Pris',
     'alarm': 'Alarme de médicament',
     'daily_reminders': 'Rappels quotidiens',
@@ -1408,7 +1408,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Dokumente teilen',
     'manual_title': 'SANA Medizinisches Taschenbuch',
     'manual_content':
-        '1. Verwalten Sie Ihre Gesundheitsdaten sicher im Web und greifen Sie jederzeit, überall und von jedem Gerät auf Ihre Daten zu.\n2. Verfolgen Sie tägliche Medikamente und Dosierungen.\n3. Speichern Sie Kontaktdaten Ihrer Ärzte und Fachgebiete.\n4. Speichern Sie Apotheken mit Adresse und Telefonnummer.\n5. Stellen Sie Erinnerungen für die Medikamenteneinnahme mit Alarm ein.\n6. Speichern Sie medizinische Dokumente und Berichte mit Fotos.\n7. Speichern Sie Vorder- und Rückseite Ihrer Versicherungskarten.\n8. Wählen Sie Datensätze aus und teilen Sie diese jederzeit mit Ihrem Arzt.\n9. Installieren Sie die App auf Ihrem Gerät, um alle Funktionen zu nutzen und Medikamentenalarme zu aktivieren.\n10. Erhalten Sie Ihre eigene private, persönliche Kopie, die für niemand anderen sichtbar ist.',
+        '1. Verwalten Sie Ihre Gesundheitsdaten sicher im Web und greifen Sie jederzeit, überall und von jedem Gerät auf Ihre Daten zu.\n2. Verfolgen Sie tägliche Medikamente und Dosierungen.\n3. Speichern Sie Kontaktdaten Ihrer Ärzte und Fachgebiete.\n4. Speichern Sie Apotheken mit Adresse und Telefonnummer.\n5. Stellen Sie Erinnerungen für die Medikamenteneinnahme mit Alarm ein.\n6. Speichern Sie medizinische Dokumente und Berichte mit Fotos.\n7. Speichern Sie Vorder- und Rückseite Ihrer Versicherungskarten.\n8. Wählen Sie Datensätze aus und teilen Sie diese jederzeit mit Ihrem Arzt.\n9. Installieren Sie die App auf Ihrem Gerät, um alle Funktionen zu nutzen und Medikamentenalarme zu aktivieren.\n10. Erhalten Sie Ihre eigene private, persönliche Kopie, die für niemand anderen sichtbar ist.\n11. App installieren: Tippen Sie unten auf die Schaltfläche, um Ihr Gerät zu erkennen und die richtigen Installationshinweise zu erhalten.',
     'taken': 'Eingenommen',
     'alarm': 'Medikamenten-Alarm',
     'daily_reminders': 'Tägliche Erinnerungen',
@@ -1563,7 +1563,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'Belgeleri Paylaş',
     'manual_title': 'SANA Cep Sağlık Rehberi',
     'manual_content':
-        '1. Sağlık kayıtlarınızı web üzerinde güvenle yönetin ve verilerinize her zaman, her yerden ve herhangi bir cihazdan erişin.\n2. Günlük ilaçlarınızı ve dozajlarınızı takip edin.\n3. Doktor iletişim ve uzmanlık bilgilerini kaydedin.\n4. Eczaneleri telefon ve adres bilgileriyle saklayın.\n5. Uyarılarla birlikte çoklu saat seçenekleriyle ilaç hatırlatıcıları kurun.\n6. Tıbbi rapor ve belgelerinizi fotoğraflarla kaydedin.\n7. Sigorta kartlarınızın ön ve arka fotoğraflarını saklayın.\n8. Kayıtlarınızı seçerek dilediğiniz zaman doktorunuzla paylaşın.\n9. Tüm özellikleri kullanmak ve ilaç alarmlarını etkinleştirmek için uygulamayı cihazınıza yükleyin.\n10. Başka hiç kimsenin göremeyeceği, size özel ve bağımsız bir kopyanızı edinin.',
+        '1. Sağlık kayıtlarınızı web üzerinde güvenle yönetin ve verilerinize her zaman, her yerden ve herhangi bir cihazdan erişin.\n2. Günlük ilaçlarınızı ve dozajlarınızı takip edin.\n3. Doktor iletişim ve uzmanlık bilgilerini kaydedin.\n4. Eczaneleri telefon ve adres bilgileriyle saklayın.\n5. Uyarılarla birlikte çoklu saat seçenekleriyle ilaç hatırlatıcıları kurun.\n6. Tıbbi rapor ve belgelerinizi fotoğraflarla kaydedin.\n7. Sigorta kartlarınızın ön ve arka fotoğraflarını saklayın.\n8. Kayıtlarınızı seçerek dilediğiniz zaman doktorunuzla paylaşın.\n9. Tüm özellikleri kullanmak ve ilaç alarmlarını etkinleştirmek için uygulamayı cihazınıza yükleyin.\n10. Başka hiç kimsenin göremeyeceği, size özel ve bağımsız bir kopyanızı edinin.\n11. Uygulamayı yükle: Cihazınızı algılamak ve doğru kurulum talimatlarını almak için aşağıdaki düğmeye dokunun.',
     'taken': 'Alındı',
     'alarm': 'İlaç Alarmı',
     'daily_reminders': 'Günlük Hatırlatıcılar',
@@ -1717,7 +1717,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': 'दस्तावेज़ साझा करें',
     'manual_title': 'साना मेडिकल पॉकेट बुक',
     'manual_content':
-        '1. वेब पर अपने स्वास्थ्य रिकॉर्ड को सुरक्षित रूप से प्रबंधित करें और किसी भी समय, कहीं से भी और किसी भी डिवाइस से अपने डेटा तक पहुँचें।\n2. दैनिक दवाइयाँ और उनकी खुराक आसानी से ट्रैक करें।\n3. अपने डॉक्टरों के संपर्क और विशेषता नोट रखें।\n4. अपनी पसंदीदा फार्मेसी का पता और फोन सेव करें।\n5. अलर्ट के साथ दवा लेने के लिए कई समय के रिमाइंडर सेट करें।\n6. मेडिकल दस्तावेज़ और रिपोर्ट फोटो के साथ रखें।\n7. बीमा कार्ड की आगे और पीछे की फोटो सुरक्षित रखें।\n8. डॉक्टर के साथ कभी भी जरूरी रिकॉर्ड चुनें और साझा करें।\n9. सभी सुविधाएँ प्राप्त करने और दवा के अलार्म सक्रिय करने के लिए अपने डिवाइस पर ऐप इंस्टॉल करें।\n10. अपनी निजी और समर्पित प्रति प्राप्त करें, जिसे कोई अन्य व्यक्ति नहीं देख सकता।',
+        '1. वेब पर अपने स्वास्थ्य रिकॉर्ड को सुरक्षित रूप से प्रबंधित करें और किसी भी समय, कहीं से भी और किसी भी डिवाइस से अपने डेटा तक पहुँचें।\n2. दैनिक दवाइयाँ और उनकी खुराक आसानी से ट्रैक करें।\n3. अपने डॉक्टरों के संपर्क और विशेषता नोट रखें।\n4. अपनी पसंदीदा फार्मेसी का पता और फोन सेव करें।\n5. अलर्ट के साथ दवा लेने के लिए कई समय के रिमाइंडर सेट करें।\n6. मेडिकल दस्तावेज़ और रिपोर्ट फोटो के साथ रखें।\n7. बीमा कार्ड की आगे और पीछे की फोटो सुरक्षित रखें।\n8. डॉक्टर के साथ कभी भी जरूरी रिकॉर्ड चुनें और साझा करें।\n9. सभी सुविधाएँ प्राप्त करने और दवा के अलार्म सक्रिय करने के लिए अपने डिवाइस पर ऐप इंस्टॉल करें।\n10. अपनी निजी और समर्पित प्रति प्राप्त करें, जिसे कोई अन्य व्यक्ति नहीं देख सकता।\n11. ऐप इंस्टॉल करें: अपने डिवाइस का पता लगाने और सही इंस्टॉलेशन निर्देश प्राप्त करने के लिए नीचे दिए गए बटन पर टैप करें।',
     'taken': 'दवा ले ली',
     'alarm': 'दवा का अलार्म',
     'daily_reminders': 'दैनिक अनुस्मारक',
@@ -1868,7 +1868,7 @@ const Map<String, Map<String, String>> _translations = {
     'share_documents': '分享文档',
     'manual_title': 'SANA 随身健康手册',
     'manual_content':
-        '1. 在网页端安全管理您的健康记录，并随时随地通过任何设备访问您的数据。\n2. 轻松添加并跟踪每日药物用量和频率。\n3. 保存医生专科信息与联系方式。\n4. 保存常用药房地址与联系电话。\n5. 设置多时间段带提示的服药提醒。\n6. 拍摄并保存医疗报告与检查单。\n7. 保存医保卡正面和反面照片。\n8. 随时勾选并向医生分享您的健康档案。\n9. 将应用程序安装到您的设备上，以获得全部功能并启用服药提醒和闹钟。\n10. 获取属于您自己的私密专属副本，任何其他人都无法看到。',
+        '1. 在网页端安全管理您的健康记录，并随时随地通过任何设备访问您的数据。\n2. 轻松添加并跟踪每日药物用量和频率。\n3. 保存医生专科信息与联系方式。\n4. 保存常用药房地址与联系电话。\n5. 设置多时间段带提示的服药提醒。\n6. 拍摄并保存医疗报告与检查单。\n7. 保存医保卡正面和反面照片。\n8. 随时勾选并向医生分享您的健康档案。\n9. 将应用程序安装到您的设备上，以获得全部功能并启用服药提醒和闹钟。\n10. 获取属于您自己的私密专属副本，任何其他人都无法看到。\n11. 安装应用：点击下方按钮以检测您的设备并获取正确的安装说明。',
     'taken': '已服药',
     'alarm': '服药提醒',
     'daily_reminders': '每日提醒',
@@ -2578,15 +2578,79 @@ class _HomeScreenState extends State<HomeScreen> {
                                             clipBehavior: Clip.none,
                                             child: SingleChildScrollView(
                                               padding: const EdgeInsets.all(16),
-                                              child: Text(
-                                                tr(
-                                                  language,
-                                                  'manual_content',
-                                                ),
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  height: 1.5,
-                                                ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Text(
+                                                    tr(
+                                                      language,
+                                                      'manual_content',
+                                                    ),
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      height: 1.5,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  InkWell(
+                                                    onTap: () {
+                                                      Navigator.of(ctx).pop();
+                                                      _showAdaptiveInstallDialog();
+                                                    },
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    child: Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        vertical: 12,
+                                                        horizontal: 16,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.teal
+                                                            .withValues(
+                                                                alpha: 0.1),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                        border: Border.all(
+                                                            color: Colors.teal),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          const Icon(
+                                                            Icons
+                                                                .install_mobile,
+                                                            color: Colors.teal,
+                                                          ),
+                                                          const SizedBox(
+                                                              width: 8),
+                                                          Flexible(
+                                                            child: Text(
+                                                              tr(
+                                                                language,
+                                                                'install_app',
+                                                              ),
+                                                              style:
+                                                                  const TextStyle(
+                                                                color:
+                                                                    Colors.teal,
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
@@ -2612,36 +2676,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 4),
                             ),
-                            InkWell(
-                              onTap: _showAdaptiveInstallDialog,
-                              borderRadius: BorderRadius.circular(8),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      tr(language, 'install_app'),
-                                      style: const TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.teal,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.install_mobile,
-                                      size: 26,
-                                      color: Colors.teal,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
                             InkWell(
                               onTap: _shareApp,
                               borderRadius: BorderRadius.circular(8),
