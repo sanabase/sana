@@ -2730,17 +2730,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       onTap: () async {
                                                         Navigator.of(ctx).pop();
                                                         if (kIsWeb) {
-                                                          final ok = await SanaWebPush.enable(
+                                                          final result = await SanaWebPush.enableVerbose(
                                                             Supabase.instance.client,
                                                           );
                                                           if (context.mounted) {
                                                             ScaffoldMessenger.of(context)
                                                                 .showSnackBar(
                                                               SnackBar(
+                                                                duration: const Duration(seconds: 15),
                                                                 content: Text(
-                                                                  ok
+                                                                  result == 'OK'
                                                                       ? tr(language, 'reminders_enabled')
-                                                                      : tr(language, 'reminders_not_enabled'),
+                                                                      : 'SANA DEBUG: $result',
                                                                 ),
                                                               ),
                                                             );

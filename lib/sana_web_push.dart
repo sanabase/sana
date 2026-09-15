@@ -1,6 +1,6 @@
 // lib/sana_web_push.dart
 //
-// SANA Web Push subsystem ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â one codebase, no native install.
+// SANA Web Push subsystem ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â one codebase, no native install.
 // On non-web platforms, every method is a no-op.
 
 import 'dart:convert';
@@ -27,49 +27,65 @@ class SanaWebPush {
     }
   }
 
-  static Future<bool> enable(SupabaseClient client) async {
-    if (!kIsWeb) return false;
+  // Temporary diagnostic: returns a human-readable message instead of
+  // a silent false, so the phone can display why enable() failed.
+  static Future<String> enableVerbose(SupabaseClient client) async {
+    if (!kIsWeb) return 'NOT_WEB';
+
     try {
       if (web.Notification.permission != 'granted') {
         final r = await web.Notification.requestPermission().toDart;
-        if (r.toDart != 'granted') return false;
+        if (r.toDart != 'granted') {
+          return 'PERMISSION_DENIED (status=${r.toDart})';
+        }
       }
 
       final reg = await web.window.navigator.serviceWorker.ready.toDart;
 
       web.PushSubscription? sub =
           await reg.pushManager.getSubscription().toDart;
-      sub ??= await reg.pushManager
-          .subscribe(
-            web.PushSubscriptionOptionsInit(
-              userVisibleOnly: true,
-              applicationServerKey: _urlB64ToUint8Array(vapidPublicKey),
-            ),
-          )
-          .toDart;
+
+      if (sub == null) {
+        try {
+          sub = await reg.pushManager
+              .subscribe(
+                web.PushSubscriptionOptionsInit(
+                  userVisibleOnly: true,
+                  applicationServerKey: _urlB64ToUint8Array(vapidPublicKey),
+                ),
+              )
+              .toDart;
+        } catch (e) {
+          return 'SUBSCRIBE_FAILED: $e';
+        }
+      }
 
       final jsonJS = sub.toJSON();
-      final endpoint = jsonJS.endpoint;
+      final endpoint = jsonJS.endpoint ?? '';
       final keys = jsonJS.keys;
       final p256dh = (keys.getProperty('p256dh'.toJS) as JSString).toDart;
       final auth = (keys.getProperty('auth'.toJS) as JSString).toDart;
 
       final user = client.auth.currentUser;
-      if (user == null || endpoint.isEmpty) return false;
+      if (user == null) return 'USER_NULL (Supabase auth not signed in)';
+      if (endpoint.isEmpty) return 'ENDPOINT_EMPTY';
 
-      await client.from(_table).upsert({
-        'user_id': user.id,
-        'endpoint': endpoint,
-        'p256dh': p256dh,
-        'auth': auth,
-        'user_agent': web.window.navigator.userAgent,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'endpoint');
+      try {
+        await client.from(_table).upsert({
+          'user_id': user.id,
+          'endpoint': endpoint,
+          'p256dh': p256dh,
+          'auth': auth,
+          'user_agent': web.window.navigator.userAgent,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }, onConflict: 'endpoint');
+      } catch (e) {
+        return 'DB_UPSERT_FAILED: $e';
+      }
 
-      return true;
+      return 'OK';
     } catch (e) {
-      debugPrint('SanaWebPush enable error: $e');
-      return false;
+      return 'UNKNOWN_ERROR: $e';
     }
   }
 
