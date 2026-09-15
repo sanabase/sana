@@ -1,4 +1,4 @@
-﻿name: Deploy Flutter Web to GitHub Pages
+name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
@@ -33,6 +33,9 @@ jobs:
 
       - name: Build Flutter Web
         run: flutter build web --release --base-href /sana/ --no-wasm-dry-run
+
+      - name: Copy native installers
+        run: Copy-Item docs/downloads build/web/downloads -Recurse -Force
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
