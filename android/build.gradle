@@ -16,9 +16,6 @@ allprojects {
 }
 rootProject.buildDir = "../build"
 subprojects {
-    project.buildDir = "/"
-}
-subprojects {
     project.evaluationDependsOn(":app")
 }
 tasks.register("clean", Delete) {
