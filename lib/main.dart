@@ -6941,6 +6941,22 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
     );
   }
 
+  Future<void> _closeAlarmScreen() async {
+    // Dismiss the alarm without marking the reminder taken.
+    await SanaAlarmService.stopAlarmSound(
+      notificationId: widget.notificationId,
+    );
+
+    if (!mounted) return;
+
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).popUntil(
+      (route) => route.isFirst,
+    );
+  }
+
   @override
   void dispose() {
     SanaAlarmService.stopAlarmSound();
@@ -7037,19 +7053,44 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                           ),
                         ],
                         const SizedBox(height: 40),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 70,
-                          child: FilledButton(
-                            onPressed: _taken ? null : _markTaken,
-                            child: Text(
-                              tr(language, 'taken'),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 70,
+                                child: FilledButton(
+                                  onPressed: _taken ? null : _markTaken,
+                                  child: Text(
+                                    tr(language, 'taken'),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                height: 70,
+                                child: OutlinedButton(
+                                  onPressed: _taken ? null : _closeAlarmScreen,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    side: const BorderSide(color: Colors.white, width: 2),
+                                  ),
+                                  child: Text(
+                                    tr(language, 'close'),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
