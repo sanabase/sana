@@ -3202,6 +3202,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 10),
         _shareCard(language),
+        const SizedBox(height: 10),
+        _closeCard(language),
       ],
     );
   }
@@ -3291,6 +3293,62 @@ class _HomeScreenState extends State<HomeScreen> {
                 Flexible(
                   child: Text(
                     tr(language, 'share_documents'),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 9, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _closeCard(String language) {
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: Colors.red.shade100,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(tr(language, 'close')),
+                content: Text(tr(language, 'close')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(tr(language, 'cancel')),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(tr(language, 'close')),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              SystemNavigator.pop();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.close, size: 28, color: Colors.red),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    tr(language, 'close'),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
