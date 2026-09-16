@@ -6613,7 +6613,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
                                                   top: 2,
                                                 ),
                                                 child: Text(
-                                                  times.join(' • '),
+                                                  times.join(' - '),
                                                   textAlign: TextAlign.center,
                                                   maxLines: 2,
                                                   overflow:
@@ -6704,7 +6704,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
                                                   if (times.isNotEmpty)
                                                     Text(
                                                       times.join(
-                                                        ' • ',
+                                                        ' - ',
                                                       ),
                                                       maxLines: 2,
                                                       overflow:
@@ -7028,7 +7028,7 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                         if (times.isNotEmpty) ...[
                           const SizedBox(height: 10),
                           Text(
-                            times.join(' • '),
+                            times.join(' - '),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white70,
