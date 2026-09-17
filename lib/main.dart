@@ -6944,6 +6944,7 @@ class SanaStore {
 
   void setAll(String t, List<Map<String, dynamic>> r) {
     _cache[t] = r; _dirty[t] = {}; _deleted[t] = {};
+    _loaded = true;
   }
 
   void upsert(String t, Map<String, dynamic> row) {
