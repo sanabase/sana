@@ -5150,10 +5150,7 @@ class _AddFormDialogState extends State<AddFormDialog> {
             ),
           ],
         ),
-        body: InteractiveViewer(
-          minScale: 1.0,
-          maxScale: 3.0,
-          child: Form(
+        body: Form(
             key: _formKey,
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(right: 4),
@@ -5305,7 +5302,6 @@ class _AddFormDialogState extends State<AddFormDialog> {
               ),
             ),
           ),
-        ),
       ),
     );
   }
