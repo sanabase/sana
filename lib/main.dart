@@ -6973,11 +6973,15 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
     if (!mounted) return;
 
     // Return completely to the application's first/home route.
-    Navigator.of(
+    final nav = Navigator.of(
       context,
       rootNavigator: true,
-    ).popUntil(
-      (route) => route.isFirst,
+    );
+    if (nav.canPop()) {
+      nav.popUntil(
+        (route) => route.isFirst,
+      );
+    }
     );
   }
 
@@ -6989,11 +6993,15 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(
+    final nav = Navigator.of(
       context,
       rootNavigator: true,
-    ).popUntil(
-      (route) => route.isFirst,
+    );
+    if (nav.canPop()) {
+      nav.popUntil(
+        (route) => route.isFirst,
+      );
+    }
     );
   }
 
