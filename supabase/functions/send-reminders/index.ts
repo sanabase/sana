@@ -1,4 +1,4 @@
-﻿import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'https://esm.sh/web-push@3.6.7';
 
@@ -101,10 +101,22 @@ serve(async () => {
     return new Response('no reminders');
   }
 
+
+  const userIds = [...new Set(reminders.map((r) => r.user_id).filter(Boolean))];
+  const { data: prefs } = await sb
+    .from('users')
+    .select('id, reminders_enabled')
+    .in('id', userIds);
+
+  const enabledByUser = new Map(
+    (prefs ?? []).map((u) => [u.id, u.reminders_enabled !== false]),
+  );
+
   let sent = 0;
 
   for (const r of reminders) {
     if (r.is_active === false) continue;
+    if (!enabledByUser.get(r.user_id)) continue;
 
     const times = parseTimes(r.reminder_time);
     if (times.length === 0) continue;
