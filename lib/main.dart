@@ -5353,6 +5353,13 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
   Future<void> _loadMedications() async {
     if (!mounted) return;
+    if (SanaStore.instance.isLoaded) {
+      setState(() {
+        _medicationsList = SanaStore.instance.rows('medications');
+      });
+      return;
+    }
+    if (!mounted) return;
     try {
       final query = _client.from('medications').select();
       final dynamic response = widget.guestMode
@@ -5378,6 +5385,17 @@ class _RecordListScreenState extends State<RecordListScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
+    if (SanaStore.instance.isLoaded) {
+      final local = SanaStore.instance.rows(_table);
+      setState(() { _rows = local; _loading = false; });
+      if (_table == 'reminders' && widget.remindersEnabled) {
+        for (final row in local) {
+          try { await SanaAlarmService.scheduleReminder(row); } catch (_) {}
+        }
+      }
+      return;
+    }
     if (!mounted) return;
 
     // ADD THESE 5 LINES FOR DEBUG
@@ -7247,6 +7265,16 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   Future<void> _loadAllData() async {
+    if (SanaStore.instance.isLoaded) {
+      setState(() {
+        for (final t in ['medications','doctors','pharmacies','reminders','documents','insurance_cards']) {
+          _allData[t] = SanaStore.instance.rows(t);
+          _selectedIds[t] = {};
+        }
+        _loading = false;
+      });
+      return;
+    }
     if (!mounted) return;
     final types = [
       'medications',
