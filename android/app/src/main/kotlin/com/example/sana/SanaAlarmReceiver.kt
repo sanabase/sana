@@ -7,11 +7,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import java.io.File
 import java.util.Calendar
 
 class SanaAlarmReceiver : BroadcastReceiver() {
@@ -35,8 +32,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             notificationId: Int,
             reminderId: String,
             triggerAtMillis: Long,
-            daily: Boolean,
-            photoPath: String = ""
+            daily: Boolean
         ) {
             val alarmManager =
                 context.getSystemService(
@@ -52,7 +48,6 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                     putExtra("notification_id", notificationId)
                     putExtra("reminder_id", reminderId)
                     putExtra("daily", daily)
-                    putExtra("photo_path", photoPath)
                 }
 
             val pendingIntent =
@@ -134,8 +129,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             notificationId: Int,
             reminderId: String,
             triggerAtMillis: Long,
-            daily: Boolean,
-            photoPath: String = ""
+            daily: Boolean
         ) {
             val prefs =
                 context.getSharedPreferences(
@@ -189,24 +183,6 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             prefs.edit()
                 .putStringSet(KEY_ALARMS, current)
                 .apply()
-        }
-
-        fun loadDownsampledBitmap(path: String, maxDim: Int): Bitmap? {
-            if (path.isEmpty()) return null
-            val f = File(path)
-            if (!f.exists()) return null
-            return try {
-                val opts = BitmapFactory.Options()
-                opts.inJustDecodeBounds = true
-                BitmapFactory.decodeFile(path, opts)
-                var scale = 1
-                while (opts.outWidth / scale > maxDim || opts.outHeight / scale > maxDim) {
-                    scale *= 2
-                }
-                val opts2 = BitmapFactory.Options()
-                opts2.inSampleSize = scale
-                BitmapFactory.decodeFile(path, opts2)
-            } catch (_: Exception) { null }
         }
 
         fun rescheduleAll(context: Context) {
@@ -287,8 +263,6 @@ class SanaAlarmReceiver : BroadcastReceiver() {
         val notificationId =
             intent.getIntExtra("notification_id", 0)
 
-        val photoPath = intent.getStringExtra("photo_path") ?: ""
-
         val reminderId =
             intent.getStringExtra("reminder_id") ?: return
 
@@ -352,10 +326,6 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 CHANNEL_ID
             )
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .apply {
-                    val bmp = loadDownsampledBitmap(photoPath, 256)
-                    if (bmp != null) setLargeIcon(bmp)
-                }
                 .setContentTitle("SANA")
                 .setContentText("Medication reminder")
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
