@@ -3433,6 +3433,34 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+        if (isLoggedIn) ...[
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: Text(tr(language, 'reminders_enabled')),
+            value: _profile?['reminders_enabled'] != false,
+            onChanged: (value) async {
+              final user = _client.auth.currentUser;
+              if (user == null) return;
+              try {
+                await _client
+                    .from('users')
+                    .update({'reminders_enabled': value})
+                    .eq('id', user.id);
+                if (!mounted) return;
+                setState(() {
+                  _profile?['reminders_enabled'] = value;
+                });
+              } catch (e) {
+                debugPrint('reminders_enabled toggle failed: ');
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('$e')),
+                );
+              }
+            },
+          ),
+        ],
+
         if (isLoggedIn && isAdmin) ...[
           const SizedBox(height: 8),
           OutlinedButton.icon(
