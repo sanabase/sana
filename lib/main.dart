@@ -2217,6 +2217,26 @@ class _HomeScreenState extends State<HomeScreen> {
           _isGuest = true;
           _loading = false;
         });
+
+        // Load store for guest mode too (parallel)
+        if (!SanaStore.instance.isLoaded) {
+          final futures = <Future>[];
+          for (final t in ['medications', 'doctors', 'pharmacies', 'reminders', 'documents', 'insurance_cards']) {
+            futures.add(() async {
+              try {
+                final resp = await _client
+                    .from(t)
+                    .select()
+                    .isFilter('user_id', null);
+                final list = (resp as List)
+                    .map((e) => Map<String, dynamic>.from(e as Map))
+                    .toList();
+                SanaStore.instance.setAll(t, list);
+              } catch (_) {}
+            }());
+          }
+          await Future.wait(futures);
+        }
         return;
       }
 
