@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -4387,6 +4388,13 @@ class StorageHelper {
     }
   }
 
+  static String? getCachedSignedUrl(String? path) {
+    if (path == null || path.trim().isEmpty) return null;
+    final c = _urlCache[path.trim()];
+    if (c != null && !c.isExpired) return c.url;
+    return null;
+  }
+
   static void clearCache() {
     _urlCache.clear();
   }
@@ -4486,7 +4494,7 @@ class DisplayImage extends StatelessWidget {
 // SIGNED IMAGE WIDGET
 // ============================================
 
-class SignedImage extends StatefulWidget {
+class SignedImage extends StatelessWidget {
   final String? path;
   final double? height;
   final double? width;
@@ -4501,10 +4509,32 @@ class SignedImage extends StatefulWidget {
   });
 
   @override
-  State<SignedImage> createState() => _SignedImageState();
+  Widget build(BuildContext context) {
+    final p = path?.trim();
+    if (p == null || p.isEmpty) {
+      return Icon(Icons.medication, size: height ?? 48, color: Colors.teal);
+    }
+    final cached = StorageHelper.getCachedSignedUrl(p);
+    if (cached != null) {
+      return Image.network(cached, height: height, width: width, fit: fit,
+        errorBuilder: (_, __, ___) =>
+          Icon(Icons.medication, size: height ?? 48, color: Colors.teal));
+    }
+    return _SignedImageAsync(path: p, height: height, width: width, fit: fit);
+  }
 }
 
-class _SignedImageState extends State<SignedImage> {
+class _SignedImageAsync extends StatefulWidget {
+  final String path;
+  final double? height;
+  final double? width;
+  final BoxFit fit;
+  const _SignedImageAsync({required this.path, this.height, this.width, this.fit = BoxFit.contain});
+  @override
+  State<_SignedImageAsync> createState() => _SignedImageAsyncState();
+}
+
+class _SignedImageAsyncState extends State<_SignedImageAsync> {
   String? _url;
   bool _loading = true;
 
@@ -4514,82 +4544,25 @@ class _SignedImageState extends State<SignedImage> {
     _load();
   }
 
-  @override
-  void didUpdateWidget(
-    covariant SignedImage oldWidget,
-  ) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.path != widget.path) {
-      _url = null;
-      _loading = true;
-      _load();
-    }
-  }
-
   Future<void> _load() async {
-    final path = widget.path?.trim();
-
-    if (path == null || path.isEmpty) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
-      return;
-    }
-
-    final url = await StorageHelper.getSignedUrl(path);
-
+    final url = await StorageHelper.getSignedUrl(widget.path);
     if (!mounted) return;
-
-    setState(() {
-      _url = url;
-      _loading = false;
-    });
+    setState(() { _url = url; _loading = false; });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return SizedBox(
-        height: widget.height ?? 100,
-        width: widget.width,
-        child: const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-          ),
-        ),
-      );
+      return SizedBox(height: widget.height ?? 100, width: widget.width, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
     }
-
     if (_url == null) {
-      return Icon(
-        Icons.medication,
-        size: widget.height ?? 48,
-        color: Colors.teal,
-      );
+      return Icon(Icons.medication, size: widget.height ?? 48, color: Colors.teal);
     }
-
-    return Image.network(
-      _url!,
-      height: widget.height,
-      width: widget.width,
-      fit: widget.fit,
-      errorBuilder: (_, __, ___) {
-        return Icon(
-          Icons.medication,
-          size: widget.height ?? 48,
-          color: Colors.teal,
-        );
-      },
-    );
+    return Image.network(_url!, height: widget.height, width: widget.width, fit: widget.fit,
+      errorBuilder: (_, __, ___) =>
+        Icon(Icons.medication, size: widget.height ?? 48, color: Colors.teal));
   }
 }
-
-// ============================================
-// ADD FORM DIALOG
-// ============================================
 
 class AddFormDialog extends StatefulWidget {
   final String type;
@@ -8550,3 +8523,5 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 }
+
+
