@@ -130,22 +130,52 @@ class MainActivity : FlutterActivity() {
                                     "reminderId"
                                 )
 
-                        val triggerAtMillis =
-                            call.argument<Long>("triggerAtMillis")
-                                ?: throw IllegalArgumentException(
-                                    "triggerAtMillis"
-                                )
+                         val triggerAtMillis =
+
+
+                             call.argument<Long>("triggerAtMillis")
+
+
+                                 ?: throw IllegalArgumentException(
+
+
+                                     "triggerAtMillis"
+
+
+                                 )
+
+
+
+                         val photoPath =
+
+
+                             call.argument<String>("photoPath") ?: ""
 
                         val daily =
                             call.argument<Boolean>("daily") ?: false
 
-                        SanaAlarmReceiver.schedule(
-                            this,
-                            notificationId,
-                            reminderId,
-                            triggerAtMillis,
-                            daily
-                        )
+                         SanaAlarmReceiver.schedule(
+
+
+                             this,
+
+
+                             notificationId,
+
+
+                             reminderId,
+
+
+                             triggerAtMillis,
+
+
+                             daily,
+
+
+                             photoPath
+
+
+                         )
 
                         result.success(null)
                     } catch (e: Exception) {
