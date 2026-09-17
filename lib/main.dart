@@ -5702,6 +5702,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 if (_table == 'reminders' && widget.remindersEnabled) {
         final inserted =
             await _client.from(_table).insert(cleanPayload).select().single();
+        try { SanaStore.instance.upsert(_table, Map<String, dynamic>.from(inserted as Map)); } catch (_) {}
 
         try {
           await SanaAlarmService.scheduleReminder(
@@ -5714,6 +5715,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
         }
       } else {
         await _client.from(_table).insert(cleanPayload);
+        try { SanaStore.instance.upsert(_table, cleanPayload); } catch (_) {}
       }
 
       await _load();
@@ -5946,6 +5948,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
       }
 
       // 1. Delete database record first.
+      try { SanaStore.instance.remove(_table, id); } catch (_) {}
       final query = _client.from(_table).delete().eq('id', id);
 
       if (widget.guestMode) {
