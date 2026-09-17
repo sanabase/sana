@@ -1988,7 +1988,7 @@ class GuestIdentityService {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await SanaAlarmService.initialize();
+  if (!kIsWeb) { await SanaAlarmService.initialize(); }
 
   await Supabase.initialize(
     url: _supabaseUrl,
