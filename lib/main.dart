@@ -2202,6 +2202,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
       Map<String, dynamic>? data;
       try {
+        if (!SanaStore.instance.isLoaded) {
+          for (final t in ['medications','doctors','pharmacies','reminders','documents','insurance_cards']) {
+            try {
+              final q = _client.from(t).select();
+              final dynamic resp = _isGuest
+                  ? await q.isFilter('user_id', null)
+                  : await q.eq('user_id', user.id);
+              final list = (resp as List)
+                  .map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList();
+              SanaStore.instance.setAll(t, list);
+            } catch (_) {}
+          }
+        }
         data = await _client
             .from('users')
             .select()
@@ -3391,6 +3405,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () async {
+                    try { await SanaStore.instance.flush(_client); } catch (_) {}
+                    SanaStore.instance.reset();
                   if (isLoggedIn) {
                     await _client.auth.signOut();
                     StorageHelper.clearCache();
@@ -6891,6 +6907,62 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 // ============================================
 // SANA ALARM SCREEN
 // ============================================
+
+class SanaStore {
+  SanaStore._();
+  static final SanaStore instance = SanaStore._();
+
+  final Map<String, List<Map<String, dynamic>>> _cache = {};
+  final Map<String, Set<String>> _dirty = {};
+  final Map<String, Set<String>> _deleted = {};
+  bool _loaded = false;
+
+  bool get isLoaded => _loaded;
+  List<Map<String, dynamic>> rows(String t) => _cache[t] ?? [];
+
+  void setAll(String t, List<Map<String, dynamic>> r) {
+    _cache[t] = r; _dirty[t] = {}; _deleted[t] = {};
+  }
+
+  void upsert(String t, Map<String, dynamic> row) {
+    final list = _cache.putIfAbsent(t, () => []);
+    final id = row['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    final i = list.indexWhere((r) => r['id']?.toString() == id);
+    if (i >= 0) { list[i] = row; } else { list.add(row); }
+    _dirty.putIfAbsent(t, () => {}).add(id);
+    _deleted.putIfAbsent(t, () => {}).remove(id);
+  }
+
+  void remove(String t, String id) {
+    _cache[t]?.removeWhere((r) => r['id']?.toString() == id);
+    _deleted.putIfAbsent(t, () => {}).add(id);
+    _dirty.putIfAbsent(t, () => {}).remove(id);
+  }
+
+  Future<void> flush(SupabaseClient c) async {
+    for (final t in _cache.keys.toList()) {
+      final dirty = _dirty[t] ?? {};
+      final gone = _deleted[t] ?? {};
+      if (dirty.isEmpty && gone.isEmpty) continue;
+      for (final id in gone) {
+        try { await c.from(t).delete().eq('id', id); } catch (_) {}
+      }
+      final rows = _cache[t] ?? [];
+      for (final id in dirty) {
+        final row = rows.firstWhere((r) => r['id']?.toString() == id, orElse: () => {});
+        if (row.isEmpty) continue;
+        try { await c.from(t).upsert(row); } catch (_) {}
+      }
+      _dirty[t] = {}; _deleted[t] = {};
+    }
+  }
+
+  void reset() {
+    _cache.clear(); _dirty.clear(); _deleted.clear(); _loaded = false;
+  }
+}
+
 
 class SanaAlarmScreen extends StatefulWidget {
   final String reminderId;
