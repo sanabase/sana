@@ -5359,8 +5359,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
           _loading = false;
         });
 
-if (_table == 'reminders' &&
-    _profile?['reminders_enabled'] != false) {
+        if (_table == 'reminders') {
           for (final row in records) {
             try {
               await SanaAlarmService.scheduleReminder(row);
@@ -5634,8 +5633,7 @@ if (_table == 'reminders' &&
     try {
       print('Inserting into $_table: $cleanPayload');
 
-if (_table == 'reminders' &&
-    _profile?['reminders_enabled'] != false) {
+      if (_table == 'reminders') {
         final inserted =
             await _client.from(_table).insert(cleanPayload).select().single();
 
