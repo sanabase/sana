@@ -2303,6 +2303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           ownerId: ownerId,
           guestMode: _isGuest,
+          remindersEnabled: _profile?['reminders_enabled'] != false,
         ),
       ),
     );
@@ -2318,6 +2319,7 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           ownerId: ownerId,
           guestMode: _isGuest,
+          remindersEnabled: _profile?['reminders_enabled'] != false,
           autoOpenAdd: true,
         ),
       ),
@@ -5249,6 +5251,7 @@ class RecordListScreen extends StatefulWidget {
   final String ownerId;
   final bool guestMode;
   final bool autoOpenAdd;
+  final bool remindersEnabled;
 
   const RecordListScreen({
     super.key,
@@ -5256,6 +5259,7 @@ class RecordListScreen extends StatefulWidget {
     required this.ownerId,
     required this.guestMode,
     this.autoOpenAdd = false,
+    this.remindersEnabled = true,
   });
 
   @override
@@ -5359,7 +5363,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
           _loading = false;
         });
 
-        if (_table == 'reminders') {
+if (_table == 'reminders' && widget.remindersEnabled) {
           for (final row in records) {
             try {
               await SanaAlarmService.scheduleReminder(row);
@@ -5633,7 +5637,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
     try {
       print('Inserting into $_table: $cleanPayload');
 
-      if (_table == 'reminders') {
+if (_table == 'reminders' && widget.remindersEnabled) {
         final inserted =
             await _client.from(_table).insert(cleanPayload).select().single();
 
