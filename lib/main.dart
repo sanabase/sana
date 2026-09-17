@@ -526,6 +526,7 @@ class SanaAlarmService {
             reminderId: id,
             scheduledDate: scheduled,
             daily: true,
+            photoBase64: row['photo_base64']?.toString() ?? row['photo']?.toString(),
           );
         } else {
           await _notifications.zonedSchedule(
@@ -582,6 +583,7 @@ class SanaAlarmService {
             reminderId: id,
             scheduledDate: scheduled,
             daily: false,
+            photoBase64: row['photo_base64']?.toString() ?? row['photo']?.toString(),
           );
         } else {
           await _notifications.zonedSchedule(
