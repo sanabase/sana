@@ -2030,69 +2030,6 @@ class SanaDiagOverlay extends StatelessWidget {
   );
 }
 
-final ValueNotifier<String> _frameTime = ValueNotifier<String>('');
-
-class SanaFrameMonitor extends StatefulWidget {
-  final Widget child;
-  const SanaFrameMonitor({super.key, required this.child});
-
-  @override
-  State<SanaFrameMonitor> createState() => _SanaFrameMonitorState();
-}
-
-class _SanaFrameMonitorState extends State<SanaFrameMonitor> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addTimingsCallback((timings) {
-      if (timings.isEmpty) return;
-      var buildMs = 0.0;
-      var rasterMs = 0.0;
-      for (final t in timings) {
-        buildMs += t.buildDuration.inMicroseconds / 1000.0;
-        rasterMs += t.rasterDuration.inMicroseconds / 1000.0;
-      }
-      _frameTime.value =
-          'build ${buildMs.toStringAsFixed(0)}ms | raster ${rasterMs.toStringAsFixed(0)}ms';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        widget.child,
-        Positioned(
-          top: 2,
-          right: 2,
-          child: SafeArea(
-            child: ValueListenableBuilder<String>(
-              valueListenable: _frameTime,
-              builder: (_, value, __) {
-                return IgnorePointer(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
-                    ),
-                    color: const Color(0xCC000000),
-                    child: Text(
-                      value,
-                      style: const TextStyle(
-                        color: Color(0xFFFFEB3B),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 class SanaApp extends StatelessWidget {
   final String? pendingReminderId;
   const SanaApp({super.key, this.pendingReminderId});
@@ -2116,7 +2053,7 @@ class SanaApp extends StatelessWidget {
           colorSchemeSeed: Colors.teal,
           brightness: Brightness.light,
         ),
-        home: SanaFrameMonitor(child: Directionality(
+        home: Directionality(
           textDirection:
               language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
           child: (pendingReminderId != null && pendingReminderId!.isNotEmpty)
@@ -2126,7 +2063,7 @@ class SanaApp extends StatelessWidget {
                   daily: false,
                 )
               : const HomeScreen(),
-        )),
+        ),
       ),
     );
   }
