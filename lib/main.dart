@@ -3342,6 +3342,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
+            try { await SanaStore.instance.flush(_client); } catch (_) {}
             final confirmed = await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
