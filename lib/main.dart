@@ -2010,6 +2010,25 @@ void main() async {
   runApp(SanaApp(pendingReminderId: pendingReminderId));
 }
 
+// SANA DIAG PANEL
+final sanaDiag = ValueNotifier<String>('diag: start');
+class SanaDiagOverlay extends StatelessWidget {
+  const SanaDiagOverlay({super.key});
+  @override
+  Widget build(BuildContext c) => Positioned(
+    top: 0, left: 0,
+    child: Container(
+      color: const Color(0xCC000000),
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(maxWidth: 260),
+      child: ValueListenableBuilder<String>(
+        valueListenable: sanaDiag,
+        builder: (c, v, _) => Text(v, style: const TextStyle(color: Color(0xFFFFEB3B), fontSize: 10)),
+      ),
+    ),
+  );
+}
+
 class SanaApp extends StatelessWidget {
   final String? pendingReminderId;
   const SanaApp({super.key, this.pendingReminderId});
@@ -2202,9 +2221,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
       Map<String, dynamic>? data;
       try {
+        sanaDiag.value = 'diag: loading tables';
         if (!SanaStore.instance.isLoaded) {
           for (final t in ['medications','doctors','pharmacies','reminders','documents','insurance_cards']) {
             try {
+              final swD = Stopwatch()..start();
+              sanaDiag.value = 'diag: q ' + t;
               final q = _client.from(t).select();
               final dynamic resp = _isGuest
                   ? await q.isFilter('user_id', null)
@@ -2212,6 +2234,8 @@ class _HomeScreenState extends State<HomeScreen> {
               final list = (resp as List)
                   .map((e) => Map<String, dynamic>.from(e as Map))
                   .toList();
+              swD.stop();
+              sanaDiag.value = 'diag: ' + t + ' ' + swD.elapsedMilliseconds.toString() + 'ms';
               SanaStore.instance.setAll(t, list);
             } catch (_) {}
           }
