@@ -5,8 +5,6 @@
 // ============================================
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -230,23 +228,9 @@ class SanaAlarmService {
     required String reminderId,
     required DateTime scheduledDate,
     required bool daily,
-    String? photoBase64,
   }) async {
     if (defaultTargetPlatform != TargetPlatform.android) {
       return;
-    }
-
-
-    String? photoPath;
-    if (photoBase64 != null && photoBase64.isNotEmpty) {
-      try {
-        final bytes = base64Decode(photoBase64);
-        final file = File(
-          '${Directory.systemTemp.path}/sana_alarm_${notificationId}.jpg',
-        );
-        await file.writeAsBytes(bytes, flush: true);
-        photoPath = file.path;
-      } catch (_) {}
     }
 
     await _alarmChannel.invokeMethod(
@@ -256,7 +240,6 @@ class SanaAlarmService {
         'reminderId': reminderId,
         'triggerAtMillis': scheduledDate.millisecondsSinceEpoch,
         'daily': daily,
-        'photoPath': photoPath ?? '',
       },
     );
   }
