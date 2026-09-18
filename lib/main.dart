@@ -5547,8 +5547,10 @@ if (_table == 'reminders' && widget.remindersEnabled) {
     //print('Table: $_table');
     //print('Result: $result');
 
+    final currentUser = _client.auth.currentUser;
     final cleanPayload = <String, dynamic>{
       'user_id': widget.guestMode ? null : widget.ownerId,
+      'guest_id': widget.guestMode ? currentUser?.id : null,
     };
 
     // Helper to extract photos across forms
