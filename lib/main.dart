@@ -2432,7 +2432,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   static const String _sanaApkUrl =
-      'https://sanabase.github.io/sana/downloads/sana.apk';
+      'https://sanabase.github.io/sana/';
 
   static const String _sanaIosUrl = 'https://sanabase.github.io/sana/';
 
