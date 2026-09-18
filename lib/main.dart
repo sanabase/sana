@@ -2431,43 +2431,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
-  static const String _sanaApkUrl =
-      'https://sanabase.github.io/sana/';
-
-  static const String _sanaIosUrl = 'https://sanabase.github.io/sana/';
-
-  static const String _sanaWindowsUrl =
-      'https://sanabase.github.io/sana/downloads/sana-windows.zip';
-
-  static const String _sanaMacosUrl =
-      'https://sanabase.github.io/sana/downloads/sana-macos.zip';
-
-  static const String _sanaLinuxUrl =
-      'https://sanabase.github.io/sana/downloads/sana-linux.tar.gz';
-
-  Future<void> _launchDirect(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-    }
-  }
-
   void _showAdaptiveInstallDialog() {
     final language = languageNotifier.value;
 
-    final bool isIos = defaultTargetPlatform == TargetPlatform.iOS;
-    final bool isAndroid = defaultTargetPlatform == TargetPlatform.android;
-    final bool isWindows = defaultTargetPlatform == TargetPlatform.windows;
-    final bool isMacos = defaultTargetPlatform == TargetPlatform.macOS;
-    final bool isLinux = defaultTargetPlatform == TargetPlatform.linux;
+    final bool isIos = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final bool isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final bool isWindows =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+    final bool isMacos =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
     String title;
-    String instructions;
+    List<String> steps;
 
     if (isAndroid) {
       title = switch (language) {
@@ -2480,23 +2456,55 @@ class _HomeScreenState extends State<HomeScreen> {
         'zh' => '在 Android 上安装 SANA',
         _ => 'Install SANA on Android',
       };
-
-      instructions = switch (language) {
-        'ar' =>
-          'سيتم فتح رابط تنزيل ملف APK الأصلي لتطبيق SANA. بعد التنزيل، اضغط على الملف لتثبيته.',
-        'es' =>
-          'Se abrirá el enlace de descarga del APK nativo de SANA. Tras descargarlo, pulse el archivo para instalarlo.',
-        'fr' =>
-          'Le lien de téléchargement de l’APK natif de SANA va s’ouvrir. Après téléchargement, appuyez sur le fichier pour l’installer.',
-        'de' =>
-          'Der Download-Link für die native SANA-APK wird geöffnet. Nach dem Download tippen Sie auf die Datei, um sie zu installieren.',
-        'tr' =>
-          'SANA yerel APK indirme bağlantısı açılacak. İndirdikten sonra dosyaya dokunarak yükleyin.',
-        'hi' =>
-          'SANA का मूल APK डाउनलोड लिंक खुलेगा। डाउनलोड के बाद फ़ाइल पर टैप करके इंस्टॉल करें।',
-        'zh' => '将打开 SANA 原生 APK 下载链接。下载后点击文件进行安装。',
-        _ =>
-          'The native SANA APK download link will open. After downloading, tap the file to install it.',
+      steps = switch (language) {
+        'ar' => [
+          'افتح SANA في متصفح Chrome.',
+          'اضغط على قائمة المتصفح (⋮) أعلى اليمين.',
+          'اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+          'أكّد التثبيت.',
+        ],
+        'es' => [
+          'Abra SANA en el navegador Chrome.',
+          'Toque el menú (⋮) en la esquina superior derecha.',
+          'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
+          'Confirme la instalación.',
+        ],
+        'fr' => [
+          'Ouvrez SANA dans le navigateur Chrome.',
+          'Appuyez sur le menu (⋮) en haut à droite.',
+          'Choisissez "Installer l’application" ou "Ajouter à l’écran d’accueil".',
+          'Confirmez l’installation.',
+        ],
+        'de' => [
+          'Öffnen Sie SANA im Chrome-Browser.',
+          'Tippen Sie auf das Menü (⋮) oben rechts.',
+          'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
+          'Bestätigen Sie die Installation.',
+        ],
+        'tr' => [
+          'SANA’yı Chrome tarayıcısında açın.',
+          'Sağ üstteki menüye (⋮) dokunun.',
+          '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
+          'Kurulumu onaylayın.',
+        ],
+        'hi' => [
+          'SANA को Chrome ब्राउज़र में खोलें।',
+          'ऊपर दाईं ओर मेनू (⋮) पर टैप करें।',
+          '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
+          'इंस्टॉलेशन की पुष्टि करें।',
+        ],
+        'zh' => [
+          '在 Chrome 浏览器中打开 SANA。',
+          '点击右上角的菜单 (⋮)。',
+          '选择“安装应用”或“添加到主屏幕”。',
+          '确认安装。',
+        ],
+        _ => [
+          'Open SANA in Chrome.',
+          'Tap the browser menu (⋮) at the top right.',
+          'Choose "Install app" or "Add to Home screen".',
+          'Confirm the installation.',
+        ],
       };
     } else if (isIos) {
       title = switch (language) {
@@ -2509,23 +2517,55 @@ class _HomeScreenState extends State<HomeScreen> {
         'zh' => '在 iPhone / iPad 上安装 SANA',
         _ => 'Install SANA on iPhone / iPad',
       };
-
-      instructions = switch (language) {
-        'ar' =>
-          'سيتم فتح صفحة تثبيت SANA لنظام iOS. اتبع التعليمات على الشاشة.',
-        'es' =>
-          'Se abrirá la página de instalación de SANA para iOS. Siga las instrucciones en pantalla.',
-        'fr' =>
-          'La page d’installation SANA pour iOS va s’ouvrir. Suivez les instructions à l’écran.',
-        'de' =>
-          'Die SANA-Installationsseite für iOS wird geöffnet. Folgen Sie den Anweisungen auf dem Bildschirm.',
-        'tr' =>
-          'SANA iOS yükleme sayfası açılacak. Ekrandaki yönergeleri izleyin.',
-        'hi' =>
-          'SANA का iOS इंस्टॉलेशन पृष्ठ खुलेगा। स्क्रीन पर दिए निर्देशों का पालन करें।',
-        'zh' => '将打开 SANA 的 iOS 安装页面。请按屏幕提示操作。',
-        _ =>
-          'The SANA iOS installation page will open. Follow the on-screen instructions.',
+      steps = switch (language) {
+        'ar' => [
+          'افتح SANA في متصفح Safari.',
+          'اضغط على زر المشاركة.',
+          'مرّر للأسفل واختر "إضافة إلى الشاشة الرئيسية".',
+          'أكّد الإضافة.',
+        ],
+        'es' => [
+          'Abra SANA en Safari.',
+          'Toque el botón Compartir.',
+          'Desplace y elija "Añadir a pantalla de inicio".',
+          'Confirme.',
+        ],
+        'fr' => [
+          'Ouvrez SANA dans Safari.',
+          'Appuyez sur le bouton Partager.',
+          'Faites défiler et choisissez "Ajouter à l’écran d’accueil".',
+          'Confirmez.',
+        ],
+        'de' => [
+          'Öffnen Sie SANA in Safari.',
+          'Tippen Sie auf die Teilen-Schaltfläche.',
+          'Wählen Sie "Zum Startbildschirm hinzufügen".',
+          'Bestätigen Sie.',
+        ],
+        'tr' => [
+          'SANA’yı Safari’de açın.',
+          'Paylaş düğmesine dokunun.',
+          '"Ana ekrana ekle" seçeneğini seçin.',
+          'Onaylayın.',
+        ],
+        'hi' => [
+          'SANA को Safari में खोलें।',
+          'शेयर बटन पर टैप करें।',
+          '"होम स्क्रीन पर जोड़ें" चुनें।',
+          'पुष्टि करें।',
+        ],
+        'zh' => [
+          '在 Safari 中打开 SANA。',
+          '点击分享按钮。',
+          '选择“添加到主屏幕”。',
+          '确认。',
+        ],
+        _ => [
+          'Open SANA in Safari.',
+          'Tap the Share button.',
+          'Choose "Add to Home Screen".',
+          'Confirm.',
+        ],
       };
     } else if (isWindows) {
       title = switch (language) {
@@ -2538,23 +2578,55 @@ class _HomeScreenState extends State<HomeScreen> {
         'zh' => '在 Windows 上安装 SANA',
         _ => 'Install SANA on Windows',
       };
-
-      instructions = switch (language) {
-        'ar' =>
-          'سيتم فتح رابط تنزيل SANA لنظام Windows. فك الضغط ثم شغّل التطبيق.',
-        'es' =>
-          'Se abrirá el enlace de descarga de SANA para Windows. Descomprima y ejecute la aplicación.',
-        'fr' =>
-          'Le lien de téléchargement SANA pour Windows va s’ouvrir. Décompressez puis lancez l’application.',
-        'de' =>
-          'Der SANA-Download-Link für Windows wird geöffnet. Entpacken Sie das Archiv und starten Sie die App.',
-        'tr' =>
-          'SANA Windows indirme bağlantısı açılacak. Arşivi açın ve uygulamayı başlatın.',
-        'hi' =>
-          'SANA का Windows डाउनलोड लिंक खुलेगा। फ़ाइल निकालें और ऐप चलाएँ।',
-        'zh' => '将打开 SANA 的 Windows 下载链接。解压后运行应用程序。',
-        _ =>
-          'The SANA Windows download link will open. Unzip and run the application.',
+      steps = switch (language) {
+        'ar' => [
+          'افتح SANA في متصفح Edge.',
+          'اضغط على القائمة (…) أعلى اليمين.',
+          'اختر "التطبيقات" ثم "تثبيت هذا الموقع كتطبيق".',
+          'أكّد التثبيت.',
+        ],
+        'es' => [
+          'Abra SANA en Microsoft Edge.',
+          'Haga clic en el menú (…) arriba a la derecha.',
+          'Elija "Aplicaciones" y luego "Instalar este sitio como aplicación".',
+          'Confirme.',
+        ],
+        'fr' => [
+          'Ouvrez SANA dans Microsoft Edge.',
+          'Cliquez sur le menu (…) en haut à droite.',
+          'Choisissez "Applications" puis "Installer ce site en tant qu’application".',
+          'Confirmez.',
+        ],
+        'de' => [
+          'Öffnen Sie SANA in Microsoft Edge.',
+          'Klicken Sie auf das Menü (…) oben rechts.',
+          'Wählen Sie "Apps" und dann "Diese Website als App installieren".',
+          'Bestätigen Sie.',
+        ],
+        'tr' => [
+          'SANA’yı Microsoft Edge’de açın.',
+          'Sağ üstteki menüye (…) tıklayın.',
+          '"Uygulamalar" ve ardından "Bu siteyi uygulama olarak yükle" seçeneğini seçin.',
+          'Onaylayın.',
+        ],
+        'hi' => [
+          'SANA को Microsoft Edge में खोलें।',
+          'ऊपर दाईं ओर मेनू (…) पर क्लिक करें।',
+          '"ऐप्स" और फिर "इस साइट को ऐप के रूप में इंस्टॉल करें" चुनें।',
+          'पुष्टि करें।',
+        ],
+        'zh' => [
+          '在 Microsoft Edge 中打开 SANA。',
+          '点击右上角的菜单 (…)。',
+          '选择“应用”，然后选择“将此站点作为应用安装”。',
+          '确认。',
+        ],
+        _ => [
+          'Open SANA in Microsoft Edge.',
+          'Click the menu (…) at the top right.',
+          'Choose "Apps" then "Install this site as an app".',
+          'Confirm.',
+        ],
       };
     } else if (isMacos) {
       title = switch (language) {
@@ -2567,24 +2639,49 @@ class _HomeScreenState extends State<HomeScreen> {
         'zh' => '在 macOS 上安装 SANA',
         _ => 'Install SANA on macOS',
       };
-
-      instructions = switch (language) {
-        'ar' =>
-          'سيتم فتح رابط تنزيل SANA لنظام macOS. فك الضغط ثم شغّل التطبيق.',
-        'es' =>
-          'Se abrirá el enlace de descarga de SANA para macOS. Descomprima y ejecute la aplicación.',
-        'fr' =>
-          'Le lien de téléchargement SANA pour macOS va s’ouvrir. Décompressez puis lancez l’application.',
-        'de' =>
-          'Der SANA-Download-Link für macOS wird geöffnet. Entpacken Sie das Archiv und starten Sie die App.',
-        'tr' =>
-          'SANA macOS indirme bağlantısı açılacak. Arşivi açın ve uygulamayı başlatın.',
-        'hi' => 'SANA का macOS डाउनलोड लिंक खुलेगा। फ़ाइल निकालें और ऐप चलाएँ।',
-        'zh' => '将打开 SANA 的 macOS 下载链接。解压后运行应用程序。',
-        _ =>
-          'The SANA macOS download link will open. Unzip and run the application.',
+      steps = switch (language) {
+        'ar' => [
+          'افتح SANA في Safari.',
+          'من قائمة "ملف" اختر "إضافة إلى Dock".',
+          'أكّد الإضافة.',
+        ],
+        'es' => [
+          'Abra SANA en Safari.',
+          'Desde el menú "Archivo" elija "Añadir al Dock".',
+          'Confirme.',
+        ],
+        'fr' => [
+          'Ouvrez SANA dans Safari.',
+          'Dans le menu "Fichier", choisissez "Ajouter au Dock".',
+          'Confirmez.',
+        ],
+        'de' => [
+          'Öffnen Sie SANA in Safari.',
+          'Wählen Sie im Menü "Ablage" die Option "Zum Dock hinzufügen".',
+          'Bestätigen Sie.',
+        ],
+        'tr' => [
+          'SANA’yı Safari’de açın.',
+          '"Dosya" menüsünden "Dock’a Ekle" seçeneğini seçin.',
+          'Onaylayın.',
+        ],
+        'hi' => [
+          'SANA को Safari में खोलें।',
+          '"फ़ाइल" मेनू से "Dock में जोड़ें" चुनें।',
+          'पुष्टि करें।',
+        ],
+        'zh' => [
+          '在 Safari 中打开 SANA。',
+          '从“文件”菜单中选择“添加到 Dock”。',
+          '确认。',
+        ],
+        _ => [
+          'Open SANA in Safari.',
+          'From the "File" menu choose "Add to Dock".',
+          'Confirm.',
+        ],
       };
-    } else if (isLinux) {
+    } else {
       title = switch (language) {
         'ar' => 'تثبيت SANA على Linux',
         'es' => 'Instalar SANA en Linux',
@@ -2595,32 +2692,47 @@ class _HomeScreenState extends State<HomeScreen> {
         'zh' => '在 Linux 上安装 SANA',
         _ => 'Install SANA on Linux',
       };
-
-      instructions = switch (language) {
-        'ar' => 'سيتم فتح رابط تنزيل SANA لنظام Linux.',
-        'es' => 'Se abrirá el enlace de descarga de SANA para Linux.',
-        'fr' => 'Le lien de téléchargement SANA pour Linux va s’ouvrir.',
-        'de' => 'Der SANA-Download-Link für Linux wird geöffnet.',
-        'tr' => 'SANA Linux indirme bağlantısı açılacak.',
-        'hi' => 'SANA का Linux डाउनलोड लिंक खुलेगा।',
-        'zh' => '将打开 SANA 的 Linux 下载链接。',
-        _ => 'The SANA Linux download link will open.',
-      };
-    } else {
-      title = tr(language, 'install_app');
-
-      instructions = switch (language) {
-        'ar' => 'سيتم توجيهك إلى التثبيت المناسب لجهازك.',
-        'es' => 'Se le dirigirá a la instalación adecuada para su dispositivo.',
-        'fr' =>
-          'Vous serez redirigé vers l’installation adaptée à votre appareil.',
-        'de' =>
-          'Sie werden zur passenden Installation für Ihr Gerät weitergeleitet.',
-        'tr' => 'Cihazınıza uygun kurulum sayfasına yönlendirileceksiniz.',
-        'hi' => 'आपको आपके डिवाइस के अनुकूल इंस्टॉलेशन पर ले जाया जाएगा।',
-        'zh' => '将引导您进入适合您设备的安装页面。',
-        _ =>
-          'You will be directed to the appropriate installation for your device.',
+      steps = switch (language) {
+        'ar' => [
+          'افتح SANA في المتصفح.',
+          'من قائمة المتصفح اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+          'أكّد الإضافة.',
+        ],
+        'es' => [
+          'Abra SANA en el navegador.',
+          'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
+          'Confirme.',
+        ],
+        'fr' => [
+          'Ouvrez SANA dans le navigateur.',
+          'Choisissez "Installer l’application" ou "Ajouter à l’écran d’accueil".',
+          'Confirmez.',
+        ],
+        'de' => [
+          'Öffnen Sie SANA im Browser.',
+          'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
+          'Bestätigen Sie.',
+        ],
+        'tr' => [
+          'SANA’yı tarayıcıda açın.',
+          '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
+          'Onaylayın.',
+        ],
+        'hi' => [
+          'SANA को ब्राउज़र में खोलें।',
+          '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
+          'पुष्टि करें।',
+        ],
+        'zh' => [
+          '在浏览器中打开 SANA。',
+          '选择“安装应用”或“添加到主屏幕”。',
+          '确认。',
+        ],
+        _ => [
+          'Open SANA in your browser.',
+          'Choose "Install app" or "Add to Home screen".',
+          'Confirm.',
+        ],
       };
     }
 
@@ -2629,7 +2741,19 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(title),
-          content: Text(instructions),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < steps.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text('${i + 1}. ${steps[i]}'),
+                  ),
+              ],
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -4056,6 +4180,7 @@ class RecordSanitizer {
     'photo_url',
     'photo_base64',
     'user_id',
+    'guest_id',
     'photo',
     'front_photo',
     'back_photo',
@@ -5669,29 +5794,50 @@ if (_table == 'reminders' && widget.remindersEnabled) {
     }
 
     try {
-      print('Inserting into $_table: $cleanPayload');
+      Map<String, dynamic> insertedRow;
 
-if (_table == 'reminders' && widget.remindersEnabled) {
-        final inserted =
-            await _client.from(_table).insert(cleanPayload).select().single();
-        try { SanaStore.instance.upsert(_table, Map<String, dynamic>.from(inserted as Map)); } catch (_) {}
+      if (_table == 'reminders' && widget.remindersEnabled) {
+        final inserted = await _client
+            .from(_table)
+            .insert(cleanPayload)
+            .select()
+            .single();
+
+        insertedRow = Map<String, dynamic>.from(inserted as Map);
 
         try {
-          await SanaAlarmService.scheduleReminder(
-            Map<String, dynamic>.from(inserted),
-          );
+          SanaStore.instance.upsert(_table, insertedRow);
+        } catch (_) {}
+
+        try {
+          await SanaAlarmService.scheduleReminder(insertedRow);
         } catch (e) {
           debugPrint(
             'Reminder saved but alarm scheduling failed: $e',
           );
         }
       } else {
-        await _client.from(_table).insert(cleanPayload);
-        try { SanaStore.instance.upsert(_table, cleanPayload); } catch (_) {}
+        final inserted = await _client
+            .from(_table)
+            .insert(cleanPayload)
+            .select()
+            .single();
+
+        insertedRow = Map<String, dynamic>.from(inserted as Map);
+
+        try {
+          SanaStore.instance.upsert(_table, insertedRow);
+        } catch (_) {}
+
+        if (mounted) {
+          setState(() {
+            _rows.insert(0, insertedRow);
+          });
+        }
       }
 
       await _load();
-      // Show confirmation when reminder alarm is saved
+
       if (mounted && _table == 'reminders') {
         final reminderName = cleanPayload['name'] ?? '';
         final reminderTime = cleanPayload['reminder_time'] ?? '';
@@ -5719,15 +5865,30 @@ if (_table == 'reminders' && widget.remindersEnabled) {
             ),
           ),
         );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 2),
+            content: Text(
+              tr(language, 'success'),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        );
       }
     } catch (e) {
-      print('========== ERROR in _saveRecord ==========');
-      print(e);
+      debugPrint('========== ERROR in _saveRecord ==========');
+      debugPrint('$e');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 6),
             content: Text(
               '${tr(language, 'operation_failed')}: $e',
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         );
@@ -5768,9 +5929,8 @@ if (_table == 'reminders' && widget.remindersEnabled) {
   // FIXED: Insurance card submit - uses base64 only
 
   Future<void> _submitInsuranceCard() async {
-    // ADD THIS FIRST LINE
-    print('>>> _submitInsuranceCard() CALLED! <<<');
     final language = languageNotifier.value;
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_frontCardBase64 == null || _backCardBase64 == null) {
@@ -5791,33 +5951,79 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 
       final cleanPayload = RecordSanitizer.sanitize(payload);
 
-      cleanPayload['user_id'] = widget.guestMode ? null : widget.ownerId;
+      final currentUser = _client.auth.currentUser;
 
-      await _client.from(_table).insert(cleanPayload);
+      if (widget.guestMode) {
+        cleanPayload['user_id'] = null;
+        cleanPayload['guest_id'] = currentUser?.id;
+      } else {
+        cleanPayload['user_id'] = widget.ownerId;
+        cleanPayload['guest_id'] = null;
+      }
+
+      if (cleanPayload['user_id'] == null) {
+        cleanPayload.remove('user_id');
+      }
+      if (cleanPayload['guest_id'] == null) {
+        cleanPayload.remove('guest_id');
+      }
+
+      final inserted = await _client
+          .from(_table)
+          .insert(cleanPayload)
+          .select()
+          .single();
+
+      final insertedRow = Map<String, dynamic>.from(inserted as Map);
+
+      try {
+        SanaStore.instance.upsert(_table, insertedRow);
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _rows.insert(0, insertedRow);
+          _frontCardBase64 = null;
+          _backCardBase64 = null;
+          _insuranceCompanyController.clear();
+          _patientIdController.clear();
+        });
+      }
+
       await _load();
 
-      setState(() {
-        _frontCardBase64 = null;
-        _backCardBase64 = null;
-        _insuranceCompanyController.clear();
-        _patientIdController.clear();
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 2),
             content: Text(
-                '${tr(language, 'add')} ${tr(language, 'insurance_cards')} ${tr(language, 'success')}')),
-      );
+              '${tr(language, 'add')} ${tr(language, 'insurance_cards')} ${tr(language, 'success')}',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${tr(language, 'operation_failed')}: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 6),
+            content: Text(
+              '${tr(language, 'operation_failed')}: $e',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      }
     }
   }
 
   // FIXED: Document submit - uses base64 only
   Future<void> _submitDocument() async {
     final language = languageNotifier.value;
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_documentPhotoBase64 == null) {
@@ -5838,27 +6044,72 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 
       final cleanPayload = RecordSanitizer.sanitize(payload);
 
-      cleanPayload['user_id'] = widget.guestMode ? null : widget.ownerId;
+      final currentUser = _client.auth.currentUser;
 
-      await _client.from(_table).insert(cleanPayload);
+      if (widget.guestMode) {
+        cleanPayload['user_id'] = null;
+        cleanPayload['guest_id'] = currentUser?.id;
+      } else {
+        cleanPayload['user_id'] = widget.ownerId;
+        cleanPayload['guest_id'] = null;
+      }
+
+      if (cleanPayload['user_id'] == null) {
+        cleanPayload.remove('user_id');
+      }
+      if (cleanPayload['guest_id'] == null) {
+        cleanPayload.remove('guest_id');
+      }
+
+      final inserted = await _client
+          .from(_table)
+          .insert(cleanPayload)
+          .select()
+          .single();
+
+      final insertedRow = Map<String, dynamic>.from(inserted as Map);
+
+      try {
+        SanaStore.instance.upsert(_table, insertedRow);
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _rows.insert(0, insertedRow);
+          _documentPhotoBase64 = null;
+          _titleController.clear();
+          _categoryController.clear();
+          _fileUrlController.clear();
+        });
+      }
+
       await _load();
 
-      setState(() {
-        _documentPhotoBase64 = null;
-        _titleController.clear();
-        _categoryController.clear();
-        _fileUrlController.clear();
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 2),
             content: Text(
-                '${tr(language, 'add')} ${tr(language, 'documents')} ${tr(language, 'success')}')),
-      );
+              '${tr(language, 'add')} ${tr(language, 'documents')} ${tr(language, 'success')}',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${tr(language, 'operation_failed')}: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 6),
+            content: Text(
+              '${tr(language, 'operation_failed')}: $e',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -6226,7 +6477,6 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 
   @override
   Widget build(BuildContext context) {
-    final language = languageNotifier.value;
 
     return ValueListenableBuilder<String>(
       valueListenable: languageNotifier,
@@ -6260,7 +6510,10 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                     key: ValueKey('card_${row['id']}_$index'),
                                     margin: const EdgeInsets.only(bottom: 10),
                                     elevation: 2,
-                                    child: Padding(
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () => _preview(row),
+                                      child: Padding(
                                       padding: const EdgeInsets.all(12),
                                       child: Row(
                                         crossAxisAlignment:
@@ -6412,6 +6665,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                           ),
                                         ],
                                       ),
+                                    ),
                                     ),
                                   );
                                 },
@@ -6616,7 +6870,10 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Padding(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => _preview(row),
+                                        child: Padding(
                                         padding: const EdgeInsets.all(8),
                                         child: Column(
                                           crossAxisAlignment:
@@ -6681,6 +6938,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                           ],
                                         ),
                                       ),
+                                      ),
                                     );
                                   }
 
@@ -6709,7 +6967,10 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                         bottom: 10,
                                       ),
                                       elevation: 2,
-                                      child: Padding(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => _preview(row),
+                                        child: Padding(
                                         padding: const EdgeInsets.all(10),
                                         child: Row(
                                           crossAxisAlignment:
@@ -6787,6 +7048,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                             ),
                                           ],
                                         ),
+                                      ),
                                       ),
                                     );
                                   }
@@ -7325,78 +7587,131 @@ class _ShareScreenState extends State<ShareScreen> {
 
   Future<void> _shareSelected() async {
     final language = languageNotifier.value;
+
     if (_getTotalSelected() == 0) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(tr(language, 'no_selection'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr(language, 'no_selection'))),
+      );
       return;
     }
 
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
-      await WidgetsBinding.instance.endOfFrame;
+      final textBuffer = StringBuffer();
       final List<XFile> files = [];
+
+      textBuffer.writeln('SANA - ${tr(language, 'share_documents')}');
+      textBuffer.writeln('');
 
       for (final type in _allData.keys) {
         final selectedRows = _allData[type]!
-            .where((row) => _selectedIds[type]!.contains(row['id'].toString()))
+            .where((row) =>
+                _selectedIds[type]!.contains(row['id'].toString()))
             .toList();
 
         for (final row in selectedRows) {
-          final itemId = '${type}_${row['id']}';
-          final itemKey = _itemShareKeys[itemId];
-          if (itemKey == null) continue;
+          final title = (row['name'] ??
+                  row['title'] ??
+                  row['provider_name'] ??
+                  tr(language, 'record'))
+              .toString();
 
-          final itemContext = itemKey.currentContext;
-          if (itemContext == null) continue;
+          textBuffer.writeln('═══════════════════════════');
+          textBuffer.writeln(
+              '${tr(language, type).toUpperCase()}: $title');
+          textBuffer.writeln('───────────────────────────');
 
-          final renderObject = itemContext.findRenderObject();
-          if (renderObject is! RenderRepaintBoundary) continue;
+          final cleanEntries = _getCleanDisplayEntries(language, row);
+          for (final e in cleanEntries.entries) {
+            textBuffer.writeln('• ${e.key}: ${e.value}');
+          }
+          textBuffer.writeln('');
 
-          if (renderObject.debugNeedsPaint) {
-            await Future.delayed(const Duration(milliseconds: 100));
-            await WidgetsBinding.instance.endOfFrame;
+          // 1. Private Supabase Storage photo (medications)
+          final photoPath = row['photo_url']?.toString();
+          if (photoPath != null && photoPath.isNotEmpty) {
+            try {
+              final signedUrl =
+                  await StorageHelper.getSignedUrl(photoPath);
+              if (signedUrl != null) {
+                final resp =
+                    await package_http.get(Uri.parse(signedUrl));
+                if (resp.statusCode == 200) {
+                  files.add(XFile.fromData(
+                    resp.bodyBytes,
+                    name: 'SANA_${type}_${row['id']}.jpg',
+                    mimeType: 'image/jpeg',
+                  ));
+                }
+              }
+            } catch (_) {}
           }
 
-          final ui.Image image = await renderObject.toImage(pixelRatio: 2.0);
-          final byteData =
-              await image.toByteData(format: ui.ImageByteFormat.png);
-
-          if (byteData == null) {
-            image.dispose();
-            continue;
+          // 2. Base64 photos (documents, insurance, legacy meds)
+          void addBase64File(String? raw, String filename) {
+            if (raw == null || raw.trim().isEmpty) return;
+            try {
+              var clean = raw.trim();
+              if (clean.contains(',')) clean = clean.split(',').last;
+              clean = clean.replaceAll(RegExp(r'\s+'), '');
+              clean = base64.normalize(clean);
+              final bytes = base64Decode(clean);
+              files.add(XFile.fromData(
+                Uint8List.fromList(bytes),
+                name: filename,
+                mimeType: 'image/jpeg',
+              ));
+            } catch (_) {}
           }
 
-          files.add(
-            XFile.fromData(
-              byteData.buffer.asUint8List(),
-              name: 'SANA_${type}_${row['id']}.png',
-              mimeType: 'image/png',
-            ),
+          addBase64File(
+            row['photo']?.toString() ?? row['photo_base64']?.toString(),
+            'SANA_${type}_${row['id']}_photo.jpg',
           );
-
-          image.dispose();
+          addBase64File(
+            row['front_image_url']?.toString() ??
+                row['front_photo']?.toString(),
+            'SANA_${type}_${row['id']}_front.jpg',
+          );
+          addBase64File(
+            row['back_image_url']?.toString() ??
+                row['back_photo']?.toString(),
+            'SANA_${type}_${row['id']}_back.jpg',
+          );
         }
       }
 
-      if (files.isEmpty) {
-        throw Exception('No previews could be captured.');
-      }
+      final shareText = textBuffer.toString().trim();
 
-      await SharePlus.instance.share(
-        ShareParams(
-          files: files,
-          subject: 'SANA Medical Records',
-        ),
-      );
+      if (files.isNotEmpty) {
+        await SharePlus.instance.share(
+          ShareParams(
+            text: shareText,
+            files: files,
+            subject: 'SANA Medical Records',
+          ),
+        );
+      } else {
+        await SharePlus.instance.share(
+          ShareParams(
+            text: shareText,
+            subject: 'SANA Medical Records',
+          ),
+        );
+      }
     } catch (e, stackTrace) {
-      debugPrint('Share preview error: $e');
+      debugPrint('Share selected error: $e');
       debugPrint('$stackTrace');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${tr(language, 'operation_failed')}: $e'),
+          backgroundColor: Colors.red.shade700,
+          duration: const Duration(seconds: 6),
+          content: Text(
+            '${tr(language, 'operation_failed')}: $e',
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       );
     }
