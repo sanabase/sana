@@ -110688,7 +110688,7 @@ $S:0}
 A.aGb.prototype={
 $0(){var s,r=this,q="https://sanabase.github.io/sana/"
 A.co(r.b,!1).f2()
-if(r.c)r.a.ma("https://sanabase.github.io/sana/downloads/sana.apk")
+if(r.c)r.a.ma(q)
 else if(r.d)r.a.ma(q)
 else if(r.e)r.a.ma("https://sanabase.github.io/sana/downloads/sana-windows.zip")
 else if(r.f)r.a.ma("https://sanabase.github.io/sana/downloads/sana-macos.zip")
