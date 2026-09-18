@@ -2857,6 +2857,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         height: 1.5,
                                                       ),
                                                     ),
+
+                                                  const SizedBox(height: 16),
+                                                  ListTile(
+                                                    leading: const Icon(Icons.install_mobile, color: Colors.teal),
+                                                    title: Text(
+                                                      tr(language, 'install_sana'),
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.teal,
+                                                      ),
+                                                    ),
+                                                    trailing: const Icon(Icons.chevron_right, color: Colors.teal),
+                                                    onTap: _showAdaptiveInstallDialog,
+                                                  ),
                                                   ],
                                                 ),
                                               ),
