@@ -3398,24 +3398,9 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
             try { await SanaStore.instance.flush(_client); } catch (_) {}
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(tr(language, 'close')),
-                content: Text(tr(language, 'close')),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(tr(language, 'cancel')),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(tr(language, 'close')),
-                  ),
-                ],
-              ),
-            );
-            if (confirmed == true) {
+            if (kIsWeb) {
+              SanaWebPush.closeApp();
+            } else {
               SystemNavigator.pop();
             }
           },

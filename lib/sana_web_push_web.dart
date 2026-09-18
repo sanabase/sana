@@ -108,6 +108,10 @@ class SanaWebPush {
       debugPrint('SanaWebPush disable error: $e');
     }
   }
+  static void closeApp() {
+    try { web.window.close(); } catch (_) {}
+  }
+
   static String? browserTimeZone() {
     if (!kIsWeb) return null;
     try {
