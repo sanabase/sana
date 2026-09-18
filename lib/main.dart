@@ -2641,17 +2641,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.of(dialogContext).pop();
 
                 if (isAndroid) {
-                  _launchDirect(_sanaApkUrl);
                 } else if (isIos) {
-                  _launchDirect(_sanaIosUrl);
                 } else if (isWindows) {
-                  _launchDirect(_sanaWindowsUrl);
                 } else if (isMacos) {
-                  _launchDirect(_sanaMacosUrl);
                 } else if (isLinux) {
-                  _launchDirect(_sanaLinuxUrl);
                 } else {
-                  _launchDirect(_sanaIosUrl);
                 }
               },
               label: Text(
