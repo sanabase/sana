@@ -33693,8 +33693,10 @@ break
 case 6:case 1:return A.p(q,r)
 case 2:return A.o(o.at(-1),r)}})
 return A.q($async$tF,r)},
-bbZ(){var s
-try{v.G.window.close()}catch(s){}try{v.G.window.location.href="about:blank"}catch(s){}},
+bbZ(){var s,r
+try{v.G.window.close()}catch(s){}try{r=v.G
+if(r.window.history.length>1){r.window.history.back()
+return}}catch(s){}try{v.G.window.location.href="about:blank"}catch(s){}},
 bbY(){var s,r,q,p,o,n,m,l=null
 try{s=v.G.Intl
 if(s==null)return l
