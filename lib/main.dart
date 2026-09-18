@@ -2175,6 +2175,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _profile;
   bool _loading = true, _isGuest = true;
   String? _guestId;
+  bool _guestRemindersEnabled = true;
   StreamSubscription<AuthState>? _authSubscription;
 
   @override
@@ -2210,11 +2211,14 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (_) {}
 
       if (!isRealUser) {
+        final guestPrefs = await SharedPreferences.getInstance();
+        final guestRemindersEnabled = guestPrefs.getBool('sana_guest_reminders_enabled') ?? true;
         if (!mounted) return;
         setState(() {
           _profile = null;
           _guestId = guestId;
           _isGuest = true;
+          _guestRemindersEnabled = guestRemindersEnabled;
           _loading = false;
         });
 
@@ -2353,6 +2357,39 @@ class _HomeScreenState extends State<HomeScreen> {
     return _guestId;
   }
 
+  String _guestRemindersLabel(String language) {
+    return _guestRemindersEnabled
+        ? {
+            'ar': 'تعطيل التذكيرات',
+            'es': 'Desactivar recordatorios',
+            'fr': 'Désactiver les rappels',
+            'de': 'Erinnerungen deaktivieren',
+            'tr': 'Hatırlatıcıları devre dışı bırak',
+            'hi': 'रिमाइंडर अक्षम करें',
+            'zh': '禁用提醒',
+            'en': 'Disable reminders',
+          }[language] ??
+            'Disable reminders'
+        : {
+            'ar': 'تمكين التذكيرات',
+            'es': 'Activar recordatorios',
+            'fr': 'Activer les rappels',
+            'de': 'Erinnerungen aktivieren',
+            'tr': 'Hatırlatıcıları etkinleştir',
+            'hi': 'रिमाइंडर सक्षम करें',
+            'zh': '启用提醒',
+            'en': 'Enable reminders',
+          }[language] ??
+            'Enable reminders';
+  }
+
+  Future<void> _setGuestRemindersEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sana_guest_reminders_enabled', value);
+    if (!mounted) return;
+    setState(() => _guestRemindersEnabled = value);
+  }
+
   Future<void> _openCard(String type) async {
     final ownerId = _ownerId ?? await GuestIdentityService.getGuestId();
     await Navigator.push(
@@ -2362,7 +2399,7 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           ownerId: ownerId,
           guestMode: _isGuest,
-          remindersEnabled: _profile?['reminders_enabled'] != false,
+          remindersEnabled: _isGuest ? _guestRemindersEnabled : _profile?['reminders_enabled'] != false,
         ),
       ),
     );
@@ -2378,7 +2415,7 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           ownerId: ownerId,
           guestMode: _isGuest,
-          remindersEnabled: _profile?['reminders_enabled'] != false,
+          remindersEnabled: _isGuest ? _guestRemindersEnabled : _profile?['reminders_enabled'] != false,
           autoOpenAdd: true,
         ),
       ),
@@ -3493,12 +3530,22 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        if (isLoggedIn) ...[
+        if (isLoggedIn || _isGuest) ...[
           const SizedBox(height: 8),
           SwitchListTile(
-            title: Text(tr(language, 'reminders_enabled')),
-            value: _profile?['reminders_enabled'] != false,
+            title: Text(
+              _isGuest
+                  ? _guestRemindersLabel(language)
+                  : tr(language, 'reminders_enabled'),
+            ),
+            value: _isGuest
+                ? _guestRemindersEnabled
+                : _profile?['reminders_enabled'] != false,
             onChanged: (value) async {
+              if (_isGuest) {
+                await _setGuestRemindersEnabled(value);
+                return;
+              }
               final user = _client.auth.currentUser;
               if (user == null) return;
               try {
@@ -3511,7 +3558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _profile?['reminders_enabled'] = value;
                 });
               } catch (e) {
-                debugPrint('reminders_enabled toggle failed: ');
+                debugPrint('reminders_enabled toggle failed: $e');
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('$e')),
