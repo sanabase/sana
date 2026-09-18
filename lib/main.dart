@@ -3359,24 +3359,27 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.folder_shared, size: 28, color: Colors.teal),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    tr(language, 'share_documents'),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 9, fontWeight: FontWeight.bold),
+          child: SizedBox(
+            height: 90,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(Icons.folder_shared, size: 26, color: Colors.teal),
+                  const SizedBox(height: 6),
+                  Flexible(
+                    child: Text(
+                      tr(language, 'share_documents'),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -3416,24 +3419,27 @@ class _HomeScreenState extends State<HomeScreen> {
               SystemNavigator.pop();
             }
           },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.close, size: 28, color: Colors.red),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    tr(language, 'close'),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 9, fontWeight: FontWeight.bold),
+          child: SizedBox(
+            height: 90,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(Icons.close, size: 26, color: Colors.red),
+                  const SizedBox(height: 6),
+                  Flexible(
+                    child: Text(
+                      tr(language, 'close'),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
