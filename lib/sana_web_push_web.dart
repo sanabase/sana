@@ -110,13 +110,7 @@ class SanaWebPush {
   }
   static void closeApp() {
     try { web.window.close(); } catch (_) {}
-    try {
-      if (web.window.history.length > 1) {
-        web.window.history.back();
-        return;
-      }
-    } catch (_) {}
-    try { web.window.location.href = 'about:blank'; } catch (_) {}
+    try { web.window.history.back(); } catch (_) {}
   }
 
   static String? browserTimeZone() {
