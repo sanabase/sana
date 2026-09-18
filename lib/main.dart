@@ -2635,32 +2635,6 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(tr(language, 'close')),
             ),
-            FilledButton.icon(
-              icon: const Icon(Icons.download),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-
-                if (isAndroid) {
-                } else if (isIos) {
-                } else if (isWindows) {
-                } else if (isMacos) {
-                } else if (isLinux) {
-                } else {
-                }
-              },
-              label: Text(
-                switch (language) {
-                  'ar' => 'ابدأ التثبيت',
-                  'es' => 'Instalar ahora',
-                  'fr' => 'Installer maintenant',
-                  'de' => 'Jetzt installieren',
-                  'tr' => 'Şimdi yükle',
-                  'hi' => 'अभी इंस्टॉल करें',
-                  'zh' => '立即安装',
-                  _ => 'Install now',
-                },
-              ),
-            ),
           ],
         );
       },
