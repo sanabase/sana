@@ -1,0 +1,729 @@
+﻿=== 1. RECORD CARD: onTap, preview/share/delete spacing ===
+ 6271:     final language = languageNotifier.value;
+ 6272: 
+ 6273:     return ValueListenableBuilder<String>(
+ 6274:       valueListenable: languageNotifier,
+ 6275:       builder: (context, language, _) => Directionality(
+ 6276:         textDirection: language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+ 6277:         child: Scaffold(
+ 6278:           appBar: AppBar(
+ 6279:             title: Text(tr(language, widget.type)),
+ 6280:           ),
+ 6281:           body: Column(
+ 6282:             children: [
+ 6283:               Expanded(
+ 6284:                 child: _loading
+ 6285:                     ? const Center(child: CircularProgressIndicator())
+ 6286:                     : _rows.isEmpty
+ 6287:                         ? Center(child: Text(tr(language, 'no_records')))
+ 6288:                         : widget.type != 'reminders'
+ 6289:                             ? ListView.builder(
+ 6290:                                 key: ValueKey('list_${widget.type}'),
+ 6291:                                 padding: const EdgeInsets.all(12),
+ 6292:                                 itemCount: _rows.length,
+ 6293:                                 itemBuilder: (context, index) {
+ 6294:                                   final row = _rows[index];
+ 6295:                                   final title = (row['name'] ??
+ 6296:                                           row['title'] ??
+ 6297:                                           row['provider_name'] ??
+ 6298:                                           tr(language, 'record'))
+ 6299:                                       .toString();
+ 6300: 
+ 6301:                                   return Card(
+ 6302:                                     key: ValueKey('card_${row['id']}_$index'),
+ 6303:                                     margin: const EdgeInsets.only(bottom: 10),
+ 6304:                                     elevation: 2,
+ 6305:                                     child: Padding(
+ 6306:                                       padding: const EdgeInsets.all(12),
+ 6307:                                       child: Row(
+ 6308:                                         crossAxisAlignment:
+ 6309:                                             CrossAxisAlignment.center,
+ 6310:                                         children: [
+ 6311:                                           if (widget.type == 'medications')
+ 6312:                                             Padding(
+ 6313:                                               padding: const EdgeInsets.only(
+ 6314:                                                   right: 12),
+ 6315:                                               child: SignedImage(
+ 6316:                                                 path: row['photo_url']
+ 6317:                                                     ?.toString(),
+ 6318:                                                 height: 50,
+ 6319:                                                 width: 50,
+ 6320:                                                 fit: BoxFit.cover,
+ 6321:                                               ),
+ 6322:                                             ),
+ 6323:                                           Expanded(
+ 6324:                                             child: Column(
+ 6325:                                               crossAxisAlignment:
+ 6326:                                                   CrossAxisAlignment.start,
+ 6327:                                               children: [
+ 6328:                                                 Text(
+ 6329:                                                   title,
+ 6330:                                                   maxLines: 1,
+ 6331:                                                   overflow:
+ 6332:                                                       TextOverflow.ellipsis,
+ 6333:                                                   style: const TextStyle(
+ 6334:                                                     fontWeight: FontWeight.bold,
+ 6335:                                                     fontSize: 16,
+ 6336:                                                   ),
+ 6337:                                                 ),
+ 6338:                                                 const SizedBox(height: 4),
+ 6339:                                                 Text(
+ 6340:                                                   _subtitle(row),
+ 6341:                                                   maxLines: 2,
+ 6342:                                                   overflow:
+ 6343:                                                       TextOverflow.ellipsis,
+ 6344:                                                   style: TextStyle(
+ 6345:                                                     fontSize: 13,
+ 6346:                                                     color: Colors.grey.shade700,
+ 6347:                                                   ),
+ 6348:                                                 ),
+ 6349:                                               ],
+ 6350:                                             ),
+ 6351:                                           ),
+ 6352:                                           Row(
+ 6353:                                             mainAxisSize: MainAxisSize.min,
+ 6354:                                             children: [
+ 6355:                                               if (widget.type == 'doctors' ||
+ 6356:                                                   widget.type == 'pharmacies')
+ 6357:                                                 IconButton(
+ 6358:                                                   key: ValueKey(
+ 6359:                                                       'call_${row['id']}'),
+ 6360:                                                   icon: const Icon(
+ 6361:                                                     Icons.phone,
+ 6362:                                                     size: 20,
+ 6363:                                                     color: Colors.green,
+ 6364:                                                   ),
+ 6365:                                                   tooltip: tr(language, 'call'),
+ 6366:                                                   onPressed: () async {
+ 6367:                                                     final rawPhone =
+ 6368:                                                         (row['phone'] ?? '')
+ 6369:                                                             .toString()
+ 6370:                                                             .trim();
+ 6371: 
+ 6372:                                                     if (rawPhone.isEmpty)
+ 6373:                                                       return;
+ 6374: 
+ 6375:                                                     String cleaned =
+ 6376:                                                         rawPhone.replaceAll(
+ 6377:                                                       RegExp(r'[^0-9+]'),
+ 6378:                                                       '',
+ 6379:                                                     );
+ 6380: 
+
+=== 2. DELETE METHOD (reminder delete) ===
+ 5904:     }
+ 5905:   }
+ 5906: 
+ 5907:   Future<void> _delete(Map<String, dynamic> row) async {
+ 5908:     final id = row['id'];
+ 5909:     if (id == null) return;
+ 5910: 
+ 5911:     final language = languageNotifier.value;
+ 5912: 
+ 5913:     final confirmed = await showDialog<bool>(
+ 5914:       context: context,
+ 5915:       builder: (dialogContext) => AlertDialog(
+ 5916:         title: Text(
+ 5917:           tr(language, 'delete_confirm_title'),
+ 5918:         ),
+ 5919:         content: Text(
+ 5920:           tr(language, 'delete_confirm_msg'),
+ 5921:         ),
+ 5922:         actions: [
+ 5923:           TextButton(
+ 5924:             onPressed: () => Navigator.pop(dialogContext, false),
+ 5925:             child: Text(
+ 5926:               tr(language, 'cancel'),
+ 5927:             ),
+ 5928:           ),
+ 5929:           FilledButton(
+ 5930:             onPressed: () => Navigator.pop(dialogContext, true),
+ 5931:             child: Text(
+ 5932:               tr(language, 'delete'),
+ 5933:             ),
+ 5934:           ),
+ 5935:         ],
+ 5936:       ),
+ 5937:     );
+ 5938: 
+ 5939:     if (confirmed != true) return;
+ 5940: 
+ 5941:     try {
+ 5942:       final photoPath = row['photo_url']?.toString();
+ 5943: 
+ 5944:       if (_table == 'reminders') {
+ 5945:         await SanaAlarmService.cancelReminder(
+ 5946:           id.toString(),
+ 5947:         );
+ 5948: 
+ 5949:         await SanaAlarmService.stopAlarmSound(
+ 5950:           notificationId: SanaAlarmService.notificationId(
+ 5951:             id.toString(),
+ 5952:             0,
+ 5953:           ),
+ 5954:         );
+ 5955: 
+ 5956:         await SanaAlarmService.cancelNativeAlarm(
+ 5957:           SanaAlarmService.notificationId(
+ 5958:             id.toString(),
+ 5959:             0,
+ 5960:           ),
+ 5961:         );
+ 5962:       }
+
+ 8117:     }
+ 8118:   }
+ 8119: 
+ 8120:   Future<void> _deleteUser(Map<String, dynamic> user) async {
+ 8121:     final id = user['id'];
+ 8122:     final name = (user['name'] ?? user['email'] ?? 'User').toString();
+ 8123:     final language = languageNotifier.value;
+ 8124: 
+ 8125:     final confirmed = await showDialog<bool>(
+ 8126:       context: context,
+ 8127:       builder: (ctx) => AlertDialog(
+ 8128:         title: Text(tr(language, 'delete_confirm_title')),
+ 8129:         content: Text('${tr(language, 'delete_confirm_msg')}\n\n$name'),
+ 8130:         actions: [
+ 8131:           TextButton(
+ 8132:             onPressed: () => Navigator.pop(ctx, false),
+ 8133:             child: Text(tr(language, 'cancel')),
+ 8134:           ),
+ 8135:           FilledButton(
+ 8136:             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+ 8137:             onPressed: () => Navigator.pop(ctx, true),
+ 8138:             child: Text(tr(language, 'delete')),
+ 8139:           ),
+ 8140:         ],
+ 8141:       ),
+ 8142:     );
+ 8143: 
+ 8144:     if (confirmed != true) return;
+ 8145: 
+ 8146:     try {
+ 8147:       await _client.rpc('admin_delete_user', params: {'target_user': id});
+ 8148:       await _loadUsers();
+ 8149:       if (mounted) {
+ 8150:         ScaffoldMessenger.of(context).showSnackBar(
+ 8151:           SnackBar(
+ 8152:             backgroundColor: Colors.teal.shade700,
+ 8153:             content: Text('$name ${tr(language, 'success')}'),
+ 8154:           ),
+ 8155:         );
+ 8156:       }
+ 8157:     } catch (e) {
+ 8158:       debugPrint('Error deleting user: $e');
+ 8159:       if (mounted) {
+ 8160:         ScaffoldMessenger.of(context).showSnackBar(
+ 8161:           SnackBar(
+ 8162:             backgroundColor: Colors.red.shade700,
+ 8163:             content: Text('Error deleting user: $e'),
+ 8164:           ),
+ 8165:         );
+ 8166:       }
+ 8167:     }
+ 8168:   }
+ 8169: 
+ 8170:   @override
+ 8171:   Widget build(BuildContext context) {
+ 8172:     return ValueListenableBuilder<String>(
+ 8173:       valueListenable: languageNotifier,
+ 8174:       builder: (context, language, _) => Directionality(
+ 8175:         textDirection: language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+
+=== 3. SAVE METHOD (_save in AddFormDialog) ===
+ 5044:     for (final entry in _controllers.entries) {
+ 5045:       final value = entry.value.text.trim();
+ 5046: 
+ 5047:       if (value.isNotEmpty) {
+ 5048:         payload[entry.key] = value;
+ 5049:       }
+ 5050:     }
+ 5051: 
+ 5052:     // Medication reminder times.
+ 5053:     if (_selectedMedicationTimes.isNotEmpty) {
+ 5054:       payload['reminder_time'] = jsonEncode(
+ 5055:         _selectedMedicationTimes.map(_formatTimeOfDay).toList(),
+ 5056:       );
+ 5057:     }
+ 5058: 
+ 5059:     // Medication schedule.
+ 5060:     if (widget.type == 'medications' || widget.type == 'reminders') {
+ 5061:       if (_medicationScheduleType == 'daily') {
+ 5062:         payload['reminder_date'] = 'daily';
+ 5063:       } else {
+ 5064:         payload['reminder_date'] = _medicationCalendarDate == null
+ 5065:             ? null
+ 5066:             : _medicationCalendarDate!.toIso8601String().split('T')[0];
+ 5067:       }
+ 5068: 
+ 5069:       if (_medicinePhotoBase64 != null && _medicinePhotoBase64!.isNotEmpty) {
+ 5070:         payload['photo_base64'] = _medicinePhotoBase64;
+ 5071:       }
+ 5072:     } else {
+ 5073:       if (_medicationScheduleType == 'daily') {
+ 5074:         payload['reminder_date'] = 'daily';
+ 5075:       } else if (_medicationCalendarDate != null) {
+ 5076:         payload['reminder_date'] =
+ 5077:             _medicationCalendarDate!.toIso8601String().split('T')[0];
+ 5078:       }
+ 5079:     }
+ 5080: 
+ 5081:     if (_selectedValues['medication_id'] != null) {
+ 5082:       payload['medication_id'] = _selectedValues['medication_id'];
+ 5083:     }
+ 5084: 
+ 5085:     if (_selectedValues['medication_name'] != null) {
+ 5086:       payload['medication_name'] = _selectedValues['medication_name'];
+ 5087: 
+ 5088:       payload['name'] = _selectedValues['medication_name'];
+ 5089:     }
+ 5090: 
+ 5091:     if (widget.type == 'documents') {
+ 5092:       if (_medicinePhotoBase64 != null && _medicinePhotoBase64!.isNotEmpty) {
+ 5093:         payload['photo'] = _medicinePhotoBase64;
+ 5094:       }
+ 5095:     }
+ 5096: 
+ 5097:     if (widget.type == 'insurance_cards') {
+ 5098:       payload['front_photo'] = _frontPhotoBase64;
+ 5099:       payload['back_photo'] = _backPhotoBase64;
+ 5100:     }
+ 5101: 
+ 5102:     await widget.onSave(payload);
+ 5103: 
+ 5104:     if (context.mounted) {
+ 5105:       Navigator.pop(context, payload);
+ 5106:     }
+ 5107:   }
+ 5108: 
+ 5109:   @override
+ 5110:   Widget build(BuildContext context) {
+ 5111:     final isMedication = widget.type == 'medications';
+ 5112: 
+ 5113:     return Dialog.fullscreen(
+ 5114:       child: Scaffold(
+ 5115:         appBar: AppBar(
+ 5116:           title: Text(
+ 5117:             '${tr(widget.language, 'add')} '
+ 5118:             '${tr(widget.language, widget.type)}',
+ 5119:           ),
+ 5120:           leading: IconButton(
+
+=== 4. INSURANCE CARD SUBMIT ===
+ 5810:   // FIXED: Insurance card submit - uses base64 only
+ 5811: 
+ 5812:   Future<void> _submitInsuranceCard() async {
+ 5813:     // ADD THIS FIRST LINE
+ 5814:     print('>>> _submitInsuranceCard() CALLED! <<<');
+ 5815:     final language = languageNotifier.value;
+ 5816:     if (!_formKey.currentState!.validate()) return;
+ 5817: 
+ 5818:     if (_frontCardBase64 == null || _backCardBase64 == null) {
+ 5819:       ScaffoldMessenger.of(context).showSnackBar(
+ 5820:         SnackBar(content: Text(tr(language, 'please_upload_both_cards'))),
+ 5821:       );
+ 5822:       return;
+ 5823:     }
+ 5824: 
+ 5825:     try {
+ 5826:       final payload = {
+ 5827:         'name': _insuranceCompanyController.text.trim(),
+ 5828:         'provider_name': _insuranceCompanyController.text.trim(),
+ 5829:         'patient_id': _patientIdController.text.trim(),
+ 5830:         'front_image_url': _frontCardBase64,
+ 5831:         'back_image_url': _backCardBase64,
+ 5832:       };
+ 5833: 
+ 5834:       final cleanPayload = RecordSanitizer.sanitize(payload);
+ 5835: 
+ 5836:       cleanPayload['user_id'] = widget.guestMode ? null : widget.ownerId;
+ 5837: 
+ 5838:       await _client.from(_table).insert(cleanPayload);
+ 5839:       await _load();
+ 5840: 
+ 5841:       setState(() {
+ 5842:         _frontCardBase64 = null;
+ 5843:         _backCardBase64 = null;
+ 5844:         _insuranceCompanyController.clear();
+ 5845:         _patientIdController.clear();
+ 5846:       });
+ 5847: 
+ 5848:       ScaffoldMessenger.of(context).showSnackBar(
+ 5849:         SnackBar(
+ 5850:             content: Text(
+ 5851:                 '${tr(language, 'add')} ${tr(language, 'insurance_cards')} ${tr(language, 'success')}')),
+ 5852:       );
+ 5853:     } catch (e) {
+ 5854:       ScaffoldMessenger.of(context).showSnackBar(
+ 5855:         SnackBar(content: Text('${tr(language, 'operation_failed')}: $e')),
+ 5856:       );
+ 5857:     }
+ 5858:   }
+ 5859: 
+ 5860:   // FIXED: Document submit - uses base64 only
+ 5861:   Future<void> _submitDocument() async {
+ 5862:     final language = languageNotifier.value;
+ 5863:     if (!_formKey.currentState!.validate()) return;
+ 5864: 
+ 5865:     if (_documentPhotoBase64 == null) {
+ 5866:       ScaffoldMessenger.of(context).showSnackBar(
+ 5867:         SnackBar(content: Text(tr(language, 'please_upload_photo'))),
+
+=== 5. SHARE SELECTED ===
+ 7366:   }
+ 7367: 
+ 7368:   Future<void> _shareSelected() async {
+ 7369:     final language = languageNotifier.value;
+ 7370:     if (_getTotalSelected() == 0) {
+ 7371:       if (!mounted) return;
+ 7372:       ScaffoldMessenger.of(context)
+ 7373:           .showSnackBar(SnackBar(content: Text(tr(language, 'no_selection'))));
+ 7374:       return;
+ 7375:     }
+ 7376: 
+ 7377:     try {
+ 7378:       await Future.delayed(const Duration(milliseconds: 400));
+ 7379:       await WidgetsBinding.instance.endOfFrame;
+ 7380:       final List<XFile> files = [];
+ 7381: 
+ 7382:       for (final type in _allData.keys) {
+ 7383:         final selectedRows = _allData[type]!
+ 7384:             .where((row) => _selectedIds[type]!.contains(row['id'].toString()))
+ 7385:             .toList();
+ 7386: 
+ 7387:         for (final row in selectedRows) {
+ 7388:           final itemId = '${type}_${row['id']}';
+ 7389:           final itemKey = _itemShareKeys[itemId];
+ 7390:           if (itemKey == null) continue;
+ 7391: 
+ 7392:           final itemContext = itemKey.currentContext;
+ 7393:           if (itemContext == null) continue;
+ 7394: 
+ 7395:           final renderObject = itemContext.findRenderObject();
+ 7396:           if (renderObject is! RenderRepaintBoundary) continue;
+ 7397: 
+ 7398:           if (renderObject.debugNeedsPaint) {
+ 7399:             await Future.delayed(const Duration(milliseconds: 100));
+ 7400:             await WidgetsBinding.instance.endOfFrame;
+ 7401:           }
+ 7402: 
+ 7403:           final ui.Image image = await renderObject.toImage(pixelRatio: 2.0);
+ 7404:           final byteData =
+ 7405:               await image.toByteData(format: ui.ImageByteFormat.png);
+ 7406: 
+ 7407:           if (byteData == null) {
+ 7408:             image.dispose();
+ 7409:             continue;
+ 7410:           }
+ 7411: 
+ 7412:           files.add(
+ 7413:             XFile.fromData(
+ 7414:               byteData.buffer.asUint8List(),
+ 7415:               name: 'SANA_${type}_${row['id']}.png',
+ 7416:               mimeType: 'image/png',
+ 7417:             ),
+ 7418:           );
+ 7419: 
+ 7420:           image.dispose();
+ 7421:         }
+ 7422:       }
+ 7423: 
+ 7424:       if (files.isEmpty) {
+ 7425:         throw Exception('No previews could be captured.');
+ 7426:       }
+ 7427: 
+ 7428:       await SharePlus.instance.share(
+ 7429:         ShareParams(
+ 7430:           files: files,
+ 7431:           subject: 'SANA Medical Records',
+ 7432:         ),
+ 7433:       );
+ 7434:     } catch (e, stackTrace) {
+ 7435:       debugPrint('Share preview error: $e');
+ 7436:       debugPrint('$stackTrace');
+ 7437: 
+ 7438:       if (!mounted) return;
+ 7439:       ScaffoldMessenger.of(context).showSnackBar(
+ 7440:         SnackBar(
+ 7441:           content: Text('${tr(language, 'operation_failed')}: $e'),
+ 7442:         ),
+ 7443:       );
+ 7444:     }
+ 7445:   }
+ 7446: 
+ 7447:   String _getSubtitle(String type, Map<String, dynamic> row) {
+ 7448:     if (type == 'medications')
+ 7449:       return '${row['dosage'] ?? ''} ${row['reminder_time'] ?? ''}';
+ 7450:     if (type == 'doctors')
+ 7451:       return '${row['specialty'] ?? ''} ${row['phone'] ?? ''}';
+ 7452:     if (type == 'pharmacies')
+ 7453:       return '${row['location'] ?? ''} ${row['phone'] ?? ''}';
+ 7454:     if (type == 'documents')
+ 7455:       return '${row['category'] ?? ''} ${row['file_type'] ?? ''}';
+ 7456:     if (type == 'insurance_cards') return '${row['provider_name'] ?? ''}';
+ 7457:     if (type == 'reminders')
+ 7458:       return '${row['reminder_time'] ?? ''} ${row['reminder_date'] ?? ''}';
+ 7459:     return '';
+ 7460:   }
+ 7461: 
+ 7462:   String _formatPreviewValue(String language, String key, dynamic value) {
+ 7463:     if (value == null ||
+ 7464:         value.toString().trim().isEmpty ||
+ 7465:         value.toString().trim() == 'null') {
+ 7466:       return '';
+ 7467:     }
+ 7468:     final raw = value.toString().trim();
+
+=== 6. SHARE CARD + CLOSE CARD (buildMainGrid) ===
+ 3250: 
+ 3251:   Widget _buildMainGrid(String language) {
+ 3252:     final cards = [
+ 3253:       _recordCard('medications', Colors.teal.shade50),
+ 3254:       _recordCard('doctors', Colors.blue.shade50),
+ 3255:       _recordCard('pharmacies', Colors.green.shade50),
+ 3256:       _recordCard('reminders', Colors.orange.shade50),
+ 3257:       _recordCard('documents', Colors.purple.shade50),
+ 3258:       _recordCard('insurance_cards', Colors.pink.shade50),
+ 3259:     ];
+ 3260: 
+ 3261:     return Column(
+ 3262:       children: [
+ 3263:         GridView.count(
+ 3264:           shrinkWrap: true,
+ 3265:           physics: const NeverScrollableScrollPhysics(),
+ 3266:           crossAxisCount: 2,
+ 3267:           crossAxisSpacing: 10,
+ 3268:           mainAxisSpacing: 10,
+ 3269:           childAspectRatio: 1.15,
+ 3270:           children: cards,
+ 3271:         ),
+ 3272:         const SizedBox(height: 10),
+ 3273:         _shareCard(language),
+ 3274:         const SizedBox(height: 10),
+ 3275:         _closeCard(language),
+ 3276:       ],
+ 3277:     );
+ 3278:   }
+ 3279: 
+ 3280:   Widget _recordCard(String type, Color color) {
+ 3281:     final language = languageNotifier.value;
+ 3282:     return Card(
+ 3283:       elevation: 2,
+ 3284:       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ 3285:       color: color,
+ 3286:       child: InkWell(
+ 3287:         borderRadius: BorderRadius.circular(12),
+ 3288:         onTap: () => _openCard(type),
+ 3289:         child: Padding(
+ 3290:           padding: const EdgeInsets.all(10),
+ 3291:           child: Column(
+ 3292:             mainAxisAlignment: MainAxisAlignment.center,
+ 3293:             children: [
+ 3294:               Row(
+ 3295:                 mainAxisAlignment: MainAxisAlignment.end,
+ 3296:                 children: [
+ 3297:                   IconButton(
+ 3298:                     icon: const Icon(Icons.add_circle,
+ 3299:                         color: Colors.teal, size: 22),
+ 3300:                     tooltip: tr(language, 'add'),
+ 3301:                     padding: EdgeInsets.zero,
+
+=== 7. CLOSE CARD onTap ===
+ 3379: 
+ 3380:   Widget _closeCard(String language) {
+ 3381:     return SizedBox(
+ 3382:       width: double.infinity,
+ 3383:       child: Card(
+ 3384:         elevation: 2,
+ 3385:         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ 3386:         color: Colors.red.shade100,
+ 3387:         child: InkWell(
+ 3388:           borderRadius: BorderRadius.circular(12),
+ 3389:           onTap: () async {
+ 3390:             try { await SanaStore.instance.flush(_client); } catch (_) {}
+ 3391:             final confirmed = await showDialog<bool>(
+ 3392:               context: context,
+ 3393:               builder: (ctx) => AlertDialog(
+ 3394:                 title: Text(tr(language, 'close')),
+ 3395:                 content: Text(tr(language, 'close')),
+ 3396:                 actions: [
+ 3397:                   TextButton(
+ 3398:                     onPressed: () => Navigator.pop(ctx, false),
+ 3399:                     child: Text(tr(language, 'cancel')),
+ 3400:                   ),
+ 3401:                   FilledButton(
+ 3402:                     onPressed: () => Navigator.pop(ctx, true),
+ 3403:                     child: Text(tr(language, 'close')),
+ 3404:                   ),
+ 3405:                 ],
+ 3406:               ),
+ 3407:             );
+ 3408:             if (confirmed == true) {
+ 3409:               SystemNavigator.pop();
+ 3410:             }
+ 3411:           },
+ 3412:           child: Padding(
+ 3413:             padding: const EdgeInsets.symmetric(vertical: 16),
+ 3414:             child: Row(
+ 3415:               mainAxisAlignment: MainAxisAlignment.center,
+ 3416:               children: [
+ 3417:                 const Icon(Icons.close, size: 28, color: Colors.red),
+ 3418:                 const SizedBox(width: 12),
+ 3419:                 Flexible(
+ 3420:                   child: Text(
+ 3421:                     tr(language, 'close'),
+ 3422:                     textAlign: TextAlign.center,
+ 3423:                     maxLines: 2,
+ 3424:                     overflow: TextOverflow.ellipsis,
+ 3425:                     style: const TextStyle(
+ 3426:                         fontSize: 9, fontWeight: FontWeight.bold),
+ 3427:                   ),
+ 3428:                 ),
+ 3429:               ],
+ 3430:             ),
+ 3431:           ),
+ 3432:         ),
+ 3433:       ),
+ 3434:     );
+ 3435:   }
+
+=== 8. REMINDERS TOGGLE IN _buildBottomArea ===
+ 3461:                     final result = await Navigator.push<bool>(
+ 3462:                       context,
+ 3463:                       MaterialPageRoute(builder: (_) => const LoginScreen()),
+ 3464:                     );
+ 3465:                     if (result == true) await _loadSession();
+ 3466:                   }
+ 3467:                 },
+ 3468:                 icon: Icon(isLoggedIn ? Icons.logout : Icons.login, size: 18),
+ 3469:                 label: Text(
+ 3470:                   tr(language, isLoggedIn ? 'logout' : 'login'),
+ 3471:                   maxLines: 1,
+ 3472:                   overflow: TextOverflow.ellipsis,
+ 3473:                 ),
+ 3474:               ),
+ 3475:             ),
+ 3476:             const SizedBox(width: 8),
+ 3477:             Expanded(
+ 3478:               child: FilledButton.icon(
+ 3479:                 onPressed: isLoggedIn
+ 3480:                     ? () => Navigator.push(
+ 3481:                           context,
+ 3482:                           MaterialPageRoute(builder: (_) => const ChatScreen()),
+ 3483:                         )
+ 3484:                     : _getOwnCopy,
+ 3485:                 icon: Icon(
+ 3486:                   isLoggedIn ? Icons.chat : Icons.copy,
+ 3487:                   size: 18,
+ 3488:                 ),
+ 3489:                 label: Text(
+ 3490:                   tr(language, isLoggedIn ? 'chat' : 'get_copy'),
+ 3491:                   maxLines: 1,
+ 3492:                   overflow: TextOverflow.ellipsis,
+ 3493:                 ),
+ 3494:               ),
+ 3495:             ),
+ 3496:           ],
+ 3497:         ),
+ 3498:         if (isLoggedIn) ...[
+ 3499:           const SizedBox(height: 8),
+ 3500:           SwitchListTile(
+ 3501:             title: Text(tr(language, 'reminders_enabled')),
+ 3502:             value: _profile?['reminders_enabled'] != false,
+ 3503:             onChanged: (value) async {
+ 3504:               final user = _client.auth.currentUser;
+ 3505:               if (user == null) return;
+ 3506:               try {
+ 3507:                 await _client
+ 3508:                     .from('users')
+ 3509:                     .update({'reminders_enabled': value})
+ 3510:                     .eq('id', user.id);
+ 3511:                 if (!mounted) return;
+ 3512:                 setState(() {
+ 3513:                   _profile?['reminders_enabled'] = value;
+ 3514:                 });
+ 3515:               } catch (e) {
+ 3516:                 debugPrint('reminders_enabled toggle failed: ');
+ 3517:                 if (!mounted) return;
+ 3518:                 ScaffoldMessenger.of(context).showSnackBar(
+ 3519:                   SnackBar(content: Text('$e')),
+ 3520:                 );
+ 3521:               }
+ 3522:             },
+ 3523:           ),
+ 3524:         ],
+ 3525: 
+ 3526:         if (isLoggedIn && isAdmin) ...[
+ 3527:           const SizedBox(height: 8),
+ 3528:           OutlinedButton.icon(
+ 3529:             onPressed: () => Navigator.push(
+ 3530:               context,
+ 3531:               MaterialPageRoute(builder: (_) => const AdminScreen()),
+ 3532:             ),
+ 3533:             icon: const Icon(Icons.admin_panel_settings),
+ 3534:             label: Text(tr(language, 'admin')),
+ 3535:           ),
+ 3536:         ],
+ 3537:       ],
+ 3538:     );
+ 3539:   }
+ 3540: }
+ 3541: 
+ 3542: /// Converts any username or email into a guaranteed valid internal email for Supabase GoTrue.
+ 3543: String usernameToAuthEmail(String rawInput) {
+ 3544:   final clean = rawInput
+ 3545:       .replaceAll(RegExp(r'[\u200B\u200C\u200D\uFEFF\u00A0]'), '')
+ 3546:       .trim()
+ 3547:       .toLowerCase();
+ 3548: 
+ 3549:   if (clean.isEmpty) return '';
+ 3550: 
+ 3551:   // Admin username aliases map to the existing Supabase Admin Auth account.
+ 3552:   if (clean == 'admin' || clean == 'malaz' || clean == 'malazjanbeih') {
+ 3553:     return 'malazjanbeih@gmail.com';
+ 3554:   }
+ 3555: 
+ 3556:   if (clean.contains('@') && clean.contains('.')) return clean;
+ 3557: 
+ 3558:   // 32-hex SHA-256 hash guarantees the internal email is ALWAYS valid and fixed-length
+ 3559:   final hash = sha256.convert(utf8.encode(clean)).toString().substring(0, 32);
+ 3560:   return 'u_$hash@sana.local';
+
+=== SUPPORTING FILES / SYMBOLS NEEDED FOR FIXES ===
+--- alarm cancel references ---
+D:\sana\lib\main.dart: 248: static Future<void> cancelNativeAlarm(
+D:\sana\lib\main.dart: 256: 'cancelNativeAlarm',
+D:\sana\lib\main.dart: 628: static Future<void> cancelReminder(
+D:\sana\lib\main.dart: 636: await cancelNativeAlarm(id);
+D:\sana\lib\main.dart: 5945: await SanaAlarmService.cancelReminder(
+D:\sana\lib\main.dart: 5956: await SanaAlarmService.cancelNativeAlarm(
+D:\sana\lib\main.dart: 7070: await SanaAlarmService.cancelNativeAlarm(
+D:\sana\lib\main.dart: 7076: await SanaAlarmService.cancelReminder(
+D:\sana\lib\core\notification_service.dart: 124: static Future<void> cancelReminder(
+--- insurance owner constraint / guest_id schema references ---
+D:\sana\supabase\migrations\20260816_sana_subscription_payment_admin.sql: 581: --   insurance_cards
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 13: add column if not exists guest_id uuid;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 16: add column if not exists guest_id uuid;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 19: add column if not exists guest_id uuid;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 22: add column if not exists guest_id uuid;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 24: alter table if exists public.insurance_cards
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 25: add column if not exists guest_id uuid;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 46: -- Anonymous Supabase users receive a real auth.uid(), which is stored in guest_id.
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 51: alter table if exists public.insurance_cards enable row level security;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 59: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 63: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 72: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 76: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 85: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 89: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 98: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 102: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 105: drop policy if exists "SANA isolated insurance" on public.insurance_cards;
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 107: on public.insurance_cards
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 111: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260825_sana_access_migration.sql: 115: or auth.uid() = guest_id
+D:\sana\supabase\migrations\20260911_fix_insurance_cards_id.sql: 1: alter table public.insurance_cards
+--- web push platform files ---
+D:\sana\lib\sana_web_push_stub.dart
+D:\sana\lib\sana_web_push_web.dart
