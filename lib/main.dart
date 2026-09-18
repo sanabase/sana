@@ -3270,9 +3270,16 @@ class _HomeScreenState extends State<HomeScreen> {
           children: cards,
         ),
         const SizedBox(height: 10),
-        _shareCard(language),
-        const SizedBox(height: 10),
-        _closeCard(language),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _shareCard(language)),
+              const SizedBox(width: 10),
+              Expanded(child: _closeCard(language)),
+            ],
+          ),
+        ),
       ],
     );
   }
