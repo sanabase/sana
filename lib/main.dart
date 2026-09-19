@@ -1996,7 +1996,9 @@ class GuestIdentityService {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!kIsWeb) { await SanaAlarmService.initialize(); }
+  if (!kIsWeb) {
+    await SanaAlarmService.initialize();
+  }
 
   await Supabase.initialize(
     url: _supabaseUrl,
@@ -2020,21 +2022,24 @@ void main() async {
 
 // SANA DIAG PANEL
 final sanaDiag = ValueNotifier<String>('diag: start');
+
 class SanaDiagOverlay extends StatelessWidget {
   const SanaDiagOverlay({super.key});
   @override
   Widget build(BuildContext c) => Positioned(
-    top: 0, left: 0,
-    child: Container(
-      color: const Color(0xCC000000),
-      padding: const EdgeInsets.all(4),
-      constraints: const BoxConstraints(maxWidth: 260),
-      child: ValueListenableBuilder<String>(
-        valueListenable: sanaDiag,
-        builder: (c, v, _) => Text(v, style: const TextStyle(color: Color(0xFFFFEB3B), fontSize: 10)),
-      ),
-    ),
-  );
+        top: 0,
+        left: 0,
+        child: Container(
+          color: const Color(0xCC000000),
+          padding: const EdgeInsets.all(4),
+          constraints: const BoxConstraints(maxWidth: 260),
+          child: ValueListenableBuilder<String>(
+            valueListenable: sanaDiag,
+            builder: (c, v, _) => Text(v,
+                style: const TextStyle(color: Color(0xFFFFEB3B), fontSize: 10)),
+          ),
+        ),
+      );
 }
 
 class SanaApp extends StatelessWidget {
@@ -2211,15 +2216,15 @@ class _HomeScreenState extends State<HomeScreen> {
           if (tz != null && tz.isNotEmpty) {
             await _client
                 .from('users')
-                .update({'timezone': tz})
-                .eq('id', user.id);
+                .update({'timezone': tz}).eq('id', user.id);
           }
         }
       } catch (_) {}
 
       if (!isRealUser) {
         final guestPrefs = await SharedPreferences.getInstance();
-        final guestRemindersEnabled = guestPrefs.getBool('sana_guest_reminders_enabled') ?? true;
+        final guestRemindersEnabled =
+            guestPrefs.getBool('sana_guest_reminders_enabled') ?? true;
         if (!mounted) return;
         setState(() {
           _profile = null;
@@ -2232,13 +2237,18 @@ class _HomeScreenState extends State<HomeScreen> {
         // Load store for guest mode too (parallel)
         if (!SanaStore.instance.isLoaded) {
           final futures = <Future>[];
-          for (final t in ['medications', 'doctors', 'pharmacies', 'reminders', 'documents', 'insurance_cards']) {
+          for (final t in [
+            'medications',
+            'doctors',
+            'pharmacies',
+            'reminders',
+            'documents',
+            'insurance_cards'
+          ]) {
             futures.add(() async {
               try {
-                final resp = await _client
-                    .from(t)
-                    .select()
-                    .isFilter('user_id', null);
+                final resp =
+                    await _client.from(t).select().isFilter('user_id', null);
                 final list = (resp as List)
                     .map((e) => Map<String, dynamic>.from(e as Map))
                     .toList();
@@ -2255,7 +2265,14 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         sanaDiag.value = 'diag: loading tables';
         if (!SanaStore.instance.isLoaded) {
-          for (final t in ['medications','doctors','pharmacies','reminders','documents','insurance_cards']) {
+          for (final t in [
+            'medications',
+            'doctors',
+            'pharmacies',
+            'reminders',
+            'documents',
+            'insurance_cards'
+          ]) {
             try {
               final swD = Stopwatch()..start();
               sanaDiag.value = 'diag: q ' + t;
@@ -2267,7 +2284,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   .map((e) => Map<String, dynamic>.from(e as Map))
                   .toList();
               swD.stop();
-              sanaDiag.value = 'diag: ' + t + ' ' + swD.elapsedMilliseconds.toString() + 'ms';
+              sanaDiag.value = 'diag: ' +
+                  t +
+                  ' ' +
+                  swD.elapsedMilliseconds.toString() +
+                  'ms';
               SanaStore.instance.setAll(t, list);
             } catch (_) {}
           }
@@ -2346,7 +2367,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) {
         final fallbackUser = _client.auth.currentUser;
-        final guestId = fallbackUser?.isAnonymous == true ? fallbackUser!.id : null;
+        final guestId =
+            fallbackUser?.isAnonymous == true ? fallbackUser!.id : null;
         setState(() {
           _profile = null;
           _guestId = guestId;
@@ -2368,26 +2390,26 @@ class _HomeScreenState extends State<HomeScreen> {
   String _guestRemindersLabel(String language) {
     return _guestRemindersEnabled
         ? {
-            'ar': 'تعطيل التذكيرات',
-            'es': 'Desactivar recordatorios',
-            'fr': 'Désactiver les rappels',
-            'de': 'Erinnerungen deaktivieren',
-            'tr': 'Hatırlatıcıları devre dışı bırak',
-            'hi': 'रिमाइंडर अक्षम करें',
-            'zh': '禁用提醒',
-            'en': 'Disable reminders',
-          }[language] ??
+              'ar': 'تعطيل التذكيرات',
+              'es': 'Desactivar recordatorios',
+              'fr': 'Désactiver les rappels',
+              'de': 'Erinnerungen deaktivieren',
+              'tr': 'Hatırlatıcıları devre dışı bırak',
+              'hi': 'रिमाइंडर अक्षम करें',
+              'zh': '禁用提醒',
+              'en': 'Disable reminders',
+            }[language] ??
             'Disable reminders'
         : {
-            'ar': 'تمكين التذكيرات',
-            'es': 'Activar recordatorios',
-            'fr': 'Activer les rappels',
-            'de': 'Erinnerungen aktivieren',
-            'tr': 'Hatırlatıcıları etkinleştir',
-            'hi': 'रिमाइंडर सक्षम करें',
-            'zh': '启用提醒',
-            'en': 'Enable reminders',
-          }[language] ??
+              'ar': 'تمكين التذكيرات',
+              'es': 'Activar recordatorios',
+              'fr': 'Activer les rappels',
+              'de': 'Erinnerungen aktivieren',
+              'tr': 'Hatırlatıcıları etkinleştir',
+              'hi': 'रिमाइंडर सक्षम करें',
+              'zh': '启用提醒',
+              'en': 'Enable reminders',
+            }[language] ??
             'Enable reminders';
   }
 
@@ -2407,7 +2429,9 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           ownerId: ownerId,
           guestMode: _isGuest,
-          remindersEnabled: _isGuest ? _guestRemindersEnabled : _profile?['reminders_enabled'] != false,
+          remindersEnabled: _isGuest
+              ? _guestRemindersEnabled
+              : _profile?['reminders_enabled'] != false,
         ),
       ),
     );
@@ -2423,7 +2447,9 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           ownerId: ownerId,
           guestMode: _isGuest,
-          remindersEnabled: _isGuest ? _guestRemindersEnabled : _profile?['reminders_enabled'] != false,
+          remindersEnabled: _isGuest
+              ? _guestRemindersEnabled
+              : _profile?['reminders_enabled'] != false,
           autoOpenAdd: true,
         ),
       ),
@@ -2460,53 +2486,53 @@ class _HomeScreenState extends State<HomeScreen> {
       };
       steps = switch (language) {
         'ar' => [
-          'افتح SANA في متصفح Chrome.',
-          'اضغط على قائمة المتصفح (⋮) أعلى اليمين.',
-          'اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
-          'أكّد التثبيت.',
-        ],
+            'افتح SANA في متصفح Chrome.',
+            'اضغط على قائمة المتصفح (⋮) أعلى اليمين.',
+            'اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+            'أكّد التثبيت.',
+          ],
         'es' => [
-          'Abra SANA en el navegador Chrome.',
-          'Toque el menú (⋮) en la esquina superior derecha.',
-          'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
-          'Confirme la instalación.',
-        ],
+            'Abra SANA en el navegador Chrome.',
+            'Toque el menú (⋮) en la esquina superior derecha.',
+            'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
+            'Confirme la instalación.',
+          ],
         'fr' => [
-          'Ouvrez SANA dans le navigateur Chrome.',
-          'Appuyez sur le menu (⋮) en haut à droite.',
-          'Choisissez "Installer l’application" ou "Ajouter à l’écran d’accueil".',
-          'Confirmez l’installation.',
-        ],
+            'Ouvrez SANA dans le navigateur Chrome.',
+            'Appuyez sur le menu (⋮) en haut à droite.',
+            'Choisissez "Installer l’application" ou "Ajouter à l’écran d’accueil".',
+            'Confirmez l’installation.',
+          ],
         'de' => [
-          'Öffnen Sie SANA im Chrome-Browser.',
-          'Tippen Sie auf das Menü (⋮) oben rechts.',
-          'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
-          'Bestätigen Sie die Installation.',
-        ],
+            'Öffnen Sie SANA im Chrome-Browser.',
+            'Tippen Sie auf das Menü (⋮) oben rechts.',
+            'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
+            'Bestätigen Sie die Installation.',
+          ],
         'tr' => [
-          'SANA’yı Chrome tarayıcısında açın.',
-          'Sağ üstteki menüye (⋮) dokunun.',
-          '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
-          'Kurulumu onaylayın.',
-        ],
+            'SANA’yı Chrome tarayıcısında açın.',
+            'Sağ üstteki menüye (⋮) dokunun.',
+            '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
+            'Kurulumu onaylayın.',
+          ],
         'hi' => [
-          'SANA को Chrome ब्राउज़र में खोलें।',
-          'ऊपर दाईं ओर मेनू (⋮) पर टैप करें।',
-          '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
-          'इंस्टॉलेशन की पुष्टि करें।',
-        ],
+            'SANA को Chrome ब्राउज़र में खोलें।',
+            'ऊपर दाईं ओर मेनू (⋮) पर टैप करें।',
+            '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
+            'इंस्टॉलेशन की पुष्टि करें।',
+          ],
         'zh' => [
-          '在 Chrome 浏览器中打开 SANA。',
-          '点击右上角的菜单 (⋮)。',
-          '选择“安装应用”或“添加到主屏幕”。',
-          '确认安装。',
-        ],
+            '在 Chrome 浏览器中打开 SANA。',
+            '点击右上角的菜单 (⋮)。',
+            '选择“安装应用”或“添加到主屏幕”。',
+            '确认安装。',
+          ],
         _ => [
-          'Open SANA in Chrome.',
-          'Tap the browser menu (⋮) at the top right.',
-          'Choose "Install app" or "Add to Home screen".',
-          'Confirm the installation.',
-        ],
+            'Open SANA in Chrome.',
+            'Tap the browser menu (⋮) at the top right.',
+            'Choose "Install app" or "Add to Home screen".',
+            'Confirm the installation.',
+          ],
       };
     } else if (isIos) {
       title = switch (language) {
@@ -2521,53 +2547,53 @@ class _HomeScreenState extends State<HomeScreen> {
       };
       steps = switch (language) {
         'ar' => [
-          'افتح SANA في متصفح Safari.',
-          'اضغط على زر المشاركة.',
-          'مرّر للأسفل واختر "إضافة إلى الشاشة الرئيسية".',
-          'أكّد الإضافة.',
-        ],
+            'افتح SANA في متصفح Safari.',
+            'اضغط على زر المشاركة.',
+            'مرّر للأسفل واختر "إضافة إلى الشاشة الرئيسية".',
+            'أكّد الإضافة.',
+          ],
         'es' => [
-          'Abra SANA en Safari.',
-          'Toque el botón Compartir.',
-          'Desplace y elija "Añadir a pantalla de inicio".',
-          'Confirme.',
-        ],
+            'Abra SANA en Safari.',
+            'Toque el botón Compartir.',
+            'Desplace y elija "Añadir a pantalla de inicio".',
+            'Confirme.',
+          ],
         'fr' => [
-          'Ouvrez SANA dans Safari.',
-          'Appuyez sur le bouton Partager.',
-          'Faites défiler et choisissez "Ajouter à l’écran d’accueil".',
-          'Confirmez.',
-        ],
+            'Ouvrez SANA dans Safari.',
+            'Appuyez sur le bouton Partager.',
+            'Faites défiler et choisissez "Ajouter à l’écran d’accueil".',
+            'Confirmez.',
+          ],
         'de' => [
-          'Öffnen Sie SANA in Safari.',
-          'Tippen Sie auf die Teilen-Schaltfläche.',
-          'Wählen Sie "Zum Startbildschirm hinzufügen".',
-          'Bestätigen Sie.',
-        ],
+            'Öffnen Sie SANA in Safari.',
+            'Tippen Sie auf die Teilen-Schaltfläche.',
+            'Wählen Sie "Zum Startbildschirm hinzufügen".',
+            'Bestätigen Sie.',
+          ],
         'tr' => [
-          'SANA’yı Safari’de açın.',
-          'Paylaş düğmesine dokunun.',
-          '"Ana ekrana ekle" seçeneğini seçin.',
-          'Onaylayın.',
-        ],
+            'SANA’yı Safari’de açın.',
+            'Paylaş düğmesine dokunun.',
+            '"Ana ekrana ekle" seçeneğini seçin.',
+            'Onaylayın.',
+          ],
         'hi' => [
-          'SANA को Safari में खोलें।',
-          'शेयर बटन पर टैप करें।',
-          '"होम स्क्रीन पर जोड़ें" चुनें।',
-          'पुष्टि करें।',
-        ],
+            'SANA को Safari में खोलें।',
+            'शेयर बटन पर टैप करें।',
+            '"होम स्क्रीन पर जोड़ें" चुनें।',
+            'पुष्टि करें।',
+          ],
         'zh' => [
-          '在 Safari 中打开 SANA。',
-          '点击分享按钮。',
-          '选择“添加到主屏幕”。',
-          '确认。',
-        ],
+            '在 Safari 中打开 SANA。',
+            '点击分享按钮。',
+            '选择“添加到主屏幕”。',
+            '确认。',
+          ],
         _ => [
-          'Open SANA in Safari.',
-          'Tap the Share button.',
-          'Choose "Add to Home Screen".',
-          'Confirm.',
-        ],
+            'Open SANA in Safari.',
+            'Tap the Share button.',
+            'Choose "Add to Home Screen".',
+            'Confirm.',
+          ],
       };
     } else if (isWindows) {
       title = switch (language) {
@@ -2582,53 +2608,53 @@ class _HomeScreenState extends State<HomeScreen> {
       };
       steps = switch (language) {
         'ar' => [
-          'افتح SANA في متصفح Edge.',
-          'اضغط على القائمة (…) أعلى اليمين.',
-          'اختر "التطبيقات" ثم "تثبيت هذا الموقع كتطبيق".',
-          'أكّد التثبيت.',
-        ],
+            'افتح SANA في متصفح Edge.',
+            'اضغط على القائمة (…) أعلى اليمين.',
+            'اختر "التطبيقات" ثم "تثبيت هذا الموقع كتطبيق".',
+            'أكّد التثبيت.',
+          ],
         'es' => [
-          'Abra SANA en Microsoft Edge.',
-          'Haga clic en el menú (…) arriba a la derecha.',
-          'Elija "Aplicaciones" y luego "Instalar este sitio como aplicación".',
-          'Confirme.',
-        ],
+            'Abra SANA en Microsoft Edge.',
+            'Haga clic en el menú (…) arriba a la derecha.',
+            'Elija "Aplicaciones" y luego "Instalar este sitio como aplicación".',
+            'Confirme.',
+          ],
         'fr' => [
-          'Ouvrez SANA dans Microsoft Edge.',
-          'Cliquez sur le menu (…) en haut à droite.',
-          'Choisissez "Applications" puis "Installer ce site en tant qu’application".',
-          'Confirmez.',
-        ],
+            'Ouvrez SANA dans Microsoft Edge.',
+            'Cliquez sur le menu (…) en haut à droite.',
+            'Choisissez "Applications" puis "Installer ce site en tant qu’application".',
+            'Confirmez.',
+          ],
         'de' => [
-          'Öffnen Sie SANA in Microsoft Edge.',
-          'Klicken Sie auf das Menü (…) oben rechts.',
-          'Wählen Sie "Apps" und dann "Diese Website als App installieren".',
-          'Bestätigen Sie.',
-        ],
+            'Öffnen Sie SANA in Microsoft Edge.',
+            'Klicken Sie auf das Menü (…) oben rechts.',
+            'Wählen Sie "Apps" und dann "Diese Website als App installieren".',
+            'Bestätigen Sie.',
+          ],
         'tr' => [
-          'SANA’yı Microsoft Edge’de açın.',
-          'Sağ üstteki menüye (…) tıklayın.',
-          '"Uygulamalar" ve ardından "Bu siteyi uygulama olarak yükle" seçeneğini seçin.',
-          'Onaylayın.',
-        ],
+            'SANA’yı Microsoft Edge’de açın.',
+            'Sağ üstteki menüye (…) tıklayın.',
+            '"Uygulamalar" ve ardından "Bu siteyi uygulama olarak yükle" seçeneğini seçin.',
+            'Onaylayın.',
+          ],
         'hi' => [
-          'SANA को Microsoft Edge में खोलें।',
-          'ऊपर दाईं ओर मेनू (…) पर क्लिक करें।',
-          '"ऐप्स" और फिर "इस साइट को ऐप के रूप में इंस्टॉल करें" चुनें।',
-          'पुष्टि करें।',
-        ],
+            'SANA को Microsoft Edge में खोलें।',
+            'ऊपर दाईं ओर मेनू (…) पर क्लिक करें।',
+            '"ऐप्स" और फिर "इस साइट को ऐप के रूप में इंस्टॉल करें" चुनें।',
+            'पुष्टि करें।',
+          ],
         'zh' => [
-          '在 Microsoft Edge 中打开 SANA。',
-          '点击右上角的菜单 (…)。',
-          '选择“应用”，然后选择“将此站点作为应用安装”。',
-          '确认。',
-        ],
+            '在 Microsoft Edge 中打开 SANA。',
+            '点击右上角的菜单 (…)。',
+            '选择“应用”，然后选择“将此站点作为应用安装”。',
+            '确认。',
+          ],
         _ => [
-          'Open SANA in Microsoft Edge.',
-          'Click the menu (…) at the top right.',
-          'Choose "Apps" then "Install this site as an app".',
-          'Confirm.',
-        ],
+            'Open SANA in Microsoft Edge.',
+            'Click the menu (…) at the top right.',
+            'Choose "Apps" then "Install this site as an app".',
+            'Confirm.',
+          ],
       };
     } else if (isMacos) {
       title = switch (language) {
@@ -2643,45 +2669,45 @@ class _HomeScreenState extends State<HomeScreen> {
       };
       steps = switch (language) {
         'ar' => [
-          'افتح SANA في Safari.',
-          'من قائمة "ملف" اختر "إضافة إلى Dock".',
-          'أكّد الإضافة.',
-        ],
+            'افتح SANA في Safari.',
+            'من قائمة "ملف" اختر "إضافة إلى Dock".',
+            'أكّد الإضافة.',
+          ],
         'es' => [
-          'Abra SANA en Safari.',
-          'Desde el menú "Archivo" elija "Añadir al Dock".',
-          'Confirme.',
-        ],
+            'Abra SANA en Safari.',
+            'Desde el menú "Archivo" elija "Añadir al Dock".',
+            'Confirme.',
+          ],
         'fr' => [
-          'Ouvrez SANA dans Safari.',
-          'Dans le menu "Fichier", choisissez "Ajouter au Dock".',
-          'Confirmez.',
-        ],
+            'Ouvrez SANA dans Safari.',
+            'Dans le menu "Fichier", choisissez "Ajouter au Dock".',
+            'Confirmez.',
+          ],
         'de' => [
-          'Öffnen Sie SANA in Safari.',
-          'Wählen Sie im Menü "Ablage" die Option "Zum Dock hinzufügen".',
-          'Bestätigen Sie.',
-        ],
+            'Öffnen Sie SANA in Safari.',
+            'Wählen Sie im Menü "Ablage" die Option "Zum Dock hinzufügen".',
+            'Bestätigen Sie.',
+          ],
         'tr' => [
-          'SANA’yı Safari’de açın.',
-          '"Dosya" menüsünden "Dock’a Ekle" seçeneğini seçin.',
-          'Onaylayın.',
-        ],
+            'SANA’yı Safari’de açın.',
+            '"Dosya" menüsünden "Dock’a Ekle" seçeneğini seçin.',
+            'Onaylayın.',
+          ],
         'hi' => [
-          'SANA को Safari में खोलें।',
-          '"फ़ाइल" मेनू से "Dock में जोड़ें" चुनें।',
-          'पुष्टि करें।',
-        ],
+            'SANA को Safari में खोलें।',
+            '"फ़ाइल" मेनू से "Dock में जोड़ें" चुनें।',
+            'पुष्टि करें।',
+          ],
         'zh' => [
-          '在 Safari 中打开 SANA。',
-          '从“文件”菜单中选择“添加到 Dock”。',
-          '确认。',
-        ],
+            '在 Safari 中打开 SANA。',
+            '从“文件”菜单中选择“添加到 Dock”。',
+            '确认。',
+          ],
         _ => [
-          'Open SANA in Safari.',
-          'From the "File" menu choose "Add to Dock".',
-          'Confirm.',
-        ],
+            'Open SANA in Safari.',
+            'From the "File" menu choose "Add to Dock".',
+            'Confirm.',
+          ],
       };
     } else {
       title = switch (language) {
@@ -2696,45 +2722,45 @@ class _HomeScreenState extends State<HomeScreen> {
       };
       steps = switch (language) {
         'ar' => [
-          'افتح SANA في المتصفح.',
-          'من قائمة المتصفح اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
-          'أكّد الإضافة.',
-        ],
+            'افتح SANA في المتصفح.',
+            'من قائمة المتصفح اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+            'أكّد الإضافة.',
+          ],
         'es' => [
-          'Abra SANA en el navegador.',
-          'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
-          'Confirme.',
-        ],
+            'Abra SANA en el navegador.',
+            'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
+            'Confirme.',
+          ],
         'fr' => [
-          'Ouvrez SANA dans le navigateur.',
-          'Choisissez "Installer l’application" ou "Ajouter à l’écran d’accueil".',
-          'Confirmez.',
-        ],
+            'Ouvrez SANA dans le navigateur.',
+            'Choisissez "Installer l’application" ou "Ajouter à l’écran d’accueil".',
+            'Confirmez.',
+          ],
         'de' => [
-          'Öffnen Sie SANA im Browser.',
-          'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
-          'Bestätigen Sie.',
-        ],
+            'Öffnen Sie SANA im Browser.',
+            'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
+            'Bestätigen Sie.',
+          ],
         'tr' => [
-          'SANA’yı tarayıcıda açın.',
-          '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
-          'Onaylayın.',
-        ],
+            'SANA’yı tarayıcıda açın.',
+            '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
+            'Onaylayın.',
+          ],
         'hi' => [
-          'SANA को ब्राउज़र में खोलें।',
-          '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
-          'पुष्टि करें।',
-        ],
+            'SANA को ब्राउज़र में खोलें।',
+            '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
+            'पुष्टि करें।',
+          ],
         'zh' => [
-          '在浏览器中打开 SANA。',
-          '选择“安装应用”或“添加到主屏幕”。',
-          '确认。',
-        ],
+            '在浏览器中打开 SANA。',
+            '选择“安装应用”或“添加到主屏幕”。',
+            '确认。',
+          ],
         _ => [
-          'Open SANA in your browser.',
-          'Choose "Install app" or "Add to Home screen".',
-          'Confirm.',
-        ],
+            'Open SANA in your browser.',
+            'Choose "Install app" or "Add to Home screen".',
+            'Confirm.',
+          ],
       };
     }
 
@@ -2951,21 +2977,27 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         height: 1.5,
                                                       ),
                                                     ),
-
-                                                  const SizedBox(height: 16),
-                                                  ListTile(
-                                                    leading: const Icon(Icons.install_mobile, color: Colors.teal),
-                                                    title: Text(
-                                                      tr(language, 'install_sana'),
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.teal,
+                                                    const SizedBox(height: 16),
+                                                    ListTile(
+                                                      leading: const Icon(
+                                                          Icons.install_mobile,
+                                                          color: Colors.teal),
+                                                      title: Text(
+                                                        tr(language,
+                                                            'install_sana'),
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.teal,
+                                                        ),
                                                       ),
+                                                      trailing: const Icon(
+                                                          Icons.chevron_right,
+                                                          color: Colors.teal),
+                                                      onTap:
+                                                          _showAdaptiveInstallDialog,
                                                     ),
-                                                    trailing: const Icon(Icons.chevron_right, color: Colors.teal),
-                                                    onTap: _showAdaptiveInstallDialog,
-                                                  ),
                                                   ],
                                                 ),
                                               ),
@@ -3449,7 +3481,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 19, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -3471,7 +3504,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
-            try { await SanaStore.instance.flush(_client); } catch (_) {}
+            try {
+              await SanaStore.instance.flush(_client);
+            } catch (_) {}
             if (kIsWeb) {
               SanaWebPush.closeApp();
             } else {
@@ -3494,7 +3529,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 19, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -3523,8 +3559,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () async {
-                    try { await SanaStore.instance.flush(_client); } catch (_) {}
-                    SanaStore.instance.reset();
+                  try {
+                    await SanaStore.instance.flush(_client);
+                  } catch (_) {}
+                  SanaStore.instance.reset();
                   if (isLoggedIn) {
                     await _client.auth.signOut();
                     StorageHelper.clearCache();
@@ -3588,8 +3626,7 @@ class _HomeScreenState extends State<HomeScreen> {
               try {
                 await _client
                     .from('users')
-                    .update({'reminders_enabled': value})
-                    .eq('id', user.id);
+                    .update({'reminders_enabled': value}).eq('id', user.id);
                 if (!mounted) return;
                 setState(() {
                   _profile?['reminders_enabled'] = value;
@@ -3604,7 +3641,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ],
-
         if (isLoggedIn && isAdmin) ...[
           const SizedBox(height: 8),
           OutlinedButton.icon(
@@ -4619,9 +4655,12 @@ class SignedImage extends StatelessWidget {
     }
     final cached = StorageHelper.getCachedSignedUrl(p);
     if (cached != null) {
-      return Image.network(cached, height: height, width: width, fit: fit,
-        errorBuilder: (_, __, ___) =>
-          Icon(Icons.medication, size: height ?? 48, color: Colors.teal));
+      return Image.network(cached,
+          height: height,
+          width: width,
+          fit: fit,
+          errorBuilder: (_, __, ___) =>
+              Icon(Icons.medication, size: height ?? 48, color: Colors.teal));
     }
     return _SignedImageAsync(path: p, height: height, width: width, fit: fit);
   }
@@ -4632,7 +4671,8 @@ class _SignedImageAsync extends StatefulWidget {
   final double? height;
   final double? width;
   final BoxFit fit;
-  const _SignedImageAsync({required this.path, this.height, this.width, this.fit = BoxFit.contain});
+  const _SignedImageAsync(
+      {required this.path, this.height, this.width, this.fit = BoxFit.contain});
   @override
   State<_SignedImageAsync> createState() => _SignedImageAsyncState();
 }
@@ -4650,20 +4690,31 @@ class _SignedImageAsyncState extends State<_SignedImageAsync> {
   Future<void> _load() async {
     final url = await StorageHelper.getSignedUrl(widget.path);
     if (!mounted) return;
-    setState(() { _url = url; _loading = false; });
+    setState(() {
+      _url = url;
+      _loading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return SizedBox(height: widget.height ?? 100, width: widget.width, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+      return SizedBox(
+          height: widget.height ?? 100,
+          width: widget.width,
+          child:
+              const Center(child: CircularProgressIndicator(strokeWidth: 2)));
     }
     if (_url == null) {
-      return Icon(Icons.medication, size: widget.height ?? 48, color: Colors.teal);
+      return Icon(Icons.medication,
+          size: widget.height ?? 48, color: Colors.teal);
     }
-    return Image.network(_url!, height: widget.height, width: widget.width, fit: widget.fit,
-      errorBuilder: (_, __, ___) =>
-        Icon(Icons.medication, size: widget.height ?? 48, color: Colors.teal));
+    return Image.network(_url!,
+        height: widget.height,
+        width: widget.width,
+        fit: widget.fit,
+        errorBuilder: (_, __, ___) => Icon(Icons.medication,
+            size: widget.height ?? 48, color: Colors.teal));
   }
 }
 
@@ -5227,157 +5278,156 @@ class _AddFormDialogState extends State<AddFormDialog> {
           ],
         ),
         body: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(right: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Medicine photo appears for medications and reminders.
-                  if (isMedication || widget.type == 'reminders')
-                    _buildMedicinePhotoSection(),
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(right: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Medicine photo appears for medications and reminders.
+                if (isMedication || widget.type == 'reminders')
+                  _buildMedicinePhotoSection(),
 
-                  ...widget.fields.map((field) {
-                    if (field == 'reminder_time') {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildReminderTimes(),
-                      );
-                    }
+                ...widget.fields.map((field) {
+                  if (field == 'reminder_time') {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _buildReminderTimes(),
+                    );
+                  }
 
-                    if (field == 'reminder_date') {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildMedicationSchedule(),
-                      );
-                    }
+                  if (field == 'reminder_date') {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _buildMedicationSchedule(),
+                    );
+                  }
 
-                    if (field == 'medication_name') {
-                      return const SizedBox.shrink();
-                    }
+                  if (field == 'medication_name') {
+                    return const SizedBox.shrink();
+                  }
 
-                    // PHOTO UPLOAD BLOCK - For Documents and Insurance Cards
-                    if (field == 'photo' ||
-                        field == 'front_photo' ||
-                        field == 'back_photo') {
-                      return Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade400),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              field == 'front_photo'
-                                  ? tr(widget.language, 'front_photo')
-                                  : field == 'back_photo'
-                                      ? tr(widget.language, 'back_photo')
-                                      : tr(widget.language, 'photo'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                  // PHOTO UPLOAD BLOCK - For Documents and Insurance Cards
+                  if (field == 'photo' ||
+                      field == 'front_photo' ||
+                      field == 'back_photo') {
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            field == 'front_photo'
+                                ? tr(widget.language, 'front_photo')
+                                : field == 'back_photo'
+                                    ? tr(widget.language, 'back_photo')
+                                    : tr(widget.language, 'photo'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Image preview thumbnail
+                          if (_frontPhotoBase64 != null &&
+                              field == 'front_photo') ...[
+                            Center(
+                              child: DisplayImage(
+                                base64String: _frontPhotoBase64,
+                                height: 120,
+                                width: 200,
+                                fit: BoxFit.contain,
                               ),
                             ),
                             const SizedBox(height: 8),
-
-                            // Image preview thumbnail
-                            if (_frontPhotoBase64 != null &&
-                                field == 'front_photo') ...[
-                              Center(
-                                child: DisplayImage(
-                                  base64String: _frontPhotoBase64,
-                                  height: 120,
-                                  width: 200,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                            ] else if (_backPhotoBase64 != null &&
-                                field == 'back_photo') ...[
-                              Center(
-                                child: DisplayImage(
-                                  base64String: _backPhotoBase64,
-                                  height: 120,
-                                  width: 200,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                            ] else if (_medicinePhotoBase64 != null &&
-                                field == 'photo') ...[
-                              Center(
-                                child: DisplayImage(
-                                  base64String: _medicinePhotoBase64,
-                                  height: 120,
-                                  width: 200,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                            ] else
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Text(
-                                  tr(widget.language, 'no_image_selected'),
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-                              ),
-
-                            // Full-width upload button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: OutlinedButton.icon(
-                                onPressed: () async {
-                                  final base64 = await ImagePickerHelper
-                                      .pickImageAsBase64();
-                                  if (base64 != null) {
-                                    setState(() {
-                                      if (field == 'front_photo') {
-                                        _frontPhotoBase64 = base64;
-                                      } else if (field == 'back_photo') {
-                                        _backPhotoBase64 = base64;
-                                      } else {
-                                        _medicinePhotoBase64 = base64;
-                                      }
-                                    });
-                                  }
-                                },
-                                icon: const Icon(Icons.photo_camera),
-                                label: Text(
-                                  field == 'front_photo'
-                                      ? (_frontPhotoBase64 == null
-                                          ? tr(widget.language,
-                                              'upload_front_card')
-                                          : tr(widget.language, 'uploaded'))
-                                      : field == 'back_photo'
-                                          ? (_backPhotoBase64 == null
-                                              ? tr(widget.language,
-                                                  'upload_back_card')
-                                              : tr(widget.language, 'uploaded'))
-                                          : (_medicinePhotoBase64 == null
-                                              ? tr(widget.language,
-                                                  'upload_photo')
-                                              : tr(
-                                                  widget.language, 'uploaded')),
-                                ),
+                          ] else if (_backPhotoBase64 != null &&
+                              field == 'back_photo') ...[
+                            Center(
+                              child: DisplayImage(
+                                base64String: _backPhotoBase64,
+                                height: 120,
+                                width: 200,
+                                fit: BoxFit.contain,
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    }
-                    return _buildTextField(field);
-                  }),
-                ],
-              ),
+                            const SizedBox(height: 8),
+                          ] else if (_medicinePhotoBase64 != null &&
+                              field == 'photo') ...[
+                            Center(
+                              child: DisplayImage(
+                                base64String: _medicinePhotoBase64,
+                                height: 120,
+                                width: 200,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ] else
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                tr(widget.language, 'no_image_selected'),
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ),
+
+                          // Full-width upload button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final base64 =
+                                    await ImagePickerHelper.pickImageAsBase64();
+                                if (base64 != null) {
+                                  setState(() {
+                                    if (field == 'front_photo') {
+                                      _frontPhotoBase64 = base64;
+                                    } else if (field == 'back_photo') {
+                                      _backPhotoBase64 = base64;
+                                    } else {
+                                      _medicinePhotoBase64 = base64;
+                                    }
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.photo_camera),
+                              label: Text(
+                                field == 'front_photo'
+                                    ? (_frontPhotoBase64 == null
+                                        ? tr(widget.language,
+                                            'upload_front_card')
+                                        : tr(widget.language, 'uploaded'))
+                                    : field == 'back_photo'
+                                        ? (_backPhotoBase64 == null
+                                            ? tr(widget.language,
+                                                'upload_back_card')
+                                            : tr(widget.language, 'uploaded'))
+                                        : (_medicinePhotoBase64 == null
+                                            ? tr(
+                                                widget.language, 'upload_photo')
+                                            : tr(widget.language, 'uploaded')),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return _buildTextField(field);
+                }),
+              ],
             ),
           ),
+        ),
       ),
     );
   }
@@ -5450,13 +5500,6 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
   Future<void> _loadMedications() async {
     if (!mounted) return;
-    if (SanaStore.instance.isLoaded) {
-      setState(() {
-        _medicationsList = SanaStore.instance.rows('medications');
-      });
-      return;
-    }
-    if (!mounted) return;
     try {
       final query = _client.from('medications').select();
       final dynamic response = widget.guestMode
@@ -5483,18 +5526,6 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
   Future<void> _load() async {
     if (!mounted) return;
-    if (SanaStore.instance.isLoaded) {
-      final local = SanaStore.instance.rows(_table);
-      setState(() { _rows = local; _loading = false; });
-      if (_table == 'reminders' && widget.remindersEnabled) {
-        for (final row in local) {
-          try { await SanaAlarmService.scheduleReminder(row); } catch (_) {}
-        }
-      }
-      return;
-    }
-    if (!mounted) return;
-
     // ADD THESE 5 LINES FOR DEBUG
     //print('========== LOAD ==========');
     //print('Type: ${widget.type}');
@@ -5522,7 +5553,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
           _loading = false;
         });
 
-if (_table == 'reminders' && widget.remindersEnabled) {
+        if (_table == 'reminders' && widget.remindersEnabled) {
           for (final row in records) {
             try {
               await SanaAlarmService.scheduleReminder(row);
@@ -5799,11 +5830,8 @@ if (_table == 'reminders' && widget.remindersEnabled) {
       Map<String, dynamic> insertedRow;
 
       if (_table == 'reminders' && widget.remindersEnabled) {
-        final inserted = await _client
-            .from(_table)
-            .insert(cleanPayload)
-            .select()
-            .single();
+        final inserted =
+            await _client.from(_table).insert(cleanPayload).select().single();
 
         insertedRow = Map<String, dynamic>.from(inserted as Map);
 
@@ -5819,11 +5847,8 @@ if (_table == 'reminders' && widget.remindersEnabled) {
           );
         }
       } else {
-        final inserted = await _client
-            .from(_table)
-            .insert(cleanPayload)
-            .select()
-            .single();
+        final inserted =
+            await _client.from(_table).insert(cleanPayload).select().single();
 
         insertedRow = Map<String, dynamic>.from(inserted as Map);
 
@@ -5832,8 +5857,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
         } catch (_) {}
 
         if (mounted) {
-          setState(() {
-          });
+          setState(() {});
         }
       }
 
@@ -5969,11 +5993,8 @@ if (_table == 'reminders' && widget.remindersEnabled) {
         cleanPayload.remove('guest_id');
       }
 
-      final inserted = await _client
-          .from(_table)
-          .insert(cleanPayload)
-          .select()
-          .single();
+      final inserted =
+          await _client.from(_table).insert(cleanPayload).select().single();
 
       final insertedRow = Map<String, dynamic>.from(inserted as Map);
 
@@ -6061,11 +6082,8 @@ if (_table == 'reminders' && widget.remindersEnabled) {
         cleanPayload.remove('guest_id');
       }
 
-      final inserted = await _client
-          .from(_table)
-          .insert(cleanPayload)
-          .select()
-          .single();
+      final inserted =
+          await _client.from(_table).insert(cleanPayload).select().single();
 
       final insertedRow = Map<String, dynamic>.from(inserted as Map);
 
@@ -6170,7 +6188,9 @@ if (_table == 'reminders' && widget.remindersEnabled) {
       }
 
       // 1. Delete database record first.
-      try { SanaStore.instance.remove(_table, id); } catch (_) {}
+      try {
+        SanaStore.instance.remove(_table, id);
+      } catch (_) {}
       final query = _client.from(_table).delete().eq('id', id);
 
       if (widget.guestMode) {
@@ -6514,158 +6534,167 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                       borderRadius: BorderRadius.circular(12),
                                       onTap: () => _preview(row),
                                       child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          if (widget.type == 'medications')
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  right: 12),
-                                              child: SignedImage(
-                                                path: row['photo_url']
-                                                    ?.toString(),
-                                                height: 50,
-                                                width: 50,
-                                                fit: BoxFit.cover,
+                                        padding: const EdgeInsets.all(12),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            if (widget.type == 'medications')
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 12),
+                                                child: SignedImage(
+                                                  path: row['photo_url']
+                                                      ?.toString(),
+                                                  height: 50,
+                                                  width: 50,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    title,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    _subtitle(row),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(
-                                                  title,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  _subtitle(row),
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    color: Colors.grey.shade700,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (widget.type == 'doctors' ||
-                                                  widget.type == 'pharmacies')
-                                                IconButton(
-                                                  key: ValueKey(
-                                                      'call_${row['id']}'),
-                                                  icon: const Icon(
-                                                    Icons.phone,
-                                                    size: 20,
-                                                    color: Colors.green,
-                                                  ),
-                                                  tooltip: tr(language, 'call'),
-                                                  onPressed: () async {
-                                                    final rawPhone =
-                                                        (row['phone'] ?? '')
-                                                            .toString()
-                                                            .trim();
+                                                if (widget.type == 'doctors' ||
+                                                    widget.type == 'pharmacies')
+                                                  IconButton(
+                                                    key: ValueKey(
+                                                        'call_${row['id']}'),
+                                                    icon: const Icon(
+                                                      Icons.phone,
+                                                      size: 20,
+                                                      color: Colors.green,
+                                                    ),
+                                                    tooltip:
+                                                        tr(language, 'call'),
+                                                    onPressed: () async {
+                                                      final rawPhone =
+                                                          (row['phone'] ?? '')
+                                                              .toString()
+                                                              .trim();
 
-                                                    if (rawPhone.isEmpty)
-                                                      return;
+                                                      if (rawPhone.isEmpty)
+                                                        return;
 
-                                                    String cleaned =
-                                                        rawPhone.replaceAll(
-                                                      RegExp(r'[^0-9+]'),
-                                                      '',
-                                                    );
-
-                                                    if (cleaned.isEmpty) return;
-
-                                                    if (cleaned
-                                                        .startsWith('00')) {
-                                                      cleaned =
-                                                          '+${cleaned.substring(2)}';
-                                                    }
-
-                                                    final waNumber = cleaned
-                                                            .startsWith('+')
-                                                        ? cleaned.substring(1)
-                                                        : cleaned;
-
-                                                    final waUri = Uri.parse(
-                                                        'https://wa.me/$waNumber');
-
-                                                    if (await canLaunchUrl(
-                                                        waUri)) {
-                                                      await launchUrl(
-                                                        waUri,
-                                                        mode: LaunchMode
-                                                            .externalApplication,
+                                                      String cleaned =
+                                                          rawPhone.replaceAll(
+                                                        RegExp(r'[^0-9+]'),
+                                                        '',
                                                       );
-                                                    } else {
-                                                      final telUri = Uri.parse(
-                                                          'tel:$cleaned');
+
+                                                      if (cleaned.isEmpty)
+                                                        return;
+
+                                                      if (cleaned
+                                                          .startsWith('00')) {
+                                                        cleaned =
+                                                            '+${cleaned.substring(2)}';
+                                                      }
+
+                                                      final waNumber = cleaned
+                                                              .startsWith('+')
+                                                          ? cleaned.substring(1)
+                                                          : cleaned;
+
+                                                      final waUri = Uri.parse(
+                                                          'https://wa.me/$waNumber');
 
                                                       if (await canLaunchUrl(
-                                                          telUri)) {
+                                                          waUri)) {
                                                         await launchUrl(
-                                                          telUri,
+                                                          waUri,
                                                           mode: LaunchMode
                                                               .externalApplication,
                                                         );
+                                                      } else {
+                                                        final telUri =
+                                                            Uri.parse(
+                                                                'tel:$cleaned');
+
+                                                        if (await canLaunchUrl(
+                                                            telUri)) {
+                                                          await launchUrl(
+                                                            telUri,
+                                                            mode: LaunchMode
+                                                                .externalApplication,
+                                                          );
+                                                        }
                                                       }
-                                                    }
-                                                  },
+                                                    },
+                                                  ),
+                                                IconButton(
+                                                  key: ValueKey(
+                                                      'view_${row['id']}'),
+                                                  onPressed: () =>
+                                                      _preview(row),
+                                                  icon: const Icon(
+                                                    Icons
+                                                        .remove_red_eye_outlined,
+                                                    size: 20,
+                                                    color: Colors.teal,
+                                                  ),
+                                                  tooltip: tr(language, 'view'),
                                                 ),
-                                              IconButton(
-                                                key: ValueKey(
-                                                    'view_${row['id']}'),
-                                                onPressed: () => _preview(row),
-                                                icon: const Icon(
-                                                  Icons.remove_red_eye_outlined,
-                                                  size: 20,
-                                                  color: Colors.teal,
+                                                IconButton(
+                                                  key: ValueKey(
+                                                      'share_${row['id']}'),
+                                                  onPressed: () =>
+                                                      _shareRecord(row),
+                                                  icon: const Icon(
+                                                    Icons.share,
+                                                    size: 20,
+                                                    color: Colors.teal,
+                                                  ),
+                                                  tooltip:
+                                                      tr(language, 'share'),
                                                 ),
-                                                tooltip: tr(language, 'view'),
-                                              ),
-                                              IconButton(
-                                                key: ValueKey(
-                                                    'share_${row['id']}'),
-                                                onPressed: () =>
-                                                    _shareRecord(row),
-                                                icon: const Icon(
-                                                  Icons.share,
-                                                  size: 20,
-                                                  color: Colors.teal,
+                                                IconButton(
+                                                  key: ValueKey(
+                                                      'delete_${row['id']}'),
+                                                  onPressed: () => _delete(row),
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 20,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  tooltip:
+                                                      tr(language, 'delete'),
                                                 ),
-                                                tooltip: tr(language, 'share'),
-                                              ),
-                                              IconButton(
-                                                key: ValueKey(
-                                                    'delete_${row['id']}'),
-                                                onPressed: () => _delete(row),
-                                                icon: const Icon(
-                                                  Icons.delete_outline,
-                                                  size: 20,
-                                                  color: Colors.redAccent,
-                                                ),
-                                                tooltip: tr(language, 'delete'),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
                                     ),
                                   );
                                 },
@@ -6874,70 +6903,74 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                         borderRadius: BorderRadius.circular(12),
                                         onTap: () => _preview(row),
                                         child: Padding(
-                                        padding: const EdgeInsets.all(8),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            reminderImage(row, 76),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              name.isEmpty
-                                                  ? tr(
-                                                      language,
-                                                      'record',
-                                                    )
-                                                  : name,
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                            if (dosage.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 2,
+                                          padding: const EdgeInsets.all(8),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              reminderImage(row, 76),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                name.isEmpty
+                                                    ? tr(
+                                                        language,
+                                                        'record',
+                                                      )
+                                                    : name,
+                                                textAlign: TextAlign.center,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
                                                 ),
-                                                child: Text(
-                                                  dosage,
-                                                  textAlign: TextAlign.center,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey.shade700,
+                                              ),
+                                              if (dosage.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    top: 2,
+                                                  ),
+                                                  child: Text(
+                                                    dosage,
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            if (times.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 2,
-                                                ),
-                                                child: Text(
-                                                  times.join(' - '),
-                                                  textAlign: TextAlign.center,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w600,
+                                              if (times.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    top: 2,
+                                                  ),
+                                                  child: Text(
+                                                    times.join(' - '),
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
                                                   ),
                                                 ),
+                                              const Spacer(),
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: actionButtons(row),
                                               ),
-                                            const Spacer(),
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: actionButtons(row),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
                                       ),
                                     );
                                   }
@@ -6971,84 +7004,84 @@ if (_table == 'reminders' && widget.remindersEnabled) {
                                         borderRadius: BorderRadius.circular(12),
                                         onTap: () => _preview(row),
                                         child: Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            reminderImage(row, 64),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    name.isEmpty
-                                                        ? tr(
-                                                            language,
-                                                            'record',
-                                                          )
-                                                        : name,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15,
-                                                    ),
-                                                  ),
-                                                  if (dosage.isNotEmpty)
+                                          padding: const EdgeInsets.all(10),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              reminderImage(row, 64),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
                                                     Text(
-                                                      dosage,
+                                                      name.isEmpty
+                                                          ? tr(
+                                                              language,
+                                                              'record',
+                                                            )
+                                                          : name,
                                                       maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors
-                                                            .grey.shade700,
-                                                      ),
-                                                    ),
-                                                  if (times.isNotEmpty)
-                                                    Text(
-                                                      times.join(
-                                                        ' - ',
-                                                      ),
-                                                      maxLines: 2,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                       style: const TextStyle(
-                                                        fontSize: 12,
                                                         fontWeight:
-                                                            FontWeight.w600,
+                                                            FontWeight.bold,
+                                                        fontSize: 15,
                                                       ),
                                                     ),
-                                                  if (date.isNotEmpty &&
-                                                      date.toLowerCase() !=
-                                                          'daily')
-                                                    Text(
-                                                      date,
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors
-                                                            .grey.shade600,
+                                                    if (dosage.isNotEmpty)
+                                                      Text(
+                                                        dosage,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors
+                                                              .grey.shade700,
+                                                        ),
                                                       ),
-                                                    ),
-                                                ],
+                                                    if (times.isNotEmpty)
+                                                      Text(
+                                                        times.join(
+                                                          ' - ',
+                                                        ),
+                                                        maxLines: 2,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    if (date.isNotEmpty &&
+                                                        date.toLowerCase() !=
+                                                            'daily')
+                                                      Text(
+                                                        date,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors
+                                                              .grey.shade600,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: actionButtons(row),
-                                            ),
-                                          ],
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: actionButtons(row),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
                                       ),
                                     );
                                   }
@@ -7176,7 +7209,9 @@ class SanaStore {
   List<Map<String, dynamic>> rows(String t) => _cache[t] ?? [];
 
   void setAll(String t, List<Map<String, dynamic>> r) {
-    _cache[t] = r; _dirty[t] = {}; _deleted[t] = {};
+    _cache[t] = r;
+    _dirty[t] = {};
+    _deleted[t] = {};
     _loaded = true;
   }
 
@@ -7185,7 +7220,11 @@ class SanaStore {
     final id = row['id']?.toString();
     if (id == null || id.isEmpty) return;
     final i = list.indexWhere((r) => r['id']?.toString() == id);
-    if (i >= 0) { list[i] = row; } else { list.add(row); }
+    if (i >= 0) {
+      list[i] = row;
+    } else {
+      list.add(row);
+    }
     _dirty.putIfAbsent(t, () => {}).add(id);
     _deleted.putIfAbsent(t, () => {}).remove(id);
   }
@@ -7202,23 +7241,31 @@ class SanaStore {
       final gone = _deleted[t] ?? {};
       if (dirty.isEmpty && gone.isEmpty) continue;
       for (final id in gone) {
-        try { await c.from(t).delete().eq('id', id); } catch (_) {}
+        try {
+          await c.from(t).delete().eq('id', id);
+        } catch (_) {}
       }
       final rows = _cache[t] ?? [];
       for (final id in dirty) {
-        final row = rows.firstWhere((r) => r['id']?.toString() == id, orElse: () => {});
+        final row =
+            rows.firstWhere((r) => r['id']?.toString() == id, orElse: () => {});
         if (row.isEmpty) continue;
-        try { await c.from(t).upsert(row); } catch (_) {}
+        try {
+          await c.from(t).upsert(row);
+        } catch (_) {}
       }
-      _dirty[t] = {}; _deleted[t] = {};
+      _dirty[t] = {};
+      _deleted[t] = {};
     }
   }
 
   void reset() {
-    _cache.clear(); _dirty.clear(); _deleted.clear(); _loaded = false;
+    _cache.clear();
+    _dirty.clear();
+    _deleted.clear();
+    _loaded = false;
   }
 }
-
 
 class SanaAlarmScreen extends StatefulWidget {
   final String reminderId;
@@ -7452,7 +7499,8 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                                   onPressed: _taken ? null : _closeAlarmScreen,
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: Colors.white,
-                                    side: const BorderSide(color: Colors.white, width: 2),
+                                    side: const BorderSide(
+                                        color: Colors.white, width: 2),
                                   ),
                                   child: Text(
                                     tr(language, 'close'),
@@ -7503,17 +7551,6 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   Future<void> _loadAllData() async {
-    if (SanaStore.instance.isLoaded) {
-      setState(() {
-        for (final t in ['medications','doctors','pharmacies','reminders','documents','insurance_cards']) {
-          _allData[t] = SanaStore.instance.rows(t);
-          _selectedIds[t] = {};
-        }
-        _loading = false;
-      });
-      return;
-    }
-    if (!mounted) return;
     final types = [
       'medications',
       'doctors',
@@ -7605,8 +7642,7 @@ class _ShareScreenState extends State<ShareScreen> {
 
       for (final type in _allData.keys) {
         final selectedRows = _allData[type]!
-            .where((row) =>
-                _selectedIds[type]!.contains(row['id'].toString()))
+            .where((row) => _selectedIds[type]!.contains(row['id'].toString()))
             .toList();
 
         for (final row in selectedRows) {
@@ -7616,7 +7652,7 @@ class _ShareScreenState extends State<ShareScreen> {
                   tr(language, 'record'))
               .toString();
 
-                    textBuffer.writeln('═══════════════════════════');
+          textBuffer.writeln('═══════════════════════════');
           textBuffer.writeln('${tr(language, type).toUpperCase()}: $title');
           textBuffer.writeln('───────────────────────────');
 
@@ -7630,11 +7666,9 @@ class _ShareScreenState extends State<ShareScreen> {
           final photoPath = row['photo_url']?.toString();
           if (photoPath != null && photoPath.isNotEmpty) {
             try {
-              final signedUrl =
-                  await StorageHelper.getSignedUrl(photoPath);
+              final signedUrl = await StorageHelper.getSignedUrl(photoPath);
               if (signedUrl != null) {
-                final resp =
-                    await package_http.get(Uri.parse(signedUrl));
+                final resp = await package_http.get(Uri.parse(signedUrl));
                 if (resp.statusCode == 200) {
                   files.add(XFile.fromData(
                     resp.bodyBytes,
@@ -7673,8 +7707,7 @@ class _ShareScreenState extends State<ShareScreen> {
             'SANA_${type}_${row['id']}_front.jpg',
           );
           addBase64File(
-            row['back_image_url']?.toString() ??
-                row['back_photo']?.toString(),
+            row['back_image_url']?.toString() ?? row['back_photo']?.toString(),
             'SANA_${type}_${row['id']}_back.jpg',
           );
         }
@@ -8815,8 +8848,3 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 }
-
-
-
-
-
