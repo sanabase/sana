@@ -36,7 +36,11 @@ jobs:
 
       - name: Copy native installers and service worker
         run: |
-          cp -r docs/downloads build/web/downloads
+          if [ -d docs/downloads ]; then
+            cp -r docs/downloads build/web/downloads
+          else
+            mkdir -p build/web/downloads
+          fi
           cp web/sana_sw.js build/web/sana_sw.js
 
       - name: Upload Pages artifact
@@ -54,4 +58,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
