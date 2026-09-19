@@ -5834,6 +5834,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 
         if (mounted) {
           setState(() {
+            _rows.insert(0, insertedRow);
           });
         }
       }
@@ -5984,6 +5985,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 
       if (mounted) {
         setState(() {
+          _rows.insert(0, insertedRow);
           _frontCardBase64 = null;
           _backCardBase64 = null;
           _insuranceCompanyController.clear();
@@ -6076,6 +6078,7 @@ if (_table == 'reminders' && widget.remindersEnabled) {
 
       if (mounted) {
         setState(() {
+          _rows.insert(0, insertedRow);
           _documentPhotoBase64 = null;
           _titleController.clear();
           _categoryController.clear();
@@ -8817,7 +8820,6 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 }
-
 
 
 

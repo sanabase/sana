@@ -43,6 +43,7 @@ class RecordSanitizer {
     'photo_base64',
     'is_active',
     'user_id',
+    'guest_id',
   };
 
   static Map<String, dynamic> sanitize(Map<String, dynamic> rawInput) {
@@ -273,13 +274,12 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
     final cleanPayload = RecordSanitizer.sanitize(result);
 
-    if (widget.guestMode) {
-      cleanPayload['user_id'] = widget.ownerId;
-      cleanPayload['user_id'] = null;
-    } else {
-      cleanPayload['user_id'] = widget.ownerId;
-      cleanPayload['user_id'] = null;
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw StateError('No Supabase Auth session exists.');
     }
+    cleanPayload['user_id'] = user.isAnonymous ? null : user.id;
+    cleanPayload['guest_id'] = user.isAnonymous ? user.id : null;
 
     if (_table == 'medications') {
       cleanPayload['quantity'] =
@@ -334,7 +334,19 @@ class _RecordListScreenState extends State<RecordListScreen> {
     if (confirmed != true) return;
 
     try {
-      await _client.from(_table).delete().eq('id', id);
+      if (_client.auth.currentUser == null) {
+        throw StateError('No Supabase Auth session exists.');
+      }
+      final user = _client.auth.currentUser!;
+      var query = _client.from(_table).delete().eq('id', id);
+
+      if (user.isAnonymous) {
+        query = query.eq('guest_id', user.id);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+
+      await query;
       await _load();
     } catch (e) {
       if (!context.mounted) return;

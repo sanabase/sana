@@ -1,59 +1,52 @@
-﻿import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GuestIdentityService {
-  static const String _key = 'sana_guest_user_id';
+  static SupabaseClient get _client => Supabase.instance.client;
+
+  static User? get currentUser => _client.auth.currentUser;
+
+  static bool get isGuest => currentUser?.isAnonymous == true;
+
+  static bool get isPermanentUser =>
+      currentUser != null && currentUser!.isAnonymous == false;
 
   static Future<String?> get sharedGuestId async {
-    final prefs = await SharedPreferences.getInstance();
+    final user = currentUser;
 
-    final value = prefs.getString(_key);
-
-    if (value == null || value.trim().isEmpty) {
+    if (user == null || !user.isAnonymous) {
       return null;
     }
 
-    return value.trim();
+    return user.id;
   }
 
   static Future<String> getGuestId() async {
-    final prefs = await SharedPreferences.getInstance();
+    final user = currentUser;
 
-    final existing = prefs.getString(_key);
-
-    if (existing != null && existing.trim().isNotEmpty) {
-      return existing.trim();
+    if (user == null) {
+      throw StateError('No Supabase Auth session exists.');
     }
 
-    final id = 'guest_${DateTime.now().microsecondsSinceEpoch}';
+    if (!user.isAnonymous) {
+      throw StateError(
+        'Current Supabase user is permanent, not anonymous.',
+      );
+    }
 
-    await prefs.setString(_key, id);
-
-    return id;
+    return user.id;
   }
 
-  static Future<String> getGuestUserId() async {
-    return getGuestId();
-  }
+  static Future<String> getGuestUserId() => getGuestId();
 
-  static Future<String> ensureGuestUserId() async {
-    return getGuestId();
-  }
+  static Future<String> ensureGuestUserId() => getGuestId();
 
-  static Future<String> getUserId() async {
-    return getGuestId();
-  }
+  static Future<String> getUserId() => getGuestId();
 
-  static Future<String> currentUserId() async {
-    return getGuestId();
-  }
+  static Future<String> currentUserId() => getGuestId();
 
-  static Future<String> getIdentity() async {
-    return getGuestId();
-  }
+  static Future<String> getIdentity() => getGuestId();
 
   static Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.remove(_key);
+    await _client.auth.signOut();
   }
 }

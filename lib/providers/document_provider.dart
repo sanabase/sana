@@ -1,11 +1,10 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/document.dart';
-import '../services/user_identity_service.dart';
 
 class DocumentProvider extends ChangeNotifier {
   static const String _localStorageKey = 'saved_documents_v2';
@@ -62,40 +61,22 @@ class DocumentProvider extends ChangeNotifier {
       final user = _currentUser;
 
       if (user == null) {
-        final guestId = await GuestIdentityService.getGuestId();
-
-        final response = await client
-            .from('documents')
-            .select()
-            .eq('user_id', guestId)
-            .isFilter('user_id', null)
-            .order(
-              'upload_date',
-              ascending: false,
-            );
-
-        _addDocumentsFromResponse(
-          response,
-          expectedUserId: null,
-          expectedGuestId: guestId,
-        );
-      } else {
-        final response = await client
-            .from('documents')
-            .select()
-            .eq('user_id', user.id)
-            .isFilter('user_id', null)
-            .order(
-              'upload_date',
-              ascending: false,
-            );
-
-        _addDocumentsFromResponse(
-          response,
-          expectedUserId: user.id,
-          expectedGuestId: null,
-        );
+        throw StateError('No Supabase Auth session exists.');
       }
+
+      final response = await client
+          .from('documents')
+          .select()
+          .order(
+            'upload_date',
+            ascending: false,
+          );
+
+      _addDocumentsFromResponse(
+        response,
+        expectedUserId: user.isAnonymous ? null : user.id,
+        expectedGuestId: user.isAnonymous ? user.id : null,
+      );
 
       await _saveToLocal();
     } catch (error, stackTrace) {
@@ -181,31 +162,15 @@ class DocumentProvider extends ChangeNotifier {
     late DocumentModel documentToSave;
 
     if (user == null) {
-      final guestId = await GuestIdentityService.getGuestId();
-
-      if (document.userId.isNotEmpty) {
-        throw StateError(
-          'A private user document cannot be saved in guest mode.',
-        );
-      }
-
-      documentToSave = document.copyWith(
-        userId: '',
-        guestId: guestId,
-      );
-    } else {
-      if (document.userId.isNotEmpty && document.userId != user.id) {
-        throw StateError(
-          'This document belongs to another user.',
-        );
-      }
-
-      documentToSave = document.copyWith(
-        userId: user.id,
-        guestId: '',
+      throw StateError(
+        'No Supabase Auth session exists.',
       );
     }
 
+    documentToSave = document.copyWith(
+      userId: user.isAnonymous ? '' : user.id,
+      guestId: user.isAnonymous ? user.id : '',
+    );
     try {
       if (_shouldUploadToStorage(
         documentToSave,
@@ -265,6 +230,14 @@ class DocumentProvider extends ChangeNotifier {
       );
     }
 
+    final user = _currentUser;
+
+    if (user == null) {
+      throw StateError(
+        'No Supabase Auth session exists.',
+      );
+    }
+
     final index = _documents.indexWhere(
       (document) => document.id == id,
     );
@@ -274,26 +247,6 @@ class DocumentProvider extends ChangeNotifier {
     }
 
     final document = _documents[index];
-
-    final user = _currentUser;
-
-    String guestId = '';
-
-    if (user == null) {
-      guestId = await GuestIdentityService.getGuestId();
-
-      if (document.guestId != guestId || document.userId.isNotEmpty) {
-        throw StateError(
-          'You cannot delete another user\'s document.',
-        );
-      }
-    } else {
-      if (document.userId != user.id || document.guestId.isNotEmpty) {
-        throw StateError(
-          'You cannot delete another user\'s document.',
-        );
-      }
-    }
 
     _clearError();
 
@@ -313,34 +266,13 @@ class DocumentProvider extends ChangeNotifier {
         }
       }
 
-      var query = client.from('documents').delete().eq(
+      await client
+          .from('documents')
+          .delete()
+          .eq(
             'id',
             id,
           );
-
-      if (user == null) {
-        query = query
-            .eq(
-              'user_id',
-              guestId,
-            )
-            .isFilter(
-              'user_id',
-              null,
-            );
-      } else {
-        query = query
-            .eq(
-              'user_id',
-              user.id,
-            )
-            .isFilter(
-              'user_id',
-              null,
-            );
-      }
-
-      await query;
 
       _documents.removeAt(index);
 
@@ -360,11 +292,6 @@ class DocumentProvider extends ChangeNotifier {
       rethrow;
     }
   }
-
-  // ============================================================
-  // SIGNED DOCUMENT URL
-  // ============================================================
-
   Future<String?> getSignedDocumentUrl(
     DocumentModel document, {
     int expiresInSeconds = 300,
@@ -372,17 +299,16 @@ class DocumentProvider extends ChangeNotifier {
     final user = _currentUser;
 
     if (user == null) {
-      final guestId = await GuestIdentityService.getGuestId();
-
-      if (document.guestId != guestId || document.userId.isNotEmpty) {
-        return null;
-      }
-    } else {
-      if (document.userId != user.id || document.guestId.isNotEmpty) {
-        return null;
-      }
+      return null;
     }
 
+    final ownsDocument = user.isAnonymous
+        ? document.guestId == user.id && document.userId.isEmpty
+        : document.userId == user.id && document.guestId.isEmpty;
+
+    if (!ownsDocument) {
+      return null;
+    }
     final path = document.storagePath?.trim();
 
     if (path == null || path.isEmpty) {
@@ -453,10 +379,8 @@ class DocumentProvider extends ChangeNotifier {
 
       final user = _currentUser;
 
-      String? guestId;
-
       if (user == null) {
-        guestId = await GuestIdentityService.getGuestId();
+        return;
       }
 
       for (final item in decoded) {
@@ -473,14 +397,12 @@ class DocumentProvider extends ChangeNotifier {
             continue;
           }
 
-          if (user != null) {
-            if (document.userId != user.id || document.guestId.isNotEmpty) {
-              continue;
-            }
-          } else {
-            if (document.guestId != guestId || document.userId.isNotEmpty) {
-              continue;
-            }
+          final ownsDocument = user.isAnonymous
+              ? document.guestId == user.id && document.userId.isEmpty
+              : document.userId == user.id && document.guestId.isEmpty;
+
+          if (!ownsDocument) {
+            continue;
           }
 
           final exists = _documents.any(

@@ -87,8 +87,6 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
       'front_image_url': frontDataUrl,
       'backImageUrl': backDataUrl,
       'back_image_url': backDataUrl,
-      'userId': 'guest',
-      'user_id': 'guest',
       'createdAt': nowIso,
       'created_at': nowIso,
     };

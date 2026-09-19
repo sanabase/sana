@@ -1,7 +1,5 @@
 ﻿import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'guest_identity_service.dart';
-
 enum DataScopeMode {
   guest,
   activeUser,
@@ -16,7 +14,7 @@ class DataScopeService {
   static DataScopeMode get mode {
     final user = _db.auth.currentUser;
 
-    if (user == null) {
+    if (user == null || user.isAnonymous) {
       return DataScopeMode.guest;
     }
 
@@ -40,39 +38,37 @@ class DataScopeService {
   static Future<String> ownerId() async {
     final user = _db.auth.currentUser;
 
-    if (user != null) {
-      return user.id;
+    if (user == null) {
+      throw StateError('No Supabase Auth session exists.');
     }
 
-    return GuestIdentityService.getGuestId();
+    return user.id;
   }
 
   static Future<String?> guestId() async {
-    if (!isGuest) {
+    final user = _db.auth.currentUser;
+    if (user == null || !user.isAnonymous) {
       return null;
     }
 
-    return GuestIdentityService.getGuestId();
+    return user.id;
   }
 
   static Future<Map<String, dynamic>> scope() async {
     final user = _db.auth.currentUser;
 
     if (user == null) {
-      final guestId = await GuestIdentityService.getGuestId();
-
-      return {
-        'mode': DataScopeMode.guest.name,
-        'user_id': null,
-        'guest_id': guestId,
-      };
+      throw StateError('No Supabase Auth session exists.');
     }
 
     return {
-      'mode':
-          isAdmin ? DataScopeMode.admin.name : DataScopeMode.activeUser.name,
-      'user_id': user.id,
-      'guest_id': null,
+      'mode': user.isAnonymous
+          ? DataScopeMode.guest.name
+          : isAdmin
+              ? DataScopeMode.admin.name
+              : DataScopeMode.activeUser.name,
+      'user_id': user.isAnonymous ? null : user.id,
+      'guest_id': user.isAnonymous ? user.id : null,
     };
   }
 

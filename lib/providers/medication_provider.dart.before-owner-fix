@@ -205,16 +205,25 @@ class MedicationProvider extends ChangeNotifier {
 
     final user = _currentUser;
 
+    late Medication medicationToSave;
+
     if (user == null) {
-      throw StateError(
-        'No authenticated user is available.',
+      // Guest creates public medication.
+      medicationToSave = medication.copyWith(
+        userId: '',
+      );
+    } else {
+      // Prevent assigning another user's ID.
+      if (medication.userId.isNotEmpty && medication.userId != user.id) {
+        throw StateError(
+          'This medication belongs to another user.',
+        );
+      }
+
+      medicationToSave = medication.copyWith(
+        userId: medication.userId.isEmpty ? '' : user.id,
       );
     }
-
-    final medicationToSave = medication.copyWith(
-      userId: user.isAnonymous ? '' : user.id,
-      guestId: user.isAnonymous ? user.id : '',
-    );
 
     try {
       await client.from('medications').upsert(
@@ -277,40 +286,57 @@ class MedicationProvider extends ChangeNotifier {
       );
     }
 
+    final existing = _medications[index];
     final user = _currentUser;
 
+    // Guest can only edit public medication.
     if (user == null) {
+      if (existing.userId.isNotEmpty) {
+        throw StateError(
+          'Private medications cannot be edited in guest mode.',
+        );
+      }
+
+      final updated = medication.copyWith(
+        userId: '',
+      );
+
+      await _updateMedication(
+        client,
+        updated,
+        publicRecord: true,
+      );
+
+      return;
+    }
+
+    // Cannot edit another user's private medication.
+    if (existing.userId.isNotEmpty && existing.userId != user.id) {
       throw StateError(
-        'No Supabase Auth session exists.',
+        'You cannot edit another user\'s medication.',
       );
     }
 
     final updated = medication.copyWith(
-      userId: user.isAnonymous ? '' : user.id,
-      guestId: user.isAnonymous ? user.id : '',
+      userId: existing.userId.isEmpty ? '' : user.id,
     );
 
     await _updateMedication(
       client,
       updated,
+      publicRecord: existing.userId.isEmpty,
     );
   }
+
   Future<void> _updateMedication(
     SupabaseClient client,
-    Medication medication,
-  ) async {
+    Medication medication, {
+    required bool publicRecord,
+  }) async {
     _errorMessage = null;
 
     try {
-      final user = _currentUser;
-
-      if (user == null) {
-        throw StateError(
-          'No Supabase Auth session exists.',
-        );
-      }
-
-      await client
+      var query = client
           .from('medications')
           .update(
             medication.toSupabaseMap(),
@@ -319,6 +345,29 @@ class MedicationProvider extends ChangeNotifier {
             'id',
             medication.id,
           );
+
+      if (publicRecord) {
+        query = query.isFilter(
+          'user_id',
+          null,
+        );
+      } else {
+        final user = _currentUser;
+
+        if (user == null) {
+          throw StateError(
+            'Authentication required.',
+          );
+        }
+
+        query = query.eq(
+          'user_id',
+          user.id,
+        );
+      }
+
+      await query;
+
       final index = _medications.indexWhere(
         (item) => item.id == medication.id,
       );
@@ -372,22 +421,52 @@ class MedicationProvider extends ChangeNotifier {
       return;
     }
 
+    final medication = _medications[index];
     final user = _currentUser;
 
-    if (user == null) {
-      throw StateError(
-        'No Supabase Auth session exists.',
-      );
-    }
-
     try {
-      await client
-          .from('medications')
-          .delete()
-          .eq(
+      var query = client.from('medications').delete().eq(
             'id',
             id,
           );
+
+      // Guest.
+      if (user == null) {
+        if (medication.userId.isNotEmpty) {
+          throw StateError(
+            'Private medications cannot be deleted in guest mode.',
+          );
+        }
+
+        query = query.isFilter(
+          'user_id',
+          null,
+        );
+      }
+
+      // Authenticated.
+      else {
+        if (medication.userId.isNotEmpty && medication.userId != user.id) {
+          throw StateError(
+            'You cannot delete another user\'s medication.',
+          );
+        }
+
+        if (medication.userId.isEmpty) {
+          query = query.isFilter(
+            'user_id',
+            null,
+          );
+        } else {
+          query = query.eq(
+            'user_id',
+            user.id,
+          );
+        }
+      }
+
+      await query;
+
       _medications.removeAt(index);
 
       await _saveMedicationsToLocal();

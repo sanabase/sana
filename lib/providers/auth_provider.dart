@@ -1,9 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/subscription_service.dart';
+import '../services/guest_data_migration_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -370,12 +371,27 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
+      // Capture anonymous identity before permanent login replaces it.
+      final previousUser = _supabase.auth.currentUser;
+      final previousGuestId =
+          previousUser != null && previousUser.isAnonymous
+              ? previousUser.id
+              : null;
+
       final response = await _supabase.auth.signInWithPassword(
         email: cleanEmail,
         password: password,
       );
 
       _currentUser = response.user;
+
+      // Move guest records to the permanent account.
+      if (previousGuestId != null && _currentUser != null) {
+        await GuestDataMigrationService.transfer(
+          guestId: previousGuestId,
+          userId: _currentUser!.id,
+        );
+      }
 
       if (_currentUser == null) {
         _setError('Unable to sign in.');
@@ -724,3 +740,4 @@ class AuthProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+

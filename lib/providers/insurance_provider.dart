@@ -79,18 +79,6 @@ class InsuranceProvider extends ChangeNotifier {
 
     final user = _client.auth.currentUser;
 
-    // ------------------------------------------------------------
-    // Guest mode
-    // ------------------------------------------------------------
-    //
-    // IMPORTANT:
-    // The current insurance_cards table has no guest_id column.
-    // Therefore guest cards cannot safely be loaded from Supabase
-    // yet.
-    //
-    // We intentionally do NOT query all rows here.
-    // That would risk exposing another user's records.
-    //
     if (user == null) {
       _cards.clear();
 
@@ -116,10 +104,6 @@ class InsuranceProvider extends ChangeNotifier {
             'front_image_url,'
             'back_image_url,'
             'created_at',
-          )
-          .eq(
-            'user_id',
-            user.id,
           )
           .order(
             'created_at',
@@ -171,18 +155,10 @@ class InsuranceProvider extends ChangeNotifier {
   ) async {
     final user = _client.auth.currentUser;
 
-    // ------------------------------------------------------------
-    // Guest mode
-    // ------------------------------------------------------------
-    //
-    // Guest support is intentionally blocked here until the
-    // database has a real guest_id ownership column and matching
-    // RLS policy.
-    //
     if (user == null) {
       debugPrint(
         'Cannot save insurance card: '
-        'guest ownership is not configured in Supabase yet.',
+        'no Supabase Auth session exists.',
       );
 
       return false;
@@ -211,7 +187,8 @@ class InsuranceProvider extends ChangeNotifier {
 
       final cardMap = <String, dynamic>{
         'id': cardId,
-        'user_id': user.id,
+        'user_id': user.isAnonymous ? null : user.id,
+        'guest_id': user.isAnonymous ? user.id : null,
         'provider_name': card.providerName,
         'policy_number': card.policyNumber,
         'front_image_url': card.frontImageUrl,
@@ -266,12 +243,10 @@ class InsuranceProvider extends ChangeNotifier {
   ) async {
     final user = _client.auth.currentUser;
 
-    // Guest records are not supported until
-    // guest_id + guest RLS are implemented.
     if (user == null) {
       debugPrint(
         'Cannot delete insurance card: '
-        'guest ownership is not configured.',
+        'no Supabase Auth session exists.',
       );
 
       return false;
@@ -290,10 +265,6 @@ class InsuranceProvider extends ChangeNotifier {
           .eq(
             'id',
             trimmedId,
-          )
-          .eq(
-            'user_id',
-            user.id,
           );
 
       _cards.removeWhere(

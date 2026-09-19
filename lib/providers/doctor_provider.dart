@@ -49,6 +49,12 @@ class DoctorProvider extends ChangeNotifier {
     loadDoctors();
   }
 
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
   // ============================================================
   // AUTH STATE
   // ============================================================
@@ -85,25 +91,13 @@ class DoctorProvider extends ChangeNotifier {
     try {
       final user = _currentUser;
 
-      final response = user == null
-          ? await _client
-              .from('doctors')
-              .select()
-              .isFilter('user_id', null)
-              .order(
-                'name',
-                ascending: true,
-              )
-          : await _client
-              .from('doctors')
-              .select()
-              .or(
-                'user_id.is.null,user_id.eq.${user.id}',
-              )
-              .order(
-                'name',
-                ascending: true,
-              );
+      final response = await _client
+          .from('doctors')
+          .select()
+          .order(
+            'name',
+            ascending: true,
+          );
 
       // Ignore an old request if auth state changed while loading.
       if (currentGeneration != _loadGeneration) {
@@ -182,30 +176,19 @@ class DoctorProvider extends ChangeNotifier {
   ) async {
     final user = _currentUser;
 
+    if (user == null) {
+      return false;
+    }
+
     try {
-      // ----------------------------------------------------------
-      // Guest:
-      // Save as public doctor.
-      //
-      // Authenticated:
-      // Save as user's private doctor.
-      // ----------------------------------------------------------
+      final doctorMap = doctor.toMap();
 
-      final doctorToSave = user == null
-          ? doctor.copyWith(
-              userId: '',
-            )
-          : doctor.copyWith(
-              userId: user.id,
-            );
-
-      final doctorMap = doctorToSave.toMap();
-
-      // Supabase uses NULL for public records.
-      if (user == null) {
+      if (user.isAnonymous) {
         doctorMap['user_id'] = null;
+        doctorMap['guest_id'] = user.id;
       } else {
         doctorMap['user_id'] = user.id;
+        doctorMap['guest_id'] = null;
       }
 
       final response =
@@ -215,11 +198,7 @@ class DoctorProvider extends ChangeNotifier {
         Map<String, dynamic>.from(response),
       );
 
-      _doctors.insert(
-        0,
-        newDoctor,
-      );
-
+      _doctors.insert(0, newDoctor);
       notifyListeners();
 
       return true;
@@ -232,7 +211,6 @@ class DoctorProvider extends ChangeNotifier {
       return false;
     }
   }
-
   // ============================================================
   // UPDATE DOCTOR
   // ============================================================
@@ -242,216 +220,85 @@ class DoctorProvider extends ChangeNotifier {
   ) async {
     final user = _currentUser;
 
+    if (user == null) {
+      return false;
+    }
+
     try {
-      final index = _doctors.indexWhere(
-        (item) => item.id == doctor.id,
-      );
+      final doctorMap = doctor.toMap();
 
-      if (index < 0) {
-        return false;
-      }
-
-      final existing = _doctors[index];
-
-      // Normalize nullable userId.
-      final existingUserId = existing.userId ?? '';
-
-      // ----------------------------------------------------------
-      // PERMISSION CHECK
-      // ----------------------------------------------------------
-
-      if (user == null) {
-        // Guest can only update public doctors.
-        if (existingUserId.isNotEmpty) {
-          return false;
-        }
-      } else {
-        // Authenticated user can update:
-        //   - public doctors
-        //   - their own private doctors
-        //
-        // Cannot update another user's private doctor.
-        if (existingUserId.isNotEmpty && existingUserId != user.id) {
-          return false;
-        }
-      }
-
-      // ----------------------------------------------------------
-      // DETERMINE OWNER
-      // ----------------------------------------------------------
-
-      final String saveUserId;
-
-      if (user == null) {
-        // Guest update stays public.
-        saveUserId = '';
-      } else if (existingUserId.isEmpty) {
-        // Existing doctor is public.
-        // Keep it public when updating.
-        saveUserId = '';
-      } else {
-        // Existing doctor belongs to current user.
-        saveUserId = user.id;
-      }
-
-      final doctorToSave = doctor.copyWith(
-        userId: saveUserId,
-      );
-
-      final doctorMap = doctorToSave.toMap();
-
-      // Convert empty userId to NULL for Supabase.
-      if (saveUserId.isEmpty) {
+      if (user.isAnonymous) {
         doctorMap['user_id'] = null;
+        doctorMap['guest_id'] = user.id;
       } else {
-        doctorMap['user_id'] = saveUserId;
+        doctorMap['user_id'] = user.id;
+        doctorMap['guest_id'] = null;
       }
 
-      // ----------------------------------------------------------
-      // UPDATE DATABASE
-      // ----------------------------------------------------------
-
-      await _client.from('doctors').update(doctorMap).eq(
+      await _client
+          .from('doctors')
+          .update(doctorMap)
+          .eq(
             'id',
             doctor.id,
           );
 
-      // ----------------------------------------------------------
-      // UPDATE LOCAL LIST
-      // ----------------------------------------------------------
+      final index = _doctors.indexWhere(
+        (item) => item.id == doctor.id,
+      );
 
-      _doctors[index] = doctorToSave;
+      if (index >= 0) {
+        _doctors[index] = doctor.copyWith(
+          userId: user.isAnonymous ? null : user.id,
+          guestId: user.isAnonymous ? user.id : '',
+        );
+      }
 
       notifyListeners();
 
       return true;
     } catch (error, stackTrace) {
       debugPrint(
-        'Error updating doctor: '
+        'Failed to update doctor: '
         '$error\n$stackTrace',
       );
-
       return false;
     }
   }
-
-  // ============================================================
-  // DELETE DOCTOR
-  // ============================================================
-
   Future<bool> deleteDoctor(
     String id,
   ) async {
     final user = _currentUser;
 
+    if (user == null) {
+      return false;
+    }
+
     try {
-      final index = _doctors.indexWhere(
+      await _client
+          .from('doctors')
+          .delete()
+          .eq(
+            'id',
+            id,
+          );
+
+      _doctors.removeWhere(
         (doctor) => doctor.id == id,
       );
-
-      if (index < 0) {
-        return false;
-      }
-
-      final doctor = _doctors[index];
-
-      // Normalize nullable userId.
-      final doctorUserId = doctor.userId ?? '';
-
-      // ----------------------------------------------------------
-      // GUEST
-      // Only public doctors can be deleted.
-      // ----------------------------------------------------------
-
-      if (user == null) {
-        if (doctorUserId.isNotEmpty) {
-          return false;
-        }
-
-        await _client
-            .from('doctors')
-            .delete()
-            .eq(
-              'id',
-              id,
-            )
-            .isFilter(
-              'user_id',
-              null,
-            );
-      }
-
-      // ----------------------------------------------------------
-      // AUTHENTICATED USER
-      //
-      // Can delete:
-      //   - public doctors
-      //   - own private doctors
-      //
-      // Cannot delete another user's private doctor.
-      // ----------------------------------------------------------
-
-      else {
-        // Public doctor.
-        if (doctorUserId.isEmpty) {
-          await _client
-              .from('doctors')
-              .delete()
-              .eq(
-                'id',
-                id,
-              )
-              .isFilter(
-                'user_id',
-                null,
-              );
-        }
-
-        // Own private doctor.
-        else if (doctorUserId == user.id) {
-          await _client
-              .from('doctors')
-              .delete()
-              .eq(
-                'id',
-                id,
-              )
-              .eq(
-                'user_id',
-                user.id,
-              );
-        }
-
-        // Another user's private doctor.
-        else {
-          return false;
-        }
-      }
-
-      // Remove from local list only after successful database delete.
-      _doctors.removeAt(index);
 
       notifyListeners();
 
       return true;
     } catch (error, stackTrace) {
       debugPrint(
-        'Error deleting doctor: '
+        'Failed to delete doctor: '
         '$error\n$stackTrace',
       );
-
       return false;
     }
   }
 
-  // ============================================================
-  // CLEANUP
-  // ============================================================
 
-  @override
-  void dispose() {
-    _authSubscription?.cancel();
 
-    super.dispose();
-  }
 }

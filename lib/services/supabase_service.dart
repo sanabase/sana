@@ -260,25 +260,14 @@ class SupabaseService {
     if (id.trim().isEmpty) {
       throw ArgumentError('Record ID cannot be empty.');
     }
+    if (_supabase.auth.currentUser == null) {
+      throw StateError('No Supabase Auth session exists.');
+    }
 
     try {
       final cleanData = Map<String, dynamic>.from(data);
 
-      var query = _supabase.from(table).update(cleanData).eq('id', id);
-
-      // If the record belongs to a user, make the update user-scoped.
-      //
-      // This keeps the existing DoctorProvider/PharmacyProvider API
-      // while preventing accidental cross-user updates.
-      final userId = currentUserId;
-
-      if (cleanData.containsKey('user_id') &&
-          userId != null &&
-          userId.isNotEmpty) {
-        query = query.eq('user_id', userId);
-      }
-
-      await query;
+      await _supabase.from(table).update(cleanData).eq('id', id);
     } catch (error, stackTrace) {
       debugPrint(
         'Update error [$table/$id]: '
@@ -295,18 +284,12 @@ class SupabaseService {
     if (id.trim().isEmpty) {
       throw ArgumentError('Record ID cannot be empty.');
     }
+    if (_supabase.auth.currentUser == null) {
+      throw StateError('No Supabase Auth session exists.');
+    }
 
     try {
-      var query = _supabase.from(table).delete().eq('id', id);
-
-      final userId = currentUserId;
-
-      // User-owned tables should only delete the current user's record.
-      if (userId != null && userId.isNotEmpty && _isUserOwnedTable(table)) {
-        query = query.eq('user_id', userId);
-      }
-
-      await query;
+      await _supabase.from(table).delete().eq('id', id);
     } catch (error, stackTrace) {
       debugPrint(
         'Delete error [$table/$id]: '
@@ -314,18 +297,6 @@ class SupabaseService {
       );
       rethrow;
     }
-  }
-
-  static bool _isUserOwnedTable(String table) {
-    const userOwnedTables = {
-      'doctors',
-      'pharmacies',
-      'medications',
-      'documents',
-      'insurance_cards',
-    };
-
-    return userOwnedTables.contains(table);
   }
 
   static Future<List<Map<String, dynamic>>> fetchAll(
