@@ -9,7 +9,6 @@ class SanaWebPush {
   static Future<bool> enable(SupabaseClient client) async => false;
   static Future<String> enableVerbose(SupabaseClient client) async => 'NOT_WEB';
   static Future<void> disable(SupabaseClient client) async {}
-  static void closeApp() {}
 
   static String? browserTimeZone() => null;
 }
