@@ -71,12 +71,15 @@ class SanaWebPush {
       if (endpoint.isEmpty) return 'ENDPOINT_EMPTY';
 
       try {
+        final timeZone = browserTimeZone();
+
         await client.from(_table).upsert({
           'user_id': user.id,
           'endpoint': endpoint,
           'p256dh': p256dh,
           'auth': auth,
           'user_agent': web.window.navigator.userAgent,
+          'timezone': timeZone,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         }, onConflict: 'endpoint');
       } catch (e) {
