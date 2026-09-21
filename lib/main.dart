@@ -2512,8 +2512,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _setRemindersEnabled(bool value) async {
+    // Save previous value for rollback if backend fails
+    final previousValue = _isGuest
+        ? _guestRemindersEnabled
+        : _profile?['reminders_enabled'] == true;
+
+    // (1) IMMEDIATE UI UPDATE (Instant response on screen)
+    if (mounted) {
+      setState(() {
+        if (_isGuest) {
+          _guestRemindersEnabled = value;
+        } else {
+          _profile?['reminders_enabled'] = value;
+        }
+      });
+    }
+
     final user = _client.auth.currentUser;
 
+    // (2) Background operations (Network / SharedPreferences / Alarms)
     try {
       if (kIsWeb) {
         if (value) {
@@ -2529,10 +2546,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_isGuest) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('sana_guest_reminders_enabled', value);
-        if (!mounted) return;
-        setState(() {
-          _guestRemindersEnabled = value;
-        });
         return;
       }
 
@@ -2540,11 +2553,6 @@ class _HomeScreenState extends State<HomeScreen> {
         await _client
             .from('users')
             .update({'reminders_enabled': value}).eq('id', user.id);
-
-        if (!mounted) return;
-        setState(() {
-          _profile?['reminders_enabled'] = value;
-        });
 
         if (!kIsWeb) {
           if (value) {
@@ -2556,7 +2564,15 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       debugPrint('Reminder enable/disable failed: $e');
+      // Rollback immediately on failure
       if (mounted) {
+        setState(() {
+          if (_isGuest) {
+            _guestRemindersEnabled = previousValue;
+          } else {
+            _profile?['reminders_enabled'] = previousValue;
+          }
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -3675,7 +3691,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 8,
-            vertical: 6,
+            vertical: 4,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -3689,19 +3705,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   softWrap: true,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: baseFontSize / 2,
+                    fontSize: (baseFontSize / 2) * 1.3,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Transform.scale(
-                scaleX: 2.0,
-                scaleY: 1.0,
-                child: Switch(
-                  value: value,
-                  onChanged: _setRemindersEnabled,
-                ),
+              Checkbox(
+                value: value,
+                onChanged: (val) {
+                  if (val != null) {
+                    _setRemindersEnabled(val);
+                  }
+                },
               ),
             ],
           ),
