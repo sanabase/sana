@@ -2359,11 +2359,115 @@ class _HomeScreenState extends State<HomeScreen> {
             'Enable reminders';
   }
 
+  Future<void> _setRemindersEnabled(bool value) async {
+    final user = _client.auth.currentUser;
+
+    try {
+      if (kIsWeb) {
+        if (value) {
+          final result = await SanaWebPush.enableVerbose(_client);
+          if (result != 'OK') {
+            throw Exception('Web Push: $result');
+          }
+        } else {
+          await SanaWebPush.disable(_client);
+        }
+      }
+
+      if (_isGuest) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('sana_guest_reminders_enabled', value);
+        if (!mounted) return;
+        setState(() {
+          _guestRemindersEnabled = value;
+        });
+        return;
+      }
+
+      if (user != null) {
+        await _client
+            .from('users')
+            .update({'reminders_enabled': value}).eq('id', user.id);
+
+        if (!mounted) return;
+        setState(() {
+          _profile?['reminders_enabled'] = value;
+        });
+
+        if (!kIsWeb) {
+          if (value) {
+            await _reconcileAllReminderAlarms();
+          } else {
+            await _cancelAllReminderAlarms();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Reminder enable/disable failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Reminder setting failed: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _setGuestRemindersEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('sana_guest_reminders_enabled', value);
     if (!mounted) return;
     setState(() => _guestRemindersEnabled = value);
+  }
+
+  Future<void> _reconcileAllReminderAlarms() async {
+    try {
+      final ownerId = _ownerId;
+      if (ownerId == null) return;
+
+      final query = _client.from('reminders').select();
+      final dynamic response = _isGuest
+          ? await query.isFilter('user_id', null)
+          : await query.eq('user_id', ownerId);
+
+      final List<dynamic> list = response as List<dynamic>;
+
+      for (final item in list) {
+        final row = Map<String, dynamic>.from(item as Map);
+        try {
+          await SanaAlarmService.scheduleReminder(row);
+        } catch (e) {
+          debugPrint('Reconcile reminder failed: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Reconcile alarms error: $e');
+    }
+  }
+
+  Future<void> _cancelAllReminderAlarms() async {
+    try {
+      final ownerId = _ownerId;
+      if (ownerId == null) return;
+
+      final query = _client.from('reminders').select('id');
+      final dynamic response = _isGuest
+          ? await query.isFilter('user_id', null)
+          : await query.eq('user_id', ownerId);
+
+      final List<dynamic> list = response as List<dynamic>;
+
+      for (final item in list) {
+        final id = (item as Map)['id']?.toString();
+        if (id == null || id.isEmpty) continue;
+        try {
+          await SanaAlarmService.cancelReminder(id);
+        } catch (e) {
+          debugPrint('Cancel reminder failed: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Cancel alarms error: $e');
+    }
   }
 
   Future<void> _openCard(String type) async {
@@ -3328,7 +3432,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(child: _shareCard(language)),
               const SizedBox(width: 10),
-              Expanded(child: _closeCard(language)),
+              Expanded(child: _reminderToggleCard(language)),
             ],
           ),
         ),
@@ -3390,6 +3494,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _reminderToggleCard(String language) {
+    return SizedBox(
+      width: double.infinity,
+      height: 90,
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: SwitchListTile(
+          title: Text(
+            _isGuest
+                ? _guestRemindersLabel(language)
+                : tr(language, 'reminders_enabled'),
+          ),
+          value: _isGuest
+              ? _guestRemindersEnabled
+              : _profile?['reminders_enabled'] == true,
+          onChanged: _setRemindersEnabled,
+        ),
+      ),
+    );
+  }
+
   Widget _shareCard(String language) {
     return SizedBox(
       width: double.infinity,
@@ -3424,54 +3552,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   Flexible(
                     child: Text(
                       tr(language, 'share_documents'),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 19, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _closeCard(String language) {
-    return SizedBox(
-      width: double.infinity,
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: Colors.red.shade100,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () async {
-            try {
-              await SanaStore.instance.flush(_client);
-            } catch (_) {}
-            if (kIsWeb) {
-              SanaWebPush.closeApp();
-            } else {
-              SystemNavigator.pop();
-            }
-          },
-          child: SizedBox(
-            height: 90,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Icon(Icons.close, size: 34, color: Colors.red),
-                  const SizedBox(height: 6),
-                  Flexible(
-                    child: Text(
-                      tr(language, 'close'),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -3551,42 +3631,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        if (isLoggedIn || _isGuest) ...[
-          const SizedBox(height: 8),
-          SwitchListTile(
-            title: Text(
-              _isGuest
-                  ? _guestRemindersLabel(language)
-                  : tr(language, 'reminders_enabled'),
-            ),
-            value: _isGuest
-                ? _guestRemindersEnabled
-                : _profile?['reminders_enabled'] != false,
-            onChanged: (value) async {
-              if (_isGuest) {
-                await _setGuestRemindersEnabled(value);
-                return;
-              }
-              final user = _client.auth.currentUser;
-              if (user == null) return;
-              try {
-                await _client
-                    .from('users')
-                    .update({'reminders_enabled': value}).eq('id', user.id);
-                if (!mounted) return;
-                setState(() {
-                  _profile?['reminders_enabled'] = value;
-                });
-              } catch (e) {
-                debugPrint('reminders_enabled toggle failed: $e');
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('$e')),
-                );
-              }
-            },
-          ),
-        ],
         if (isLoggedIn && isAdmin) ...[
           const SizedBox(height: 8),
           OutlinedButton.icon(

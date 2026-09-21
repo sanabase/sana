@@ -248,7 +248,7 @@ class SanaAlarmService {
   static Future<void> cancelNativeAlarm(
     int notificationId,
   ) async {
-    if (defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
 
@@ -295,7 +295,7 @@ class SanaAlarmService {
   }
 
   static Future<void> startAlarmSound() async {
-    if (defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
 
@@ -309,7 +309,7 @@ class SanaAlarmService {
   static Future<void> stopAlarmSound({
     int? notificationId,
   }) async {
-    if (defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
 
@@ -628,6 +628,10 @@ class SanaAlarmService {
   static Future<void> cancelReminder(
     String reminderId,
   ) async {
+    if (kIsWeb) {
+      return;
+    }
+
     for (var index = 0; index < 20; index++) {
       final id = notificationId(reminderId, index);
 
@@ -658,6 +662,16 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'Close',
     'share': 'Share',
     'reminders_enabled': 'Reminders enabled',
+    'disable_reminders': 'Disable reminders',
+    'enable_reminders': 'Enable reminders',
+    'saved_successfully': 'Saved successfully',
+    'reminder_saved_successfully':
+        'Reminder "{name}" saved successfully for {date} at {time}.',
+    'delete_success': 'Deleted successfully',
+    'delete_failed': 'Delete failed.',
+    'reminder_setting_failed': 'Reminder setting failed.',
+    'error_loading': 'Error loading data.',
+    'loading': 'Loading...',
     'install_app': 'Install App',
     'help': 'Help',
     'call': 'Call',
@@ -812,6 +826,16 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'إغلاق',
     'share': 'مشاركة',
     'reminders_enabled': 'تم تمكين التذكيرات',
+    'disable_reminders': 'تعطيل التذكيرات',
+    'enable_reminders': 'تمكين التذكيرات',
+    'saved_successfully': 'تم الحفظ بنجاح',
+    'reminder_saved_successfully':
+        'تم حفظ التذكير "{name}" بنجاح للموعد {date} الساعة {time}.',
+    'delete_success': 'تم الحذف بنجاح',
+    'delete_failed': 'فشل حذف السجل.',
+    'reminder_setting_failed': 'فشل إعداد التذكيرات.',
+    'error_loading': 'حدث خطأ أثناء تحميل البيانات.',
+    'loading': 'جارٍ التحميل...',
     'install_app': 'تثبيت التطبيق',
     'help': 'مساعدة',
     'call': 'اتصال',
@@ -967,6 +991,17 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'Cerrar',
     'share': 'Compartir',
     'reminders_enabled': 'Recordatorios activados',
+    'disable_reminders': 'Desactivar recordatorios',
+    'enable_reminders': 'Activar recordatorios',
+    'saved_successfully': 'Guardado correctamente',
+    'reminder_saved_successfully':
+        'El recordatorio "{name}" se guardó correctamente para {date} a las {time}.',
+    'delete_success': 'Eliminado correctamente',
+    'delete_failed': 'No se pudo eliminar el registro.',
+    'reminder_setting_failed':
+        'No se pudo cambiar la configuración de recordatorios.',
+    'error_loading': 'Error al cargar los datos.',
+    'loading': 'Cargando...',
     'install_app': 'Instalar aplicación',
     'help': 'Ayuda',
     'call': 'Llamar',
@@ -1124,6 +1159,16 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'Fermer',
     'share': 'Partager',
     'reminders_enabled': 'Rappels activés',
+    'disable_reminders': 'Désactiver les rappels',
+    'enable_reminders': 'Activer les rappels',
+    'saved_successfully': 'Enregistré avec succès',
+    'reminder_saved_successfully':
+        'Le rappel "{name}" a été enregistré pour {date} à {time}.',
+    'delete_success': 'Supprimé avec succès',
+    'delete_failed': 'Échec de la suppression du dossier.',
+    'reminder_setting_failed': 'Échec du réglage des rappels.',
+    'error_loading': 'Erreur lors du chargement des données.',
+    'loading': 'Chargement...',
     'install_app': 'Installer l\'application',
     'help': 'Aide',
     'call': 'Appeler',
@@ -1282,6 +1327,17 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'Schließen',
     'share': 'Teilen',
     'reminders_enabled': 'Erinnerungen aktiviert',
+    'disable_reminders': 'Erinnerungen deaktivieren',
+    'enable_reminders': 'Erinnerungen aktivieren',
+    'saved_successfully': 'Erfolgreich gespeichert',
+    'reminder_saved_successfully':
+        'Erinnerung "{name}" wurde erfolgreich für {date} um {time} gespeichert.',
+    'delete_success': 'Erfolgreich gelöscht',
+    'delete_failed': 'Datensatz konnte nicht gelöscht werden.',
+    'reminder_setting_failed':
+        'Die Erinnerungseinstellung konnte nicht geändert werden.',
+    'error_loading': 'Fehler beim Laden der Daten.',
+    'loading': 'Wird geladen...',
     'install_app': 'App installieren',
     'help': 'Hilfe',
     'call': 'Anrufen',
@@ -1439,6 +1495,16 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'Kapat',
     'share': 'Paylaş',
     'reminders_enabled': 'Hatırlatıcılar etkinleştirildi',
+    'disable_reminders': 'Hatırlatıcıları devre dışı bırak',
+    'enable_reminders': 'Hatırlatıcıları etkinleştir',
+    'saved_successfully': 'Başarıyla kaydedildi',
+    'reminder_saved_successfully':
+        '"{name}" hatırlatıcısı {date} saat {time} için başarıyla kaydedildi.',
+    'delete_success': 'Başarıyla silindi',
+    'delete_failed': 'Kayıt silinemedi.',
+    'reminder_setting_failed': 'Hatırlatıcı ayarı değiştirilemedi.',
+    'error_loading': 'Veriler yüklenirken hata oluştu.',
+    'loading': 'Yükleniyor...',
     'install_app': 'Uygulamayı yükle',
     'help': 'Yardım',
     'call': 'Ara',
@@ -1596,6 +1662,16 @@ const Map<String, Map<String, String>> _translations = {
     'close': 'बंद करें',
     'share': 'साझा करें',
     'reminders_enabled': 'अनुस्मारक सक्षम किए गए',
+    'disable_reminders': 'रिमाइंडर अक्षम करें',
+    'enable_reminders': 'रिमाइंडर सक्षम करें',
+    'saved_successfully': 'सफलतापूर्वक सहेजा गया',
+    'reminder_saved_successfully':
+        'रिमाइंडर "{name}" {date} को {time} के लिए सफलतापूर्वक सहेजा गया।',
+    'delete_success': 'सफलतापूर्वक हटाया गया',
+    'delete_failed': 'रिकॉर्ड हटाया नहीं जा सका।',
+    'reminder_setting_failed': 'रिमाइंडर सेटिंग बदलने में विफल।',
+    'error_loading': 'डेटा लोड करने में त्रुटि।',
+    'loading': 'लोड हो रहा है...',
     'install_app': 'ऐप इंस्टॉल करें',
     'help': 'मदद',
     'call': 'कॉल करें',
@@ -1752,6 +1828,15 @@ const Map<String, Map<String, String>> _translations = {
     'close': '关闭',
     'share': '分享',
     'reminders_enabled': '提醒已启用',
+    'disable_reminders': '禁用提醒',
+    'enable_reminders': '启用提醒',
+    'saved_successfully': '保存成功',
+    'reminder_saved_successfully': '提醒“{name}”已成功保存，时间为 {date} {time}。',
+    'delete_success': '删除成功',
+    'delete_failed': '删除记录失败。',
+    'reminder_setting_failed': '提醒设置失败。',
+    'error_loading': '加载数据时出错。',
+    'loading': '加载中...',
     'install_app': '安装应用',
     'help': '帮助',
     'call': '呼叫',
@@ -2205,6 +2290,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final isRealUser = user != null && user.isAnonymous == false;
       final guestId = user?.isAnonymous == true ? user!.id : null;
 
+      if (mounted) {
+        setState(() {
+          _guestId = guestId;
+          _isGuest = !isRealUser;
+          _loading = false;
+        });
+      }
+
       try {
         if (user != null) {
           String? tz;
@@ -2233,6 +2326,13 @@ class _HomeScreenState extends State<HomeScreen> {
           _guestRemindersEnabled = guestRemindersEnabled;
           _loading = false;
         });
+
+        unawaited(
+          _warmDataCache(
+            guestMode: true,
+            ownerId: null,
+          ),
+        );
 
         return;
       }
@@ -2310,6 +2410,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _isGuest = false;
         _loading = false;
       });
+
+      unawaited(
+        _warmDataCache(
+          guestMode: false,
+          ownerId: user.id,
+        ),
+      );
     } catch (_) {
       if (mounted) {
         final fallbackUser = _client.auth.currentUser;
@@ -2325,38 +2432,83 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _warmDataCache({
+    required bool guestMode,
+    required String? ownerId,
+  }) async {
+    Future<void> warmTable(
+      String table,
+      String columns,
+    ) async {
+      try {
+        final query = _client.from(table).select(columns);
+
+        final dynamic response = guestMode || ownerId == null
+            ? await query.isFilter('user_id', null)
+            : await query.eq('user_id', ownerId);
+
+        final List<dynamic> list = response as List<dynamic>;
+
+        final serverRows = list
+            .map(
+              (item) => Map<String, dynamic>.from(item as Map),
+            )
+            .toList();
+
+        SanaStore.instance.reconcile(
+          table,
+          serverRows,
+        );
+      } catch (e) {
+        debugPrint(
+          'Background cache warm failed for $table: $e',
+        );
+      }
+    }
+
+    await warmTable(
+      'medications',
+      'id, user_id, guest_id, name, dosage, reminder_time, '
+          'reminder_date, reminder_schedule_type, photo_url, '
+          'ringtone_path, notes',
+    );
+
+    await warmTable(
+      'reminders',
+      'id, user_id, guest_id, medication_id, name, dosage, '
+          'reminder_time, reminder_date, description, is_active, '
+          'notes, created_at, updated_at, photo_url, photo_base64',
+    );
+
+    await warmTable(
+      'documents',
+      'id, user_id, guest_id, title, category, file_url, '
+          'file_type, photo_url, photo, photo_base64',
+    );
+
+    await warmTable(
+      'insurance_cards',
+      'id, user_id, guest_id, provider_name, policy_number, '
+          'front_image_url, back_image_url, created_at, photo_url',
+    );
+
+    await warmTable(
+      'doctors',
+      'id, user_id, guest_id, name, specialty, phone, address',
+    );
+
+    await warmTable(
+      'pharmacies',
+      'id, user_id, guest_id, name, address, phone',
+    );
+  }
+
   String? get _ownerId {
     final user = _client.auth.currentUser;
     if (user != null && user.isAnonymous == false) {
       return user.id;
     }
     return _guestId;
-  }
-
-  String _guestRemindersLabel(String language) {
-    return _guestRemindersEnabled
-        ? {
-              'ar': 'تعطيل التذكيرات',
-              'es': 'Desactivar recordatorios',
-              'fr': 'Désactiver les rappels',
-              'de': 'Erinnerungen deaktivieren',
-              'tr': 'Hatırlatıcıları devre dışı bırak',
-              'hi': 'रिमाइंडर अक्षम करें',
-              'zh': '禁用提醒',
-              'en': 'Disable reminders',
-            }[language] ??
-            'Disable reminders'
-        : {
-              'ar': 'تمكين التذكيرات',
-              'es': 'Activar recordatorios',
-              'fr': 'Activer les rappels',
-              'de': 'Erinnerungen aktivieren',
-              'tr': 'Hatırlatıcıları etkinleştir',
-              'hi': 'रिमाइंडर सक्षम करें',
-              'zh': '启用提醒',
-              'en': 'Enable reminders',
-            }[language] ??
-            'Enable reminders';
   }
 
   Future<void> _setRemindersEnabled(bool value) async {
@@ -2406,7 +2558,14 @@ class _HomeScreenState extends State<HomeScreen> {
       debugPrint('Reminder enable/disable failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reminder setting failed: $e')),
+          SnackBar(
+            content: Text(
+              tr(
+                languageNotifier.value,
+                'reminder_setting_failed',
+              ),
+            ),
+          ),
         );
       }
     }
@@ -3495,6 +3654,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _reminderToggleCard(String language) {
+    final value = _isGuest
+        ? _guestRemindersEnabled
+        : _profile?['reminders_enabled'] == true;
+
+    final label = value
+        ? tr(language, 'disable_reminders')
+        : tr(language, 'enable_reminders');
+
+    final baseFontSize = Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16;
+
     return SizedBox(
       width: double.infinity,
       height: 90,
@@ -3503,16 +3672,39 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        child: SwitchListTile(
-          title: Text(
-            _isGuest
-                ? _guestRemindersLabel(language)
-                : tr(language, 'reminders_enabled'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 6,
           ),
-          value: _isGuest
-              ? _guestRemindersEnabled
-              : _profile?['reminders_enabled'] == true,
-          onChanged: _setRemindersEnabled,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: baseFontSize / 2,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Transform.scale(
+                scaleX: 2.0,
+                scaleY: 1.0,
+                child: Switch(
+                  value: value,
+                  onChanged: _setRemindersEnabled,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -5596,8 +5788,16 @@ class _RecordListScreenState extends State<RecordListScreen> {
       if (mounted) {
         setState(() => _loading = false);
         if (_rows.isEmpty) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Error loading: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                tr(
+                  languageNotifier.value,
+                  'error_loading',
+                ),
+              ),
+            ),
+          );
         }
       }
     }
@@ -5912,10 +6112,18 @@ class _RecordListScreenState extends State<RecordListScreen> {
         if (!mounted) return;
 
         if (_table == 'reminders') {
-          final reminderName = cleanPayload['name'] ?? '';
-          final reminderTime = cleanPayload['reminder_time'] ?? '';
-          final reminderDate =
-              cleanPayload['reminder_date'] ?? tr(language, 'daily');
+          final reminderName = cleanPayload['name']?.toString() ?? '';
+          final reminderTime = cleanPayload['reminder_time']?.toString() ?? '';
+          final reminderDate = cleanPayload['reminder_date']?.toString() ??
+              tr(language, 'daily');
+
+          final message = tr(
+            language,
+            'reminder_saved_successfully',
+          )
+              .replaceAll('{name}', reminderName)
+              .replaceAll('{date}', reminderDate)
+              .replaceAll('{time}', reminderTime);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -5923,15 +6131,19 @@ class _RecordListScreenState extends State<RecordListScreen> {
               duration: const Duration(seconds: 4),
               content: Row(
                 children: [
-                  const Icon(Icons.alarm_on, color: Colors.white, size: 24),
+                  const Icon(
+                    Icons.alarm_on,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      language == 'ar'
-                          ? 'تم تفعيل منبه "$reminderName" بنجاح للموعد: $reminderDate $reminderTime'
-                          : 'Alarm for "$reminderName" activated for $reminderDate at $reminderTime',
+                      message,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -5944,7 +6156,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
               backgroundColor: Colors.green.shade700,
               duration: const Duration(seconds: 2),
               content: Text(
-                tr(language, 'success'),
+                tr(language, 'saved_successfully'),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -6257,14 +6469,9 @@ class _RecordListScreenState extends State<RecordListScreen> {
           await SanaAlarmService.stopAlarmSound(
             notificationId: SanaAlarmService.notificationId(idStr, 0),
           );
-          await SanaAlarmService.cancelNativeAlarm(
-            SanaAlarmService.notificationId(idStr, 0),
-          );
         }
 
         // Supabase delete with existing filters.
-        // Only a failure here (or in the alarm cleanup above) should
-        // trigger the rollback, because the DB row determines success.
         final query = _client.from(_table).delete().eq('id', idStr);
         if (widget.guestMode) {
           await query.isFilter('user_id', null);
@@ -6296,7 +6503,9 @@ class _RecordListScreenState extends State<RecordListScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: Colors.red.shade700,
-              content: Text('Error: $e'),
+              content: Text(
+                tr(language, 'delete_failed'),
+              ),
             ),
           );
         }
@@ -6311,6 +6520,21 @@ class _RecordListScreenState extends State<RecordListScreen> {
         } catch (e) {
           debugPrint('Storage photo cleanup failed: $e');
         }
+      }
+
+      // ==========================================
+      // >>> PUT IT RIGHT HERE <<<
+      // At the very end of the Future, right before }));
+      // ==========================================
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green.shade700,
+            content: Text(
+              tr(language, 'delete_success'),
+            ),
+          ),
+        );
       }
     }));
   }
@@ -6600,601 +6824,538 @@ class _RecordListScreenState extends State<RecordListScreen> {
           body: Column(
             children: [
               Expanded(
-                child: _rows.isEmpty
-                    ? Center(child: Text(tr(language, 'no_records')))
-                    : widget.type != 'reminders'
-                        ? ListView.builder(
-                            key: ValueKey('list_${widget.type}'),
-                            padding: const EdgeInsets.all(12),
-                            itemCount: _rows.length,
-                            itemBuilder: (context, index) {
-                              final row = _rows[index];
-                              final title = (row['name'] ??
-                                      row['title'] ??
-                                      row['provider_name'] ??
-                                      tr(language, 'record'))
-                                  .toString();
+                child: _loading && _rows.isEmpty
+                    ? Center(
+                        child: Text(
+                          tr(language, 'loading'),
+                        ),
+                      )
+                    : _rows.isEmpty
+                        ? Center(child: Text(tr(language, 'no_records')))
+                        : widget.type != 'reminders'
+                            ? ListView.builder(
+                                key: ValueKey('list_${widget.type}'),
+                                padding: const EdgeInsets.all(12),
+                                itemCount: _rows.length,
+                                itemBuilder: (context, index) {
+                                  final row = _rows[index];
+                                  final title = (row['name'] ??
+                                          row['title'] ??
+                                          row['provider_name'] ??
+                                          tr(language, 'record'))
+                                      .toString();
 
-                              return Card(
-                                key: ValueKey('card_${row['id']}_$index'),
-                                margin: const EdgeInsets.only(bottom: 10),
-                                elevation: 2,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () => _preview(row),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        if (widget.type == 'medications')
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                right: 12),
-                                            child: SignedImage(
-                                              path:
-                                                  row['photo_url']?.toString(),
-                                              height: 50,
-                                              width: 50,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        if (widget.type == 'documents')
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                right: 12),
-                                            child: SizedBox(
-                                              height: 50,
-                                              width: 50,
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                child: (() {
-                                                  final b64 = (row['photo'] ??
-                                                          row['photo_base64'])
-                                                      ?.toString()
-                                                      .trim();
-                                                  final path = row['photo_url']
-                                                      ?.toString()
-                                                      .trim();
-                                                  if (b64 != null &&
-                                                      b64.isNotEmpty) {
-                                                    return DisplayImage(
-                                                      base64String: b64,
-                                                      height: 50,
-                                                      width: 50,
-                                                      fit: BoxFit.cover,
-                                                    );
-                                                  }
-                                                  if (path != null &&
-                                                      path.isNotEmpty) {
-                                                    return SignedImage(
-                                                      path: path,
-                                                      height: 50,
-                                                      width: 50,
-                                                      fit: BoxFit.cover,
-                                                    );
-                                                  }
-                                                  return Container(
-                                                    color: Colors.grey.shade200,
-                                                    child: const Icon(
-                                                      Icons.description,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  );
-                                                })(),
+                                  return Card(
+                                    key: ValueKey('card_${row['id']}_$index'),
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    elevation: 2,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () => _preview(row),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            if (widget.type == 'medications')
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 12),
+                                                child: SignedImage(
+                                                  path: row['photo_url']
+                                                      ?.toString(),
+                                                  height: 50,
+                                                  width: 50,
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        if (widget.type == 'insurance_cards')
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                right: 12),
-                                            child: SizedBox(
-                                              height: 50,
-                                              width: 50,
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                child: (() {
-                                                  final front =
-                                                      (row['front_image_url'] ??
+                                            if (widget.type == 'documents')
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 12),
+                                                child: SizedBox(
+                                                  height: 50,
+                                                  width: 50,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            6),
+                                                    child: (() {
+                                                      final b64 = (row[
+                                                                  'photo'] ??
+                                                              row['photo_base64'])
+                                                          ?.toString()
+                                                          .trim();
+                                                      final path =
+                                                          row['photo_url']
+                                                              ?.toString()
+                                                              .trim();
+                                                      if (b64 != null &&
+                                                          b64.isNotEmpty) {
+                                                        return DisplayImage(
+                                                          base64String: b64,
+                                                          height: 50,
+                                                          width: 50,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      }
+                                                      if (path != null &&
+                                                          path.isNotEmpty) {
+                                                        return SignedImage(
+                                                          path: path,
+                                                          height: 50,
+                                                          width: 50,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      }
+                                                      return Container(
+                                                        color: Colors
+                                                            .grey.shade200,
+                                                        child: const Icon(
+                                                          Icons.description,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      );
+                                                    })(),
+                                                  ),
+                                                ),
+                                              ),
+                                            if (widget.type ==
+                                                'insurance_cards')
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 12),
+                                                child: SizedBox(
+                                                  height: 50,
+                                                  width: 50,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            6),
+                                                    child: (() {
+                                                      final front = (row[
+                                                                  'front_image_url'] ??
                                                               row['front_photo'])
                                                           ?.toString()
                                                           .trim();
-                                                  final path = row['photo_url']
-                                                      ?.toString()
-                                                      .trim();
-                                                  if (front != null &&
-                                                      front.isNotEmpty) {
-                                                    return DisplayImage(
-                                                      base64String: front,
-                                                      height: 50,
-                                                      width: 50,
-                                                      fit: BoxFit.cover,
-                                                    );
-                                                  }
-                                                  if (path != null &&
-                                                      path.isNotEmpty) {
-                                                    return SignedImage(
-                                                      path: path,
-                                                      height: 50,
-                                                      width: 50,
-                                                      fit: BoxFit.cover,
-                                                    );
-                                                  }
-                                                  return Container(
-                                                    color: Colors.grey.shade200,
-                                                    child: const Icon(
-                                                      Icons.badge,
-                                                      color: Colors.grey,
+                                                      final path =
+                                                          row['photo_url']
+                                                              ?.toString()
+                                                              .trim();
+                                                      if (front != null &&
+                                                          front.isNotEmpty) {
+                                                        return DisplayImage(
+                                                          base64String: front,
+                                                          height: 50,
+                                                          width: 50,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      }
+                                                      if (path != null &&
+                                                          path.isNotEmpty) {
+                                                        return SignedImage(
+                                                          path: path,
+                                                          height: 50,
+                                                          width: 50,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      }
+                                                      return Container(
+                                                        color: Colors
+                                                            .grey.shade200,
+                                                        child: const Icon(
+                                                          Icons.badge,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      );
+                                                    })(),
+                                                  ),
+                                                ),
+                                              ),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    title,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16,
                                                     ),
-                                                  );
-                                                })(),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    _subtitle(row),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (widget.type == 'doctors' ||
+                                                    widget.type == 'pharmacies')
+                                                  IconButton(
+                                                    key: ValueKey(
+                                                        'call_${row['id']}'),
+                                                    icon: const Icon(
+                                                      Icons.phone,
+                                                      size: 20,
+                                                      color: Colors.green,
+                                                    ),
+                                                    tooltip:
+                                                        tr(language, 'call'),
+                                                    onPressed: () async {
+                                                      final rawPhone =
+                                                          (row['phone'] ?? '')
+                                                              .toString()
+                                                              .trim();
+
+                                                      if (rawPhone.isEmpty)
+                                                        return;
+
+                                                      String cleaned =
+                                                          rawPhone.replaceAll(
+                                                        RegExp(r'[^0-9+]'),
+                                                        '',
+                                                      );
+
+                                                      if (cleaned.isEmpty)
+                                                        return;
+
+                                                      if (cleaned
+                                                          .startsWith('00')) {
+                                                        cleaned =
+                                                            '+${cleaned.substring(2)}';
+                                                      }
+
+                                                      final waNumber = cleaned
+                                                              .startsWith('+')
+                                                          ? cleaned.substring(1)
+                                                          : cleaned;
+
+                                                      final waUri = Uri.parse(
+                                                          'https://wa.me/$waNumber');
+
+                                                      if (await canLaunchUrl(
+                                                          waUri)) {
+                                                        await launchUrl(
+                                                          waUri,
+                                                          mode: LaunchMode
+                                                              .externalApplication,
+                                                        );
+                                                      } else {
+                                                        final telUri =
+                                                            Uri.parse(
+                                                                'tel:$cleaned');
+
+                                                        if (await canLaunchUrl(
+                                                            telUri)) {
+                                                          await launchUrl(
+                                                            telUri,
+                                                            mode: LaunchMode
+                                                                .externalApplication,
+                                                          );
+                                                        }
+                                                      }
+                                                    },
+                                                  ),
+                                                IconButton(
+                                                  key: ValueKey(
+                                                      'view_${row['id']}'),
+                                                  onPressed: () =>
+                                                      _preview(row),
+                                                  icon: const Icon(
+                                                    Icons
+                                                        .remove_red_eye_outlined,
+                                                    size: 20,
+                                                    color: Colors.teal,
+                                                  ),
+                                                  tooltip: tr(language, 'view'),
+                                                ),
+                                                IconButton(
+                                                  key: ValueKey(
+                                                      'share_${row['id']}'),
+                                                  onPressed: () =>
+                                                      _shareRecord(row),
+                                                  icon: const Icon(
+                                                    Icons.share,
+                                                    size: 20,
+                                                    color: Colors.teal,
+                                                  ),
+                                                  tooltip:
+                                                      tr(language, 'share'),
+                                                ),
+                                                IconButton(
+                                                  key: ValueKey(
+                                                      'delete_${row['id']}'),
+                                                  onPressed: () => _delete(row),
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 20,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  tooltip:
+                                                      tr(language, 'delete'),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Builder(
+                                builder: (context) {
+                                  bool isDaily(Map<String, dynamic> row) {
+                                    final date = row['reminder_date']
+                                        ?.toString()
+                                        .trim()
+                                        .toLowerCase();
+
+                                    return date == 'daily';
+                                  }
+
+                                  int reminderTimeMinutes(
+                                    Map<String, dynamic> row,
+                                  ) {
+                                    final times = SanaAlarmService.parseTimes(
+                                      row['reminder_time'],
+                                    );
+
+                                    if (times.isEmpty) {
+                                      return 24 * 60;
+                                    }
+
+                                    var earliest = 24 * 60;
+
+                                    for (final time in times) {
+                                      final parts = time.split(':');
+
+                                      if (parts.length < 2) {
+                                        continue;
+                                      }
+
+                                      final hour = int.tryParse(parts[0]);
+                                      final minute = int.tryParse(parts[1]);
+
+                                      if (hour == null || minute == null) {
+                                        continue;
+                                      }
+
+                                      final totalMinutes = hour * 60 + minute;
+
+                                      if (totalMinutes < earliest) {
+                                        earliest = totalMinutes;
+                                      }
+                                    }
+
+                                    return earliest;
+                                  }
+
+                                  final dailyRows =
+                                      _rows.where(isDaily).toList()
+                                        ..sort(
+                                          (a, b) =>
+                                              reminderTimeMinutes(a).compareTo(
+                                            reminderTimeMinutes(b),
                                           ),
-                                        Expanded(
+                                        );
+
+                                  final calendarRows = _rows
+                                      .where((row) => !isDaily(row))
+                                      .toList()
+                                    ..sort(
+                                      (a, b) =>
+                                          reminderTimeMinutes(a).compareTo(
+                                        reminderTimeMinutes(b),
+                                      ),
+                                    );
+
+                                  if (_rows.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        tr(language, 'no_records'),
+                                      ),
+                                    );
+                                  }
+
+                                  Widget actionButtons(
+                                    Map<String, dynamic> row,
+                                  ) {
+                                    return Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        IconButton(
+                                          key: ValueKey(
+                                            'view_${row['id']}',
+                                          ),
+                                          padding: const EdgeInsets.all(4),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 34,
+                                            minHeight: 34,
+                                          ),
+                                          onPressed: () => _preview(row),
+                                          icon: const Icon(
+                                            Icons.remove_red_eye_outlined,
+                                            size: 19,
+                                            color: Colors.teal,
+                                          ),
+                                          tooltip: tr(language, 'view'),
+                                        ),
+                                        IconButton(
+                                          key: ValueKey(
+                                            'share_${row['id']}',
+                                          ),
+                                          padding: const EdgeInsets.all(4),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 34,
+                                            minHeight: 34,
+                                          ),
+                                          onPressed: () => _shareRecord(row),
+                                          icon: const Icon(
+                                            Icons.share,
+                                            size: 19,
+                                            color: Colors.teal,
+                                          ),
+                                          tooltip: tr(language, 'share'),
+                                        ),
+                                        IconButton(
+                                          key: ValueKey(
+                                            'delete_${row['id']}',
+                                          ),
+                                          padding: const EdgeInsets.all(4),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 34,
+                                            minHeight: 34,
+                                          ),
+                                          onPressed: () => _delete(row),
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            size: 19,
+                                            color: Colors.redAccent,
+                                          ),
+                                          tooltip: tr(language, 'delete'),
+                                        ),
+                                      ],
+                                    );
+                                  }
+
+                                  Widget reminderImage(
+                                    Map<String, dynamic> row,
+                                    double size,
+                                  ) {
+                                    final raw =
+                                        (row['photo_base64'] ?? row['photo'])
+                                            ?.toString()
+                                            .trim();
+
+                                    if (raw != null && raw.isNotEmpty) {
+                                      return GestureDetector(
+                                        onTap: () => _preview(row),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: DisplayImage(
+                                            base64String: raw,
+                                            height: size,
+                                            width: size,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    return Container(
+                                      height: size,
+                                      width: size,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.medication,
+                                        size: size * .45,
+                                        color: Colors.teal,
+                                      ),
+                                    );
+                                  }
+
+                                  Widget dailyCard(
+                                    Map<String, dynamic> row,
+                                  ) {
+                                    final name =
+                                        (row['name'] ?? '').toString().trim();
+
+                                    final dosage =
+                                        (row['dosage'] ?? '').toString().trim();
+
+                                    final times = SanaAlarmService.parseTimes(
+                                      row['reminder_time'],
+                                    );
+
+                                    return Card(
+                                      key: ValueKey(
+                                        'daily_reminder_${row['id']}',
+                                      ),
+                                      margin: EdgeInsets.zero,
+                                      elevation: 3,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => _preview(row),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8),
                                           child: Column(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                                CrossAxisAlignment.center,
                                             children: [
+                                              reminderImage(row, 76),
+                                              const SizedBox(height: 6),
                                               Text(
-                                                title,
+                                                name.isEmpty
+                                                    ? tr(
+                                                        language,
+                                                        'record',
+                                                      )
+                                                    : name,
+                                                textAlign: TextAlign.center,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
+                                                  fontSize: 14,
                                                 ),
                                               ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                _subtitle(row),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.grey.shade700,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (widget.type == 'doctors' ||
-                                                widget.type == 'pharmacies')
-                                              IconButton(
-                                                key: ValueKey(
-                                                    'call_${row['id']}'),
-                                                icon: const Icon(
-                                                  Icons.phone,
-                                                  size: 20,
-                                                  color: Colors.green,
-                                                ),
-                                                tooltip: tr(language, 'call'),
-                                                onPressed: () async {
-                                                  final rawPhone =
-                                                      (row['phone'] ?? '')
-                                                          .toString()
-                                                          .trim();
-
-                                                  if (rawPhone.isEmpty) return;
-
-                                                  String cleaned =
-                                                      rawPhone.replaceAll(
-                                                    RegExp(r'[^0-9+]'),
-                                                    '',
-                                                  );
-
-                                                  if (cleaned.isEmpty) return;
-
-                                                  if (cleaned
-                                                      .startsWith('00')) {
-                                                    cleaned =
-                                                        '+${cleaned.substring(2)}';
-                                                  }
-
-                                                  final waNumber =
-                                                      cleaned.startsWith('+')
-                                                          ? cleaned.substring(1)
-                                                          : cleaned;
-
-                                                  final waUri = Uri.parse(
-                                                      'https://wa.me/$waNumber');
-
-                                                  if (await canLaunchUrl(
-                                                      waUri)) {
-                                                    await launchUrl(
-                                                      waUri,
-                                                      mode: LaunchMode
-                                                          .externalApplication,
-                                                    );
-                                                  } else {
-                                                    final telUri = Uri.parse(
-                                                        'tel:$cleaned');
-
-                                                    if (await canLaunchUrl(
-                                                        telUri)) {
-                                                      await launchUrl(
-                                                        telUri,
-                                                        mode: LaunchMode
-                                                            .externalApplication,
-                                                      );
-                                                    }
-                                                  }
-                                                },
-                                              ),
-                                            IconButton(
-                                              key:
-                                                  ValueKey('view_${row['id']}'),
-                                              onPressed: () => _preview(row),
-                                              icon: const Icon(
-                                                Icons.remove_red_eye_outlined,
-                                                size: 20,
-                                                color: Colors.teal,
-                                              ),
-                                              tooltip: tr(language, 'view'),
-                                            ),
-                                            IconButton(
-                                              key: ValueKey(
-                                                  'share_${row['id']}'),
-                                              onPressed: () =>
-                                                  _shareRecord(row),
-                                              icon: const Icon(
-                                                Icons.share,
-                                                size: 20,
-                                                color: Colors.teal,
-                                              ),
-                                              tooltip: tr(language, 'share'),
-                                            ),
-                                            IconButton(
-                                              key: ValueKey(
-                                                  'delete_${row['id']}'),
-                                              onPressed: () => _delete(row),
-                                              icon: const Icon(
-                                                Icons.delete_outline,
-                                                size: 20,
-                                                color: Colors.redAccent,
-                                              ),
-                                              tooltip: tr(language, 'delete'),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          )
-                        : Builder(
-                            builder: (context) {
-                              bool isDaily(Map<String, dynamic> row) {
-                                final date = row['reminder_date']
-                                    ?.toString()
-                                    .trim()
-                                    .toLowerCase();
-
-                                return date == 'daily';
-                              }
-
-                              int reminderTimeMinutes(
-                                Map<String, dynamic> row,
-                              ) {
-                                final times = SanaAlarmService.parseTimes(
-                                  row['reminder_time'],
-                                );
-
-                                if (times.isEmpty) {
-                                  return 24 * 60;
-                                }
-
-                                var earliest = 24 * 60;
-
-                                for (final time in times) {
-                                  final parts = time.split(':');
-
-                                  if (parts.length < 2) {
-                                    continue;
-                                  }
-
-                                  final hour = int.tryParse(parts[0]);
-                                  final minute = int.tryParse(parts[1]);
-
-                                  if (hour == null || minute == null) {
-                                    continue;
-                                  }
-
-                                  final totalMinutes = hour * 60 + minute;
-
-                                  if (totalMinutes < earliest) {
-                                    earliest = totalMinutes;
-                                  }
-                                }
-
-                                return earliest;
-                              }
-
-                              final dailyRows = _rows.where(isDaily).toList()
-                                ..sort(
-                                  (a, b) => reminderTimeMinutes(a).compareTo(
-                                    reminderTimeMinutes(b),
-                                  ),
-                                );
-
-                              final calendarRows = _rows
-                                  .where((row) => !isDaily(row))
-                                  .toList()
-                                ..sort(
-                                  (a, b) => reminderTimeMinutes(a).compareTo(
-                                    reminderTimeMinutes(b),
-                                  ),
-                                );
-
-                              if (_rows.isEmpty) {
-                                return Center(
-                                  child: Text(
-                                    tr(language, 'no_records'),
-                                  ),
-                                );
-                              }
-
-                              Widget actionButtons(
-                                Map<String, dynamic> row,
-                              ) {
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      key: ValueKey(
-                                        'view_${row['id']}',
-                                      ),
-                                      padding: const EdgeInsets.all(4),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 34,
-                                        minHeight: 34,
-                                      ),
-                                      onPressed: () => _preview(row),
-                                      icon: const Icon(
-                                        Icons.remove_red_eye_outlined,
-                                        size: 19,
-                                        color: Colors.teal,
-                                      ),
-                                      tooltip: tr(language, 'view'),
-                                    ),
-                                    IconButton(
-                                      key: ValueKey(
-                                        'share_${row['id']}',
-                                      ),
-                                      padding: const EdgeInsets.all(4),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 34,
-                                        minHeight: 34,
-                                      ),
-                                      onPressed: () => _shareRecord(row),
-                                      icon: const Icon(
-                                        Icons.share,
-                                        size: 19,
-                                        color: Colors.teal,
-                                      ),
-                                      tooltip: tr(language, 'share'),
-                                    ),
-                                    IconButton(
-                                      key: ValueKey(
-                                        'delete_${row['id']}',
-                                      ),
-                                      padding: const EdgeInsets.all(4),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 34,
-                                        minHeight: 34,
-                                      ),
-                                      onPressed: () => _delete(row),
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        size: 19,
-                                        color: Colors.redAccent,
-                                      ),
-                                      tooltip: tr(language, 'delete'),
-                                    ),
-                                  ],
-                                );
-                              }
-
-                              Widget reminderImage(
-                                Map<String, dynamic> row,
-                                double size,
-                              ) {
-                                final raw =
-                                    (row['photo_base64'] ?? row['photo'])
-                                        ?.toString()
-                                        .trim();
-
-                                if (raw != null && raw.isNotEmpty) {
-                                  return GestureDetector(
-                                    onTap: () => _preview(row),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: DisplayImage(
-                                        base64String: raw,
-                                        height: size,
-                                        width: size,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                return Container(
-                                  height: size,
-                                  width: size,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    Icons.medication,
-                                    size: size * .45,
-                                    color: Colors.teal,
-                                  ),
-                                );
-                              }
-
-                              Widget dailyCard(
-                                Map<String, dynamic> row,
-                              ) {
-                                final name =
-                                    (row['name'] ?? '').toString().trim();
-
-                                final dosage =
-                                    (row['dosage'] ?? '').toString().trim();
-
-                                final times = SanaAlarmService.parseTimes(
-                                  row['reminder_time'],
-                                );
-
-                                return Card(
-                                  key: ValueKey(
-                                    'daily_reminder_${row['id']}',
-                                  ),
-                                  margin: EdgeInsets.zero,
-                                  elevation: 3,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: () => _preview(row),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          reminderImage(row, 76),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            name.isEmpty
-                                                ? tr(
-                                                    language,
-                                                    'record',
-                                                  )
-                                                : name,
-                                            textAlign: TextAlign.center,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          if (dosage.isNotEmpty)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 2,
-                                              ),
-                                              child: Text(
-                                                dosage,
-                                                textAlign: TextAlign.center,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey.shade700,
-                                                ),
-                                              ),
-                                            ),
-                                          if (times.isNotEmpty)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 2,
-                                              ),
-                                              child: Text(
-                                                times.join(' - '),
-                                                textAlign: TextAlign.center,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          const Spacer(),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: actionButtons(row),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              Widget calendarCard(
-                                Map<String, dynamic> row,
-                              ) {
-                                final name =
-                                    (row['name'] ?? '').toString().trim();
-
-                                final dosage =
-                                    (row['dosage'] ?? '').toString().trim();
-
-                                final times = SanaAlarmService.parseTimes(
-                                  row['reminder_time'],
-                                );
-
-                                final date = (row['reminder_date'] ?? '')
-                                    .toString()
-                                    .trim();
-
-                                return Card(
-                                  key: ValueKey(
-                                    'calendar_reminder_${row['id']}',
-                                  ),
-                                  margin: const EdgeInsets.only(
-                                    bottom: 10,
-                                  ),
-                                  elevation: 2,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: () => _preview(row),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          reminderImage(row, 64),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  name.isEmpty
-                                                      ? tr(
-                                                          language,
-                                                          'record',
-                                                        )
-                                                      : name,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 15,
+                                              if (dosage.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    top: 2,
                                                   ),
-                                                ),
-                                                if (dosage.isNotEmpty)
-                                                  Text(
+                                                  child: Text(
                                                     dosage,
+                                                    textAlign: TextAlign.center,
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -7204,111 +7365,212 @@ class _RecordListScreenState extends State<RecordListScreen> {
                                                           Colors.grey.shade700,
                                                     ),
                                                   ),
-                                                if (times.isNotEmpty)
-                                                  Text(
-                                                    times.join(
-                                                      ' - ',
-                                                    ),
+                                                ),
+                                              if (times.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    top: 2,
+                                                  ),
+                                                  child: Text(
+                                                    times.join(' - '),
+                                                    textAlign: TextAlign.center,
                                                     maxLines: 2,
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     style: const TextStyle(
-                                                      fontSize: 12,
+                                                      fontSize: 11,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                     ),
                                                   ),
-                                                if (date.isNotEmpty &&
-                                                    date.toLowerCase() !=
-                                                        'daily')
-                                                  Text(
-                                                    date,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
+                                                ),
+                                              const Spacer(),
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: actionButtons(row),
+                                              ),
+                                            ],
                                           ),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: actionButtons(row),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                );
-                              }
+                                    );
+                                  }
 
-                              return ListView(
-                                key: const ValueKey(
-                                  'reminders_scroll_view',
-                                ),
-                                padding: const EdgeInsets.all(12),
-                                children: [
-                                  if (dailyRows.isNotEmpty) ...[
-                                    Text(
-                                      tr(
-                                        language,
-                                        'daily_reminders',
+                                  Widget calendarCard(
+                                    Map<String, dynamic> row,
+                                  ) {
+                                    final name =
+                                        (row['name'] ?? '').toString().trim();
+
+                                    final dosage =
+                                        (row['dosage'] ?? '').toString().trim();
+
+                                    final times = SanaAlarmService.parseTimes(
+                                      row['reminder_time'],
+                                    );
+
+                                    final date = (row['reminder_date'] ?? '')
+                                        .toString()
+                                        .trim();
+
+                                    return Card(
+                                      key: ValueKey(
+                                        'calendar_reminder_${row['id']}',
                                       ),
-                                      style: const TextStyle(
-                                        fontSize: 21,
-                                        fontWeight: FontWeight.bold,
+                                      margin: const EdgeInsets.only(
+                                        bottom: 10,
                                       ),
+                                      elevation: 2,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => _preview(row),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(10),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              reminderImage(row, 64),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      name.isEmpty
+                                                          ? tr(
+                                                              language,
+                                                              'record',
+                                                            )
+                                                          : name,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                    if (dosage.isNotEmpty)
+                                                      Text(
+                                                        dosage,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors
+                                                              .grey.shade700,
+                                                        ),
+                                                      ),
+                                                    if (times.isNotEmpty)
+                                                      Text(
+                                                        times.join(
+                                                          ' - ',
+                                                        ),
+                                                        maxLines: 2,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    if (date.isNotEmpty &&
+                                                        date.toLowerCase() !=
+                                                            'daily')
+                                                      Text(
+                                                        date,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors
+                                                              .grey.shade600,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: actionButtons(row),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  return ListView(
+                                    key: const ValueKey(
+                                      'reminders_scroll_view',
                                     ),
-                                    const SizedBox(height: 10),
-                                    GridView.builder(
-                                      key: const ValueKey(
-                                        'daily_reminders_grid',
-                                      ),
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      itemCount: dailyRows.length,
-                                      gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        crossAxisSpacing: 10,
-                                        mainAxisSpacing: 10,
-                                        childAspectRatio: 0.82,
-                                      ),
-                                      itemBuilder: (context, index) {
-                                        return dailyCard(
-                                          dailyRows[index],
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                  if (dailyRows.isNotEmpty &&
-                                      calendarRows.isNotEmpty)
-                                    const SizedBox(height: 24),
-                                  if (calendarRows.isNotEmpty) ...[
-                                    Text(
-                                      tr(
-                                        language,
-                                        'calendar_reminders',
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 21,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    ...calendarRows.map(
-                                      calendarCard,
-                                    ),
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
+                                    padding: const EdgeInsets.all(12),
+                                    children: [
+                                      if (dailyRows.isNotEmpty) ...[
+                                        Text(
+                                          tr(
+                                            language,
+                                            'daily_reminders',
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 21,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        GridView.builder(
+                                          key: const ValueKey(
+                                            'daily_reminders_grid',
+                                          ),
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          itemCount: dailyRows.length,
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            crossAxisSpacing: 10,
+                                            mainAxisSpacing: 10,
+                                            childAspectRatio: 0.82,
+                                          ),
+                                          itemBuilder: (context, index) {
+                                            return dailyCard(
+                                              dailyRows[index],
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                      if (dailyRows.isNotEmpty &&
+                                          calendarRows.isNotEmpty)
+                                        const SizedBox(height: 24),
+                                      if (calendarRows.isNotEmpty) ...[
+                                        Text(
+                                          tr(
+                                            language,
+                                            'calendar_reminders',
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 21,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        ...calendarRows.map(
+                                          calendarCard,
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                },
+                              ),
               ),
               Container(
                 padding: const EdgeInsets.all(12),
