@@ -76,6 +76,9 @@ class SanaAlarmService {
 
   static final MethodChannel _alarmChannel = MethodChannel('sana/alarm');
 
+  /*
+   * KEEP THIS EXISTING FLUTTER CHANNEL ID.
+   */
   static const String _channelId = 'sana_medication_alarm_v2';
 
   static Map<String, dynamic>? _pendingNativeAlarm;
@@ -85,8 +88,6 @@ class SanaAlarmService {
   static DateTime? _lastNativeAlarmAt;
 
   static Future<void> initialize() async {
-    // On the web, medication reminders are delivered by
-    // Supabase Cron + Web Push. No native initialization needed.
     if (kIsWeb) {
       return;
     }
@@ -96,7 +97,9 @@ class SanaAlarmService {
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
 
     tz.setLocalLocation(
-      tz.getLocation(currentTimeZone),
+      tz.getLocation(
+        currentTimeZone,
+      ),
     );
 
     const androidSettings = AndroidInitializationSettings(
@@ -133,6 +136,12 @@ class SanaAlarmService {
           ) ??
           false;
 
+      /*
+       * Keep the existing permission request behavior.
+       *
+       * Even if the user does not grant it, native scheduling
+       * now falls back to setAndAllowWhileIdle().
+       */
       if (!canExact) {
         await _alarmChannel.invokeMethod(
           'requestNativeAlarmPermission',
@@ -144,6 +153,7 @@ class SanaAlarmService {
               AndroidFlutterLocalNotificationsPlugin>();
 
       await androidPlugin?.requestNotificationsPermission();
+
       await androidPlugin?.requestFullScreenIntentPermission();
     }
   }
@@ -161,7 +171,9 @@ class SanaAlarmService {
       return null;
     }
 
-    _pendingNativeAlarm = Map<String, dynamic>.from(raw);
+    _pendingNativeAlarm = Map<String, dynamic>.from(
+      raw,
+    );
 
     _flushPendingNativeAlarm();
 
@@ -169,80 +181,120 @@ class SanaAlarmService {
   }
 
   static void _flushPendingNativeAlarm() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final data = _pendingNativeAlarm;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        final data = _pendingNativeAlarm;
 
-      if (data == null) {
-        return;
-      }
+        if (data == null) {
+          return;
+        }
 
-      final navigator = navigatorKey.currentState;
+        final navigator = navigatorKey.currentState;
 
-      if (navigator == null) {
-        _flushPendingNativeAlarm();
-        return;
-      }
+        if (navigator == null) {
+          _flushPendingNativeAlarm();
+          return;
+        }
 
-      final reminderId = data['reminderId']?.toString();
+        final reminderId = data['reminderId']?.toString();
 
-      if (reminderId == null || reminderId.isEmpty) {
+        if (reminderId == null || reminderId.isEmpty) {
+          _pendingNativeAlarm = null;
+
+          return;
+        }
+
+        final notificationId = int.tryParse(
+              data['notificationId']?.toString() ?? '',
+            ) ??
+            0;
+
+        final daily = data['daily'] == true;
+
+        final name = data['name']?.toString() ?? '';
+
+        final dosage = data['dosage']?.toString() ?? '';
+
+        final reminderTime = data['reminderTime']?.toString() ?? '';
+
+        final reminderDate = data['reminderDate']?.toString() ?? '';
+
+        final photoBase64 = data['photoBase64']?.toString() ?? '';
+
+        final key = '$reminderId:$notificationId';
+
+        final now = DateTime.now();
+
+        if (_lastNativeAlarmKey == key &&
+            _lastNativeAlarmAt != null &&
+            now.difference(
+                  _lastNativeAlarmAt!,
+                ) <
+                const Duration(
+                  seconds: 5,
+                )) {
+          _pendingNativeAlarm = null;
+
+          return;
+        }
+
+        _lastNativeAlarmKey = key;
+
+        _lastNativeAlarmAt = now;
+
         _pendingNativeAlarm = null;
-        return;
-      }
 
-      final notificationId =
-          int.tryParse(data['notificationId']?.toString() ?? '') ?? 0;
+        await startAlarmSound();
 
-      final daily = data['daily'] == true;
-
-      final key = '$reminderId:$notificationId';
-      final now = DateTime.now();
-
-      if (_lastNativeAlarmKey == key &&
-          _lastNativeAlarmAt != null &&
-          now.difference(_lastNativeAlarmAt!) < const Duration(seconds: 5)) {
-        _pendingNativeAlarm = null;
-        return;
-      }
-
-      _lastNativeAlarmKey = key;
-      _lastNativeAlarmAt = now;
-
-      _pendingNativeAlarm = null;
-
-      await startAlarmSound();
-
-      navigator.push(
-        MaterialPageRoute(
-          builder: (_) => SanaAlarmScreen(
-            reminderId: reminderId,
-            notificationId: notificationId,
-            daily: daily,
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => SanaAlarmScreen(
+              reminderId: reminderId,
+              notificationId: notificationId,
+              daily: daily,
+              name: name,
+              dosage: dosage,
+              reminderTime: reminderTime,
+              reminderDate: reminderDate,
+              photoBase64: photoBase64,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
-  static Future<void> scheduleNativeAlarm({
+  static Future<String?> scheduleNativeAlarm({
     required int notificationId,
     required String reminderId,
     required DateTime scheduledDate,
     required bool daily,
+    required String name,
+    required String dosage,
+    required String reminderTime,
+    required String reminderDate,
+    String? photoBase64,
   }) async {
     if (defaultTargetPlatform != TargetPlatform.android) {
-      return;
+      return null;
     }
 
-    await _alarmChannel.invokeMethod(
+    final status = await _alarmChannel.invokeMethod<String>(
       'scheduleNativeAlarm',
       {
         'notificationId': notificationId,
         'reminderId': reminderId,
         'triggerAtMillis': scheduledDate.millisecondsSinceEpoch,
         'daily': daily,
+        'name': name,
+        'dosage': dosage,
+        'reminderTime': reminderTime,
+        'reminderDate': reminderDate,
+        'photoBase64': photoBase64,
       },
     );
+
+    return status;
   }
 
   static Future<void> cancelNativeAlarm(
@@ -260,6 +312,42 @@ class SanaAlarmService {
     );
   }
 
+  static Future<void> cancelNativeReminder(
+    String reminderId,
+  ) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    await _alarmChannel.invokeMethod(
+      'cancelNativeReminder',
+      {
+        'reminderId': reminderId,
+      },
+    );
+  }
+
+  static Future<void> dismissNativeAlarmNotification(
+    int notificationId,
+  ) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    try {
+      await _alarmChannel.invokeMethod(
+        'dismissNativeAlarmNotification',
+        {
+          'notificationId': notificationId,
+        },
+      );
+    } catch (e) {
+      debugPrint(
+        'Dismiss alarm notification error: $e',
+      );
+    }
+  }
+
   static Future<void> _onNotificationResponse(
     NotificationResponse response,
   ) async {
@@ -268,7 +356,9 @@ class SanaAlarmService {
     }
 
     try {
-      final data = jsonDecode(response.payload!) as Map<String, dynamic>;
+      final data = jsonDecode(
+        response.payload!,
+      ) as Map<String, dynamic>;
 
       final id = data['id']?.toString();
 
@@ -290,7 +380,9 @@ class SanaAlarmService {
         ),
       );
     } catch (e) {
-      debugPrint('Alarm response error: $e');
+      debugPrint(
+        'Alarm response error: $e',
+      );
     }
   }
 
@@ -300,9 +392,13 @@ class SanaAlarmService {
     }
 
     try {
-      await _alarmChannel.invokeMethod('startAlarmSound');
+      await _alarmChannel.invokeMethod(
+        'startAlarmSound',
+      );
     } catch (e) {
-      debugPrint('Start alarm sound error: $e');
+      debugPrint(
+        'Start alarm sound error: $e',
+      );
     }
   }
 
@@ -321,7 +417,9 @@ class SanaAlarmService {
         },
       );
     } catch (e) {
-      debugPrint('Stop alarm sound error: $e');
+      debugPrint(
+        'Stop alarm sound error: $e',
+      );
     }
   }
 
@@ -340,7 +438,9 @@ class SanaAlarmService {
     return hash == 0 ? index + 1 : hash;
   }
 
-  static List<String> parseTimes(dynamic value) {
+  static List<String> parseTimes(
+    dynamic value,
+  ) {
     if (value == null) {
       return [];
     }
@@ -356,66 +456,139 @@ class SanaAlarmService {
 
       if (decoded is List) {
         return decoded
-            .map((e) => e.toString().trim())
-            .where((e) => e.isNotEmpty)
+            .map(
+              (e) => e.toString().trim(),
+            )
+            .where(
+              (e) => e.isNotEmpty,
+            )
             .toList();
       }
     } catch (_) {}
 
     return raw
         .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
+        .map(
+          (e) => e.trim(),
+        )
+        .where(
+          (e) => e.isNotEmpty,
+        )
         .toList();
+  }
+
+  static int? parseTimeToMinutes(
+    String value,
+  ) {
+    final text = value.trim();
+
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$',
+      caseSensitive: false,
+    ).firstMatch(text);
+
+    if (match == null) {
+      return null;
+    }
+
+    var hour = int.tryParse(
+      match.group(1)!,
+    );
+
+    final minute = int.tryParse(
+      match.group(2)!,
+    );
+
+    if (hour == null || minute == null) {
+      return null;
+    }
+
+    if (minute < 0 || minute > 59) {
+      return null;
+    }
+
+    final meridiem = match.group(3)?.toUpperCase();
+
+    if (meridiem == 'AM') {
+      if (hour < 1 || hour > 12) {
+        return null;
+      }
+
+      if (hour == 12) {
+        hour = 0;
+      }
+    } else if (meridiem == 'PM') {
+      if (hour < 1 || hour > 12) {
+        return null;
+      }
+
+      if (hour != 12) {
+        hour += 12;
+      }
+    } else {
+      if (hour < 0 || hour > 23) {
+        return null;
+      }
+    }
+
+    return (hour * 60 + minute);
   }
 
   static DateTime? parseDateTime(
     String date,
     String time,
   ) {
-    final dateParts = date.split('-');
-    final timeParts = time.split(':');
-
-    if (dateParts.length != 3 || timeParts.length < 2) {
-      return null;
-    }
-
-    final year = int.tryParse(dateParts[0].trim());
-    final month = int.tryParse(dateParts[1].trim());
-    final day = int.tryParse(dateParts[2].trim());
-
-    var hour = int.tryParse(timeParts[0].trim());
-
-    final minute = int.tryParse(
-      timeParts[1].replaceAll(
-        RegExp(r'[^0-9]'),
-        '',
-      ),
+    final dateMatch = RegExp(
+      r'^(\d{4})-(\d{2})-(\d{2})$',
+    ).firstMatch(
+      date.trim(),
     );
 
-    if (year == null ||
-        month == null ||
-        day == null ||
-        hour == null ||
-        minute == null) {
+    if (dateMatch == null) {
       return null;
     }
 
-    final upper = time.toUpperCase();
+    final year = int.tryParse(
+      dateMatch.group(1)!,
+    );
 
-    if (upper.contains('PM') && hour < 12) {
-      hour += 12;
-    } else if (upper.contains('AM') && hour == 12) {
-      hour = 0;
+    final month = int.tryParse(
+      dateMatch.group(2)!,
+    );
+
+    final day = int.tryParse(
+      dateMatch.group(3)!,
+    );
+
+    final minutes = parseTimeToMinutes(
+      time,
+    );
+
+    if (year == null || month == null || day == null || minutes == null) {
+      return null;
     }
 
-    return DateTime(
+    final hour = minutes ~/ 60;
+
+    final minute = minutes % 60;
+
+    final result = DateTime(
       year,
       month,
       day,
       hour,
       minute,
     );
+
+    if (result.year != year ||
+        result.month != month ||
+        result.day != day ||
+        result.hour != hour ||
+        result.minute != minute) {
+      return null;
+    }
+
+    return result;
   }
 
   static Future<void> scheduleReminder(
@@ -427,62 +600,56 @@ class SanaAlarmService {
       return;
     }
 
-    final times = parseTimes(row['reminder_time']);
+    final times = parseTimes(
+      row['reminder_time'],
+    );
 
     if (times.isEmpty) {
       return;
     }
 
     if (kIsWeb) {
-      // Web reminders are delivered by Supabase Cron + Web Push.
-      // Nothing to schedule on the device.
       return;
     }
 
-    final reminderDate = row['reminder_date']?.toString().trim().toLowerCase();
+    final reminderDate = row['reminder_date']?.toString().trim();
 
-    final scheduleType = reminderDate == 'daily' ? 'daily' : 'calendar';
+    final normalizedReminderDate = reminderDate?.toLowerCase() ?? '';
+
+    final scheduleType =
+        normalizedReminderDate == 'daily' ? 'daily' : 'calendar';
+
+    final name = row['name']?.toString().trim() ?? '';
+
+    final dosage = row['dosage']?.toString().trim() ?? '';
+
+    final reminderTime = row['reminder_time']?.toString().trim() ?? '';
+
+    final reminderDateForCache = reminderDate ?? '';
+
+    final rawPhoto = row['photo_base64'] ?? row['photo'];
+
+    final photoBase64 = rawPhoto?.toString().trim();
 
     for (var index = 0; index < times.length; index++) {
       final time = times[index];
 
-      final timeParts = time.split(':');
+      final minutes = parseTimeToMinutes(
+        time,
+      );
 
-      if (timeParts.length < 2) {
+      if (minutes == null) {
         continue;
       }
 
-      var hour = int.tryParse(
-        timeParts[0].trim(),
-      );
+      final hour = minutes ~/ 60;
 
-      final minute = int.tryParse(
-        timeParts[1].replaceAll(
-          RegExp(r'[^0-9]'),
-          '',
-        ),
-      );
-
-      if (hour == null || minute == null) {
-        continue;
-      }
-
-      final upper = time.toUpperCase();
-
-      if (upper.contains('PM') && hour < 12) {
-        hour += 12;
-      } else if (upper.contains('AM') && hour == 12) {
-        hour = 0;
-      }
+      final minute = minutes % 60;
 
       final notificationId = SanaAlarmService.notificationId(
         id,
         index,
       );
-
-      // ==========================================================
-      // DAILY REMINDER
-      // ==========================================================
 
       if (scheduleType == 'daily') {
         var scheduled = tz.TZDateTime(
@@ -498,19 +665,37 @@ class SanaAlarmService {
           tz.local,
         );
 
-        if (!scheduled.isAfter(now)) {
-          scheduled = scheduled.add(
-            const Duration(days: 1),
+        if (!scheduled.isAfter(
+          now,
+        )) {
+          scheduled = tz.TZDateTime(
+            tz.local,
+            now.year,
+            now.month,
+            now.day + 1,
+            hour,
+            minute,
           );
         }
 
         if (defaultTargetPlatform == TargetPlatform.android) {
-          await SanaAlarmService.scheduleNativeAlarm(
+          final status = await SanaAlarmService.scheduleNativeAlarm(
             notificationId: notificationId,
             reminderId: id,
             scheduledDate: scheduled,
             daily: true,
+            name: name,
+            dosage: dosage,
+            reminderTime: reminderTime,
+            reminderDate: reminderDateForCache,
+            photoBase64: photoBase64,
           );
+
+          if (status == 'FAILED' || status == 'INVALID') {
+            throw StateError(
+              'Native alarm scheduling failed for $id',
+            );
+          }
         } else {
           await _notifications.zonedSchedule(
             id: notificationId,
@@ -519,7 +704,7 @@ class SanaAlarmService {
               languageNotifier.value,
               'alarm',
             ),
-            body: row['name']?.toString() ?? '',
+            body: name,
             payload: jsonEncode({
               'id': id,
               'daily': true,
@@ -529,14 +714,8 @@ class SanaAlarmService {
             matchDateTimeComponents: DateTimeComponents.time,
           );
         }
-      }
-
-      // ==========================================================
-      // CALENDAR / ONE-TIME REMINDER
-      // ==========================================================
-
-      else {
-        if (reminderDate == null || reminderDate.trim().isEmpty) {
+      } else {
+        if (reminderDate == null || reminderDate.isEmpty) {
           continue;
         }
 
@@ -555,18 +734,31 @@ class SanaAlarmService {
         );
 
         if (!scheduled.isAfter(
-          tz.TZDateTime.now(tz.local),
+          tz.TZDateTime.now(
+            tz.local,
+          ),
         )) {
           continue;
         }
 
         if (defaultTargetPlatform == TargetPlatform.android) {
-          await SanaAlarmService.scheduleNativeAlarm(
+          final status = await SanaAlarmService.scheduleNativeAlarm(
             notificationId: notificationId,
             reminderId: id,
             scheduledDate: scheduled,
             daily: false,
+            name: name,
+            dosage: dosage,
+            reminderTime: reminderTime,
+            reminderDate: reminderDateForCache,
+            photoBase64: photoBase64,
           );
+
+          if (status == 'FAILED' || status == 'INVALID') {
+            throw StateError(
+              'Native alarm scheduling failed for $id',
+            );
+          }
         } else {
           await _notifications.zonedSchedule(
             id: notificationId,
@@ -575,7 +767,7 @@ class SanaAlarmService {
               languageNotifier.value,
               'alarm',
             ),
-            body: row['name']?.toString() ?? '',
+            body: name,
             payload: jsonEncode({
               'id': id,
               'daily': false,
@@ -632,12 +824,45 @@ class SanaAlarmService {
       return;
     }
 
+    /*
+     * Android native alarms are cancelled by the cache itself.
+     * This avoids the old arbitrary 0..20 native-alarm loop.
+     */
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await cancelNativeReminder(
+        reminderId,
+      );
+
+      /*
+       * Also cancel any legacy flutter_local_notifications
+       * alarms that may have been created by an older version.
+       */
+      for (var index = 0; index < 20; index++) {
+        final id = notificationId(
+          reminderId,
+          index,
+        );
+
+        await _notifications.cancel(
+          id: id,
+        );
+      }
+
+      return;
+    }
+
+    /*
+     * Preserve the existing iOS cleanup behavior.
+     */
     for (var index = 0; index < 20; index++) {
-      final id = notificationId(reminderId, index);
+      final id = notificationId(
+        reminderId,
+        index,
+      );
 
-      await _notifications.cancel(id: id);
-
-      await cancelNativeAlarm(id);
+      await _notifications.cancel(
+        id: id,
+      );
     }
   }
 }
@@ -7772,11 +7997,29 @@ class SanaAlarmScreen extends StatefulWidget {
   final int notificationId;
   final bool daily;
 
+  /*
+   * Native Android supplies these fields directly from
+   * SanaAlarmCache.
+   *
+   * They are optional because iOS / older notification
+   * paths may not provide them.
+   */
+  final String name;
+  final String dosage;
+  final String reminderTime;
+  final String reminderDate;
+  final String photoBase64;
+
   const SanaAlarmScreen({
     super.key,
     required this.reminderId,
     required this.notificationId,
     required this.daily,
+    this.name = '',
+    this.dosage = '',
+    this.reminderTime = '',
+    this.reminderDate = '',
+    this.photoBase64 = '',
   });
 
   @override
@@ -7787,33 +8030,120 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
   final _client = Supabase.instance.client;
 
   Map<String, dynamic>? _reminder;
+
   bool _loading = true;
+
   bool _taken = false;
 
   @override
   void initState() {
     super.initState();
+
+    /*
+     * Put the native cached payload into the screen FIRST.
+     *
+     * This means the alarm screen has usable data even when
+     * Supabase is unreachable.
+     */
+    final cached = <String, dynamic>{};
+
+    if (widget.name.trim().isNotEmpty) {
+      cached['name'] = widget.name.trim();
+    }
+
+    if (widget.dosage.trim().isNotEmpty) {
+      cached['dosage'] = widget.dosage.trim();
+    }
+
+    if (widget.reminderTime.trim().isNotEmpty) {
+      cached['reminder_time'] = widget.reminderTime.trim();
+    }
+
+    if (widget.reminderDate.trim().isNotEmpty) {
+      cached['reminder_date'] = widget.reminderDate.trim();
+    }
+
+    if (widget.photoBase64.trim().isNotEmpty) {
+      cached['photo_base64'] = widget.photoBase64.trim();
+    }
+
+    if (cached.isNotEmpty) {
+      _reminder = cached;
+    }
+
     _loadReminder();
   }
 
   Future<void> _loadReminder() async {
     try {
+      /*
+       * Supabase is only an enhancement here.
+       *
+       * The screen already has its native offline payload.
+       */
       final result = await _client
           .from('reminders')
           .select('*')
-          .eq('id', widget.reminderId)
+          .eq(
+            'id',
+            widget.reminderId,
+          )
           .maybeSingle();
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      setState(() {
-        _reminder = result == null ? null : Map<String, dynamic>.from(result);
-        _loading = false;
-      });
+      if (result != null) {
+        final server = Map<String, dynamic>.from(
+          result,
+        );
+
+        final existing = _reminder ?? <String, dynamic>{};
+
+        final merged = <String, dynamic>{
+          ...existing,
+          ...server,
+        };
+
+        /*
+         * If the server row does not contain the offline
+         * photo, preserve the cached photo.
+         */
+        final serverPhoto = server['photo_base64']?.toString().trim();
+
+        if ((serverPhoto == null || serverPhoto.isEmpty) &&
+            existing['photo_base64']?.toString().trim().isNotEmpty == true) {
+          merged['photo_base64'] = existing['photo_base64'];
+        }
+
+        setState(() {
+          _reminder = merged;
+
+          _loading = false;
+        });
+      } else {
+        /*
+         * No server record.
+         *
+         * Keep the native cached record.
+         */
+        setState(() {
+          _loading = false;
+        });
+      }
     } catch (e) {
-      debugPrint('Alarm reminder load error: $e');
+      debugPrint(
+        'Alarm reminder load error: $e',
+      );
 
       if (mounted) {
+        /*
+         * IMPORTANT:
+         * Do NOT clear _reminder here.
+         *
+         * The native cached payload is the offline fallback.
+         */
         setState(() {
           _loading = false;
         });
@@ -7822,70 +8152,111 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
   }
 
   Future<void> _markTaken() async {
-    if (_taken) return;
+    if (_taken) {
+      return;
+    }
 
     setState(() {
       _taken = true;
     });
 
-    // Keep the existing alarm ring/voice implementation unchanged.
-    await SanaAlarmService.stopAlarmSound(
-      notificationId: widget.notificationId,
-    );
+    if (widget.daily) {
+      /*
+       * DAILY:
+       *
+       * Stop today's ringing.
+       * Dismiss today's notification.
+       *
+       * DO NOT call cancelNativeAlarm().
+       *
+       * SanaAlarmReceiver has already scheduled tomorrow's
+       * daily occurrence.
+       */
+      await SanaAlarmService.stopAlarmSound(
+        notificationId: widget.notificationId,
+      );
 
-    // Cancel the native alarm that is currently firing.
-    await SanaAlarmService.cancelNativeAlarm(
-      widget.notificationId,
-    );
+      await SanaAlarmService.dismissNativeAlarmNotification(
+        widget.notificationId,
+      );
+    } else {
+      /*
+       * ONE-TIME:
+       *
+       * Stop the current alarm.
+       * Cancel its native alarm.
+       * Cancel all remaining native alarms for this reminder.
+       */
+      await SanaAlarmService.stopAlarmSound(
+        notificationId: widget.notificationId,
+      );
 
-    // A one-time reminder must not fire again.
-    if (!widget.daily) {
+      await SanaAlarmService.cancelNativeAlarm(
+        widget.notificationId,
+      );
+
       await SanaAlarmService.cancelReminder(
         widget.reminderId,
       );
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
-    // Return completely to the application's first/home route.
+    /*
+     * Only pop the alarm screen.
+     *
+     * DO NOT popUntil(isFirst).
+     */
     final nav = Navigator.of(
       context,
       rootNavigator: true,
     );
+
     if (nav.canPop()) {
-      nav.popUntil(
-        (route) => route.isFirst,
-      );
+      nav.pop();
     }
   }
 
   Future<void> _closeAlarmScreen() async {
-    // Dismiss the alarm without marking the reminder taken.
+    /*
+     * Closing is NOT the same as TAKEN.
+     *
+     * Do not cancel tomorrow's daily alarm.
+     */
     await SanaAlarmService.stopAlarmSound(
       notificationId: widget.notificationId,
     );
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     final nav = Navigator.of(
       context,
       rootNavigator: true,
     );
+
     if (nav.canPop()) {
-      nav.popUntil(
-        (route) => route.isFirst,
-      );
+      nav.pop();
     }
   }
 
   @override
   void dispose() {
+    /*
+     * Preserve the existing safety behavior.
+     */
     SanaAlarmService.stopAlarmSound();
+
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final language = languageNotifier.value;
 
     final reminder = _reminder;
@@ -7911,12 +8282,17 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                 )
               : Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(
+                      24,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          tr(language, 'alarm'),
+                          tr(
+                            language,
+                            'alarm',
+                          ),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
@@ -7924,10 +8300,14 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(
+                          height: 24,
+                        ),
                         if (photo != null && photo.trim().isNotEmpty)
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(
+                              20,
+                            ),
                             child: DisplayImage(
                               base64String: photo,
                               height: 260,
@@ -7941,7 +8321,9 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                             color: Colors.white,
                             size: 180,
                           ),
-                        const SizedBox(height: 24),
+                        const SizedBox(
+                          height: 24,
+                        ),
                         Text(
                           name,
                           textAlign: TextAlign.center,
@@ -7952,7 +8334,9 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                           ),
                         ),
                         if (dosage.isNotEmpty) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(
+                            height: 10,
+                          ),
                           Text(
                             dosage,
                             textAlign: TextAlign.center,
@@ -7963,9 +8347,13 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                           ),
                         ],
                         if (times.isNotEmpty) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(
+                            height: 10,
+                          ),
                           Text(
-                            times.join(' - '),
+                            times.join(
+                              ' - ',
+                            ),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white70,
@@ -7973,7 +8361,9 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                             ),
                           ),
                         ],
-                        const SizedBox(height: 40),
+                        const SizedBox(
+                          height: 40,
+                        ),
                         Row(
                           children: [
                             Expanded(
@@ -7982,7 +8372,10 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                                 child: FilledButton(
                                   onPressed: _taken ? null : _markTaken,
                                   child: Text(
-                                    tr(language, 'taken'),
+                                    tr(
+                                      language,
+                                      'taken',
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -7991,7 +8384,9 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(
+                              width: 12,
+                            ),
                             Expanded(
                               child: SizedBox(
                                 height: 70,
@@ -8000,10 +8395,15 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: Colors.white,
                                     side: const BorderSide(
-                                        color: Colors.white, width: 2),
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
                                   ),
                                   child: Text(
-                                    tr(language, 'close'),
+                                    tr(
+                                      language,
+                                      'close',
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,

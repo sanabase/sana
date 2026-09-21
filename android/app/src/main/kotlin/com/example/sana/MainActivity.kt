@@ -12,89 +12,145 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.android.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.util.ArrayDeque
 
 class MainActivity : FlutterActivity() {
 
     companion object {
+
         const val ACTION_NATIVE_ALARM =
             "com.example.sana.action.NATIVE_ALARM"
     }
 
-    private val channelName = "sana/alarm"
+    private val channelName =
+        "sana/alarm"
 
-    private var alarmChannel: MethodChannel? = null
+    private var alarmChannel:
+        MethodChannel? = null
 
-    private var pendingAlarm: Map<String, Any>? = null
+    /*
+     * Queue instead of a single pending alarm.
+     *
+     * This prevents a second alarm event from overwriting
+     * the first one before Flutter is ready.
+     */
+    private val pendingAlarms =
+        ArrayDeque<Map<String, Any>>()
 
     private val alarmReceiver =
         object : BroadcastReceiver() {
+
             override fun onReceive(
                 context: Context,
                 intent: Intent
             ) {
-                if (intent.action != ACTION_NATIVE_ALARM) {
+
+                if (
+                    intent.action !=
+                    ACTION_NATIVE_ALARM
+                ) {
                     return
                 }
 
-                val data = alarmDataFromIntent(intent)
+                val data =
+                    alarmDataFromIntent(
+                        intent
+                    )
 
                 if (data != null) {
-                    pendingAlarm = data
-                    deliverPendingAlarm()
+                    pendingAlarms.addLast(
+                        data
+                    )
+
+                    deliverPendingAlarms()
                 }
             }
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
+
+        super.onCreate(
+            savedInstanceState
+        )
 
         ContextCompat.registerReceiver(
             this,
             alarmReceiver,
-            IntentFilter(ACTION_NATIVE_ALARM),
+            IntentFilter(
+                ACTION_NATIVE_ALARM
+            ),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
-        handleAlarmIntent(intent)
+        handleAlarmIntent(
+            intent
+        )
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        handleAlarmIntent(intent)
+    override fun onNewIntent(
+        intent: Intent
+    ) {
+
+        super.onNewIntent(
+            intent
+        )
+
+        setIntent(
+            intent
+        )
+
+        handleAlarmIntent(
+            intent
+        )
     }
 
     override fun configureFlutterEngine(
-        flutterEngine: FlutterEngine
+        flutterEngine: io.flutter.embedding.engine.FlutterEngine
     ) {
-        super.configureFlutterEngine(flutterEngine)
 
-        alarmChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            channelName
+        super.configureFlutterEngine(
+            flutterEngine
         )
 
-        alarmChannel?.setMethodCallHandler { call, result ->
+        alarmChannel =
+            MethodChannel(
+                flutterEngine.dartExecutor.binaryMessenger,
+                channelName
+            )
+
+        alarmChannel?.setMethodCallHandler {
+                call,
+                result ->
 
             when (call.method) {
 
                 "nativeAlarmReady" -> {
-                    deliverPendingAlarm()
-                    result.success(null)
+
+                    deliverPendingAlarms()
+
+                    result.success(
+                        null
+                    )
                 }
 
                 "canScheduleNativeAlarm" -> {
+
                     val alarmManager =
-                        getSystemService(Context.ALARM_SERVICE)
-                            as AlarmManager
+                        getSystemService(
+                            Context.ALARM_SERVICE
+                        ) as AlarmManager
 
                     result.success(
-                        if (Build.VERSION.SDK_INT >=
+                        if (
+                            Build.VERSION.SDK_INT >=
                             Build.VERSION_CODES.S
                         ) {
-                            alarmManager.canScheduleExactAlarms()
+                            alarmManager
+                                .canScheduleExactAlarms()
                         } else {
                             true
                         }
@@ -102,53 +158,108 @@ class MainActivity : FlutterActivity() {
                 }
 
                 "requestNativeAlarmPermission" -> {
-                    if (Build.VERSION.SDK_INT >=
+
+                    if (
+                        Build.VERSION.SDK_INT >=
                         Build.VERSION_CODES.S
                     ) {
-                        val settingsIntent = Intent(
-                            Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                            Uri.parse("package:$packageName")
-                        )
 
-                        startActivity(settingsIntent)
+                        val settingsIntent =
+                            Intent(
+                                Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                Uri.parse(
+                                    "package:$packageName"
+                                )
+                            )
+
+                        startActivity(
+                            settingsIntent
+                        )
                     }
 
-                    result.success(null)
+                    result.success(
+                        null
+                    )
                 }
 
                 "scheduleNativeAlarm" -> {
+
                     try {
+
                         val notificationId =
-                            call.argument<Int>("notificationId")
+                            call.argument<Int>(
+                                "notificationId"
+                            )
                                 ?: throw IllegalArgumentException(
                                     "notificationId"
                                 )
 
                         val reminderId =
-                            call.argument<String>("reminderId")
+                            call.argument<String>(
+                                "reminderId"
+                            )
                                 ?: throw IllegalArgumentException(
                                     "reminderId"
                                 )
 
                         val triggerAtMillis =
-                            call.argument<Long>("triggerAtMillis")
+                            call.argument<Long>(
+                                "triggerAtMillis"
+                            )
                                 ?: throw IllegalArgumentException(
                                     "triggerAtMillis"
                                 )
 
                         val daily =
-                            call.argument<Boolean>("daily") ?: false
+                            call.argument<Boolean>(
+                                "daily"
+                            ) ?: false
 
-                        SanaAlarmReceiver.schedule(
-                            this,
-                            notificationId,
-                            reminderId,
-                            triggerAtMillis,
-                            daily
+                        val name =
+                            call.argument<String>(
+                                "name"
+                            ) ?: ""
+
+                        val dosage =
+                            call.argument<String>(
+                                "dosage"
+                            ) ?: ""
+
+                        val reminderTime =
+                            call.argument<String>(
+                                "reminderTime"
+                            ) ?: ""
+
+                        val reminderDate =
+                            call.argument<String>(
+                                "reminderDate"
+                            ) ?: ""
+
+                        val photoBase64 =
+                            call.argument<String>(
+                                "photoBase64"
+                            )
+
+                        val status =
+                            SanaAlarmReceiver.schedule(
+                                context = this,
+                                notificationId = notificationId,
+                                reminderId = reminderId,
+                                triggerAtMillis = triggerAtMillis,
+                                daily = daily,
+                                name = name,
+                                dosage = dosage,
+                                reminderTime = reminderTime,
+                                reminderDate = reminderDate,
+                                photoBase64 = photoBase64
+                            )
+
+                        result.success(
+                            status
                         )
 
-                        result.success(null)
                     } catch (e: Exception) {
+
                         result.error(
                             "ALARM_SCHEDULE_ERROR",
                             e.message,
@@ -158,114 +269,279 @@ class MainActivity : FlutterActivity() {
                 }
 
                 "cancelNativeAlarm" -> {
-                    val notificationId =
-                        call.argument<Int>("notificationId")
 
-                    if (notificationId != null) {
+                    val notificationId =
+                        call.argument<Int>(
+                            "notificationId"
+                        )
+
+                    if (
+                        notificationId != null
+                    ) {
+
                         SanaAlarmReceiver.cancel(
                             this,
                             notificationId
                         )
                     }
 
-                    result.success(null)
+                    result.success(
+                        null
+                    )
                 }
 
-                "startAlarmSound" -> {
-                    val serviceIntent = Intent(
-                        this,
-                        SanaAlarmSoundService::class.java
-                    ).setAction(
-                        SanaAlarmSoundService.ACTION_START
-                    )
+                "cancelNativeReminder" -> {
 
-                    if (Build.VERSION.SDK_INT >=
-                        Build.VERSION_CODES.O
+                    val reminderId =
+                        call.argument<String>(
+                            "reminderId"
+                        )
+
+                    if (
+                        !reminderId.isNullOrBlank()
                     ) {
-                        startForegroundService(serviceIntent)
-                    } else {
-                        startService(serviceIntent)
+
+                        SanaAlarmReceiver.cancelReminder(
+                            this,
+                            reminderId
+                        )
                     }
 
-                    result.success(null)
+                    result.success(
+                        null
+                    )
                 }
 
-                "stopAlarmSound" -> {
+                "dismissNativeAlarmNotification" -> {
+
                     val notificationId =
-                        call.argument<Int>("notificationId")
+                        call.argument<Int>(
+                            "notificationId"
+                        )
 
-                    val serviceIntent = Intent(
-                        this,
-                        SanaAlarmSoundService::class.java
-                    ).setAction(
-                        SanaAlarmSoundService.ACTION_STOP
-                    )
+                    if (
+                        notificationId != null
+                    ) {
 
-                    startService(serviceIntent)
-
-                    if (notificationId != null) {
                         val manager =
                             getSystemService(
                                 Context.NOTIFICATION_SERVICE
                             ) as NotificationManager
 
-                        manager.cancel(notificationId)
+                        manager.cancel(
+                            notificationId
+                        )
                     }
 
-                    result.success(null)
+                    result.success(
+                        null
+                    )
                 }
 
-                else -> result.notImplemented()
+                "startAlarmSound" -> {
+
+                    val serviceIntent =
+                        Intent(
+                            this,
+                            SanaAlarmSoundService::class.java
+                        ).setAction(
+                            SanaAlarmSoundService.ACTION_START
+                        )
+
+                    if (
+                        Build.VERSION.SDK_INT >=
+                        Build.VERSION_CODES.O
+                    ) {
+
+                        startForegroundService(
+                            serviceIntent
+                        )
+
+                    } else {
+
+                        startService(
+                            serviceIntent
+                        )
+                    }
+
+                    result.success(
+                        null
+                    )
+                }
+
+                "stopAlarmSound" -> {
+
+                    val notificationId =
+                        call.argument<Int>(
+                            "notificationId"
+                        )
+
+                    val serviceIntent =
+                        Intent(
+                            this,
+                            SanaAlarmSoundService::class.java
+                        ).setAction(
+                            SanaAlarmSoundService.ACTION_STOP
+                        )
+
+                    startService(
+                        serviceIntent
+                    )
+
+                    if (
+                        notificationId != null
+                    ) {
+
+                        val manager =
+                            getSystemService(
+                                Context.NOTIFICATION_SERVICE
+                            ) as NotificationManager
+
+                        manager.cancel(
+                            notificationId
+                        )
+                    }
+
+                    result.success(
+                        null
+                    )
+                }
+
+                else -> {
+                    result.notImplemented()
+                }
             }
         }
     }
 
-    private fun handleAlarmIntent(intent: Intent?) {
-        if (intent?.getBooleanExtra("native_alarm", false) != true) {
+    private fun handleAlarmIntent(
+        intent: Intent?
+    ) {
+
+        if (
+            intent?.getBooleanExtra(
+                "native_alarm",
+                false
+            ) != true
+        ) {
             return
         }
 
-        val data = alarmDataFromIntent(intent)
+        val data =
+            alarmDataFromIntent(
+                intent
+            )
 
         if (data != null) {
-            pendingAlarm = data
-            deliverPendingAlarm()
+
+            pendingAlarms.addLast(
+                data
+            )
+
+            deliverPendingAlarms()
         }
     }
 
-    private fun alarmDataFromIntent(intent: Intent): Map<String, Any>? {
+    private fun alarmDataFromIntent(
+        intent: Intent
+    ): Map<String, Any>? {
 
         val notificationId =
-            intent.getIntExtra("notification_id", 0)
+            intent.getIntExtra(
+                "notification_id",
+                0
+            )
 
         val reminderId =
-            intent.getStringExtra("reminder_id") ?: return null
+            intent.getStringExtra(
+                "reminder_id"
+            )
+                ?: return null
 
         val daily =
-            intent.getBooleanExtra("daily", false)
+            intent.getBooleanExtra(
+                "daily",
+                false
+            )
+
+        val name =
+            intent.getStringExtra(
+                "name"
+            ) ?: ""
+
+        val dosage =
+            intent.getStringExtra(
+                "dosage"
+            ) ?: ""
+
+        val reminderTime =
+            intent.getStringExtra(
+                "reminder_time"
+            ) ?: ""
+
+        val reminderDate =
+            intent.getStringExtra(
+                "reminder_date"
+            ) ?: ""
+
+        val photoBase64 =
+            intent.getStringExtra(
+                "photo_base64"
+            ) ?: ""
 
         return mapOf(
-            "notificationId" to notificationId,
-            "reminderId" to reminderId,
-            "daily" to daily
+            "notificationId" to
+                notificationId,
+
+            "reminderId" to
+                reminderId,
+
+            "daily" to
+                daily,
+
+            "name" to
+                name,
+
+            "dosage" to
+                dosage,
+
+            "reminderTime" to
+                reminderTime,
+
+            "reminderDate" to
+                reminderDate,
+
+            "photoBase64" to
+                photoBase64
         )
     }
 
-    private fun deliverPendingAlarm() {
-        val channel = alarmChannel ?: return
-        val alarm = pendingAlarm ?: return
+    private fun deliverPendingAlarms() {
 
-        pendingAlarm = null
+        val channel =
+            alarmChannel
+                ?: return
 
-        channel.invokeMethod(
-            "nativeAlarmTriggered",
-            alarm
-        )
+        while (
+            pendingAlarms.isNotEmpty()
+        ) {
+
+            val alarm =
+                pendingAlarms.removeFirst()
+
+            channel.invokeMethod(
+                "nativeAlarmTriggered",
+                alarm
+            )
+        }
     }
 
     override fun onDestroy() {
+
         try {
-            unregisterReceiver(alarmReceiver)
+            unregisterReceiver(
+                alarmReceiver
+            )
         } catch (_: Exception) {
         }
 
