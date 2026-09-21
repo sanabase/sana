@@ -4,10 +4,10 @@ import webpush from "npm:web-push@3.6.7";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const vapidPublicKey = Deno.env.get("SANA_VAPID_PUBLIC_KEY")!;
-const vapidPrivateKey = Deno.env.get("SANA_VAPID_PRIVATE_KEY")!;
+const vapidPublicKey = Deno.env.get("VAPID_PUBLIC")!;
+const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE")!;
 const vapidSubject =
-  Deno.env.get("SANA_VAPID_SUBJECT") ?? "mailto:admin@sanabase.com";
+  Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@sanabase.com";
 
 webpush.setVapidDetails(
   vapidSubject,
