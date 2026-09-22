@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
+
 import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
 
@@ -91,7 +91,11 @@ class SanaWebAlarm {
     final audio = _getAudio();
     try {
       audio.currentTime = 0;
-      await audio.play().toDart;
+      final result = audio.play();
+      result.toDart.catchError((Object e) {
+        debugPrint('Web audio unlock play error: $e');
+        return null;
+      });
       audio.pause();
       audio.currentTime = 0;
       _audioUnlocked = true;
@@ -174,17 +178,20 @@ class SanaWebAlarm {
 
       try {
         final reg = await web.window.navigator.serviceWorker.ready.toDart;
-        await reg.showNotification(
-          'SANA Reminder: $name',
-          web.NotificationOptions(
-            body: bodyText,
-            icon: '/sana/icons/Icon-192.png',
-            badge: '/sana/icons/Icon-192.png',
-            tag: 'sana-$id-$time',
-            renotify: true,
-            requireInteraction: true,
-          ),
-        );
+        final svcReg = reg;
+        await svcReg
+            .showNotification(
+              'SANA Reminder: $name',
+              web.NotificationOptions(
+                body: bodyText,
+                icon: '/sana/icons/Icon-192.png',
+                badge: '/sana/icons/Icon-192.png',
+                tag: 'sana-$id-$time',
+                renotify: true,
+                requireInteraction: true,
+              ),
+            )
+            .toDart;
         return;
       } catch (_) {}
 
@@ -230,7 +237,11 @@ class SanaWebAlarm {
     final audio = _getAudio();
     try {
       audio.currentTime = 0;
-      await audio.play().toDart;
+      final result = audio.play();
+      result.toDart.catchError((Object e) {
+        debugPrint('Web audio playback error: $e');
+        return null;
+      });
     } catch (e) {
       debugPrint('Web audio playback error: $e');
     }
