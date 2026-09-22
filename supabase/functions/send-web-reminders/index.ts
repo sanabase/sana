@@ -104,8 +104,7 @@ Deno.serve(async () => {
     const { data: reminders, error: reminderError } = await supabase
       .from("reminders")
       .select("id,user_id,name,dosage,reminder_time,reminder_date,is_active")
-      .eq("is_active", true)
-      .not("user_id", "is", null);
+      .eq("is_active", true);
 
     if (reminderError) throw reminderError;
 
@@ -114,15 +113,39 @@ Deno.serve(async () => {
     let missingTimezone = 0;
 
     for (const reminder of reminders ?? []) {
-      const { data: subscriptions, error: subError } = await supabase
-        .from("push_subscriptions")
-        .select("id,user_id,endpoint,p256dh,auth,timezone")
-        .eq("user_id", reminder.user_id);
+      const reminderUserId =
+        reminder.user_id == null ? null : String(reminder.user_id);
+      const isGuestReminder = reminderUserId == null;
+
+      let subscriptions: any[] = [];
+      let subError: any = null;
+
+      if (isGuestReminder) {
+        const res = await supabase
+          .from("push_subscriptions")
+          .select("id,user_id,endpoint,p256dh,auth,timezone");
+        subscriptions = res.data ?? [];
+        subError = res.error;
+      } else {
+        const res = await supabase
+          .from("push_subscriptions")
+          .select("id,user_id,endpoint,p256dh,auth,timezone")
+          .eq("user_id", reminderUserId);
+        subscriptions = res.data ?? [];
+        subError = res.error;
+      }
 
       if (subError) {
         console.error("Subscription lookup failed", subError);
         continue;
       }
+
+      // First pass: find which subscriptions match this reminder at this minute.
+      type Matched = {
+        sub: any;
+        match: { time: string; scheduledKey: string };
+      };
+      const matched: Matched[] = [];
 
       for (const sub of subscriptions ?? []) {
         const rawTz = String(sub.timezone ?? "").trim();
@@ -130,63 +153,73 @@ Deno.serve(async () => {
           missingTimezone++;
           continue;
         }
-        const timeZone = rawTz;
-
-        const match = matchesReminder(reminder, timeZone);
+        const match = matchesReminder(reminder, rawTz);
         if (!match) {
           skipped++;
           continue;
         }
-
-        const { data: existing } = await supabase
-          .from("web_push_deliveries")
-          .select("id")
-          .eq("endpoint", sub.endpoint)
-          .eq("reminder_id", reminder.id)
-          .eq("scheduled_key", match.scheduledKey)
-          .maybeSingle();
-
-        if (existing) continue;
-
-        const payload = {
-          title: "SANA Reminder",
-          body: `${reminder.name ?? ""}${reminder.dosage ? ` — ${reminder.dosage}` : ""}`,
-          reminder_id: String(reminder.id),
-          reminder_time: match.time,
-          reminder_date: String(reminder.reminder_date ?? ""),
-        };
-
-        try {
-          await webpush.sendNotification(
-            {
-              endpoint: sub.endpoint,
-              keys: { p256dh: sub.p256dh, auth: sub.auth },
-            },
-            JSON.stringify(payload),
-            { TTL: 120 },
-          );
-
-          await supabase.from("web_push_deliveries").insert({
-            endpoint: sub.endpoint,
-            reminder_id: reminder.id,
-            scheduled_key: match.scheduledKey,
-          });
-
-          sent++;
-        } catch (pushError) {
-          console.error("Web push failed:", pushError);
-          const status =
-            pushError && typeof pushError === "object" && "statusCode" in pushError
-              ? Number((pushError as { statusCode: unknown }).statusCode)
-              : 0;
-          if (status === 404 || status === 410) {
-            await supabase
-              .from("push_subscriptions")
-              .delete()
-              .eq("endpoint", sub.endpoint);
-          }
-        }
+        matched.push({ sub, match });
       }
+
+      if (matched.length === 0) continue;
+
+      // One dedup query per distinct scheduled_key, not per subscription.
+      const scheduledKey = matched[0].match.scheduledKey;
+      const { data: existingRows } = await supabase
+        .from("web_push_deliveries")
+        .select("endpoint")
+        .eq("reminder_id", reminder.id)
+        .eq("scheduled_key", scheduledKey);
+
+      const alreadySent = new Set<string>(
+        (existingRows ?? []).map((r: { endpoint: string }) => r.endpoint),
+      );
+
+      // Second pass: send in parallel.
+      const tasks = matched
+        .filter(({ sub }) => !alreadySent.has(sub.endpoint))
+        .map(async ({ sub, match }) => {
+          const payload = {
+            title: "SANA Reminder",
+            body: `${reminder.name ?? ""}${reminder.dosage ? ` — ${reminder.dosage}` : ""}`,
+            reminder_id: String(reminder.id),
+            reminder_time: match.time,
+            reminder_date: String(reminder.reminder_date ?? ""),
+          };
+
+          try {
+            await webpush.sendNotification(
+              {
+                endpoint: sub.endpoint,
+                keys: { p256dh: sub.p256dh, auth: sub.auth },
+              },
+              JSON.stringify(payload),
+              { TTL: 120 },
+            );
+
+            await supabase.from("web_push_deliveries").insert({
+              endpoint: sub.endpoint,
+              reminder_id: reminder.id,
+              scheduled_key: match.scheduledKey,
+            });
+
+            sent++;
+          } catch (pushError) {
+            console.error("Web push failed:", pushError);
+            const status =
+              pushError && typeof pushError === "object" && "statusCode" in pushError
+                ? Number((pushError as { statusCode: unknown }).statusCode)
+                : 0;
+            if (status === 404 || status === 410) {
+              await supabase
+                .from("push_subscriptions")
+                .delete()
+                .eq("endpoint", sub.endpoint);
+            }
+          }
+        });
+
+      await Promise.all(tasks);
     }
 
     return new Response(

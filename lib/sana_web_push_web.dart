@@ -35,8 +35,9 @@ class SanaWebPush {
     try {
       if (web.Notification.permission != 'granted') {
         final r = await web.Notification.requestPermission().toDart;
-        if (r.toDart != 'granted') {
-          return 'PERMISSION_DENIED (status=${r.toDart})';
+        final perm = r.toDart;
+        if (perm != 'granted') {
+          return 'PERMISSION_DENIED (status=$perm)';
         }
       }
 
@@ -111,8 +112,6 @@ class SanaWebPush {
       debugPrint('SanaWebPush disable error: $e');
     }
   }
-  
-
 
   static String? browserTimeZone() {
     if (!kIsWeb) return null;
@@ -127,17 +126,16 @@ class SanaWebPush {
       final formatter =
           (dateTimeFormat as JSFunction).callAsConstructor<JSObject>();
 
-      final options =
-          formatter.callMethod<JSObject>('resolvedOptions'.toJS);
+      final options = formatter.callMethod<JSObject>('resolvedOptions'.toJS);
 
-      final timeZone =
-          options.getProperty<JSString?>('timeZone'.toJS);
+      final timeZone = options.getProperty<JSString?>('timeZone'.toJS);
 
       return timeZone?.toDart;
     } catch (_) {
       return null;
     }
   }
+
   static JSAny _urlB64ToUint8Array(String s) {
     final pad = '=' * ((4 - s.length % 4) % 4);
     final bytes = base64Decode(
