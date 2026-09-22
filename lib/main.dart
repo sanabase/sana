@@ -2466,8 +2466,36 @@ class _SanaInstallBannerState extends State<SanaInstallBanner> {
     final result = await SanaPwaInstall.triggerInstall();
     if (!mounted) return;
     if (result != 'OK') {
-      _showIosGuide();
+      _showChromeManualGuide();
     }
+  }
+
+  void _showChromeManualGuide() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_t('install_app')),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text('1. Tap the ⋮ menu at the top right of Chrome.'),
+              SizedBox(height: 8),
+              Text('2. Tap "Add to Home screen" or "Install app".'),
+              SizedBox(height: 8),
+              Text('3. Tap "Install" to confirm.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(_t('close')),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showIosGuide() {
@@ -6891,6 +6919,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
   Future<void> _delete(Map<String, dynamic> row) async {
     final id = row['id'];
     if (id == null) return;
+    if (id.toString().startsWith('local_')) return;
 
     final language = languageNotifier.value;
 
