@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import webpush from 'https://esm.sh/web-push@3.6.7';
+import webpush from 'https://esm.sh/web-push@3.6.7?no-dts';
 
 const SB_URL = Deno.env.get('SUPABASE_URL')!;
 const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -102,14 +102,14 @@ serve(async () => {
   }
 
 
-  const userIds = [...new Set(reminders.map((r) => r.user_id).filter(Boolean))];
+  const userIds = [...new Set(reminders.map((r: any) => r.user_id).filter(Boolean))];
   const { data: prefs } = await sb
     .from('users')
     .select('id, reminders_enabled')
     .in('id', userIds);
 
   const enabledByUser = new Map(
-    (prefs ?? []).map((u) => [u.id, u.reminders_enabled !== false]),
+    (prefs ?? []).map((u: any) => [u.id, u.reminders_enabled !== false]),
   );
 
   let sent = 0;
