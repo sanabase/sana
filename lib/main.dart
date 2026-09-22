@@ -3716,7 +3716,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ),
                                                     ),
                                                     const SizedBox(height: 16),
-                                                    SanaInstallBanner(
+                                                    _SanaInstallHelp(
                                                       language: language,
                                                     ),
                                                   ],
@@ -8636,55 +8636,41 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
                         const SizedBox(
                           height: 40,
                         ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 70,
-                                child: FilledButton(
-                                  onPressed: _taken ? null : _markTaken,
-                                  child: Text(
-                                    tr(
-                                      language,
-                                      'taken',
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 70,
+                          child: FilledButton(
+                            onPressed: _taken ? null : _markTaken,
+                            child: Text(
+                              tr(language, 'taken'),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(
-                              width: 12,
-                            ),
-                            Expanded(
-                              child: SizedBox(
-                                height: 70,
-                                child: OutlinedButton(
-                                  onPressed: _taken ? null : _closeAlarmScreen,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    side: const BorderSide(
-                                      color: Colors.white,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    tr(
-                                      language,
-                                      'close',
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 70,
+                          child: OutlinedButton(
+                            onPressed: _taken ? null : _closeAlarmScreen,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(
+                                color: Colors.white,
+                                width: 2,
                               ),
                             ),
-                          ],
+                            child: Text(
+                              tr(language, 'close'),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -10037,6 +10023,155 @@ class _AdminScreenState extends State<AdminScreen> {
                   },
                 ),
         ),
+      ),
+    );
+  }
+}
+
+class _SanaInstallHelp extends StatelessWidget {
+  final String language;
+  const _SanaInstallHelp({required this.language});
+
+  String _t(String key) {
+    const map = <String, Map<String, String>>{
+      'en': {
+        'android_title': 'Install SANA on Android',
+        'android_1': 'Tap the ⋮ menu at the top right of Chrome.',
+        'android_2': 'Tap "Install app" or "Add to Home screen".',
+        'android_3': 'Tap "Install" to confirm.',
+        'ios_title': 'Install SANA on iPhone / iPad',
+        'ios_1': 'Open SANA in Safari.',
+        'ios_2': 'Tap the Share button.',
+        'ios_3': 'Tap "Add to Home Screen".',
+        'ios_4': 'Tap "Add".',
+      },
+      'ar': {
+        'android_title': 'تثبيت SANA على Android',
+        'android_1': 'اضغط على قائمة ⋮ في أعلى يمين Chrome.',
+        'android_2': 'اضغط "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
+        'android_3': 'اضغط "تثبيت" للتأكيد.',
+        'ios_title': 'تثبيت SANA على iPhone / iPad',
+        'ios_1': 'افتح SANA في Safari.',
+        'ios_2': 'اضغط على زر المشاركة.',
+        'ios_3': 'اضغط "إضافة إلى الشاشة الرئيسية".',
+        'ios_4': 'اضغط "إضافة".',
+      },
+      'es': {
+        'android_title': 'Instalar SANA en Android',
+        'android_1': 'Toca el menú ⋮ arriba a la derecha de Chrome.',
+        'android_2':
+            'Toca "Instalar aplicación" o "Añadir a pantalla de inicio".',
+        'android_3': 'Toca "Instalar" para confirmar.',
+        'ios_title': 'Instalar SANA en iPhone / iPad',
+        'ios_1': 'Abre SANA en Safari.',
+        'ios_2': 'Toca el botón Compartir.',
+        'ios_3': 'Toca "Añadir a pantalla de inicio".',
+        'ios_4': 'Toca "Añadir".',
+      },
+      'fr': {
+        'android_title': 'Installer SANA sur Android',
+        'android_1': 'Appuyez sur le menu ⋮ en haut à droite de Chrome.',
+        'android_2':
+            'Appuyez sur "Installer l’application" ou "Ajouter à l’écran d’accueil".',
+        'android_3': 'Appuyez sur "Installer" pour confirmer.',
+        'ios_title': 'Installer SANA sur iPhone / iPad',
+        'ios_1': 'Ouvrez SANA dans Safari.',
+        'ios_2': 'Appuyez sur le bouton Partager.',
+        'ios_3': 'Appuyez sur "Sur l’écran d’accueil".',
+        'ios_4': 'Appuyez sur "Ajouter".',
+      },
+      'de': {
+        'android_title': 'SANA auf Android installieren',
+        'android_1': 'Tippen Sie oben rechts in Chrome auf das ⋮ Menü.',
+        'android_2':
+            'Tippen Sie auf "App installieren" oder "Zum Startbildschirm hinzufügen".',
+        'android_3': 'Tippen Sie auf "Installieren".',
+        'ios_title': 'SANA auf iPhone / iPad installieren',
+        'ios_1': 'Öffnen Sie SANA in Safari.',
+        'ios_2': 'Tippen Sie auf Teilen.',
+        'ios_3': 'Tippen Sie auf "Zum Home-Bildschirm".',
+        'ios_4': 'Tippen Sie auf "Hinzufügen".',
+      },
+      'tr': {
+        'android_title': 'SANA’yı Android’e yükle',
+        'android_1': 'Chrome’un sağ üstündeki ⋮ menüsüne dokunun.',
+        'android_2':
+            '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğine dokunun.',
+        'android_3': 'Onaylamak için "Yükle" düğmesine dokunun.',
+        'ios_title': 'SANA’yı iPhone / iPad’e yükle',
+        'ios_1': 'SANA’yı Safari’de açın.',
+        'ios_2': 'Paylaş düğmesine dokunun.',
+        'ios_3': '"Ana Ekrana Ekle" seçeneğine dokunun.',
+        'ios_4': '"Ekle" düğmesine dokunun.',
+      },
+      'hi': {
+        'android_title': 'Android पर SANA इंस्टॉल करें',
+        'android_1': 'Chrome के ऊपर दाईं ओर ⋮ मेनू पर टैप करें।',
+        'android_2':
+            '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" पर टैप करें।',
+        'android_3': 'पुष्टि के लिए "इंस्टॉल" पर टैप करें।',
+        'ios_title': 'iPhone / iPad पर SANA इंस्टॉल करें',
+        'ios_1': 'Safari में SANA खोलें।',
+        'ios_2': 'शेयर बटन पर टैप करें।',
+        'ios_3': '"होम स्क्रीन पर जोड़ें" पर टैप करें।',
+        'ios_4': '"जोड़ें" पर टैप करें।',
+      },
+      'zh': {
+        'android_title': '在 Android 上安装 SANA',
+        'android_1': '点击 Chrome 右上角的 ⋮ 菜单。',
+        'android_2': '点击"安装应用"或"添加到主屏幕"。',
+        'android_3': '点击"安装"以确认。',
+        'ios_title': '在 iPhone / iPad 上安装 SANA',
+        'ios_1': '在 Safari 中打开 SANA。',
+        'ios_2': '点击分享按钮。',
+        'ios_3': '点击"添加到主屏幕"。',
+        'ios_4': '点击"添加"。',
+      },
+    };
+    return map[language]?[key] ?? map['en']![key] ?? key;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final title = isIos ? _t('ios_title') : _t('android_title');
+    final steps = isIos
+        ? [_t('ios_1'), _t('ios_2'), _t('ios_3'), _t('ios_4')]
+        : [_t('android_1'), _t('android_2'), _t('android_3')];
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.teal.shade50,
+        border: Border.all(color: Colors.teal.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.install_mobile, color: Colors.teal, size: 32),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < steps.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text('${i + 1}. ${steps[i]}'),
+            ),
+        ],
       ),
     );
   }
