@@ -32,6 +32,8 @@ import 'sana_pwa_install_stub.dart'
     if (dart.library.js_interop) 'sana_pwa_install_web.dart';
 import 'sana_web_alarm_stub.dart'
     if (dart.library.js_interop) 'sana_web_alarm_web.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -2712,6 +2714,23 @@ class _HomeScreenState extends State<HomeScreen> {
           debugPrint('Web reminder startup reconciliation failed: $e');
         }
       });
+
+      try {
+        web.window.navigator.serviceWorker.addEventListener(
+          'message',
+          (web.Event event) {
+            try {
+              final msg = event as web.MessageEvent;
+              final data = msg.data;
+              if (data == null) return;
+              final map = data.dartify();
+              if (map is Map && map['type'] == 'sana-taken') {
+                SanaAlarmService.stopAlarmSound();
+              }
+            } catch (_) {}
+          }.toJS,
+        );
+      } catch (_) {}
     }
   }
 
