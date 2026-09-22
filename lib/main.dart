@@ -2600,14 +2600,42 @@ class _SanaAppState extends State<SanaApp> {
           'popstate',
           (web.Event _) {
             final id = Uri.base.queryParameters['reminder'];
-            if (mounted) {
-              setState(() {
-                _reminderId = (id != null && id.isNotEmpty) ? id : null;
-              });
+            if (!mounted) return;
+            if (id != null && id.isNotEmpty) {
+              final nav = navigatorKey.currentState;
+              if (nav != null) {
+                nav.push(
+                  MaterialPageRoute(
+                    builder: (_) => SanaAlarmScreen(
+                      reminderId: id,
+                      notificationId: 0,
+                      daily: false,
+                    ),
+                  ),
+                );
+              }
             }
           }.toJS,
         );
       } catch (_) {}
+
+      if (_reminderId != null && _reminderId!.isNotEmpty) {
+        final id = _reminderId!;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final nav = navigatorKey.currentState;
+          if (nav != null) {
+            nav.push(
+              MaterialPageRoute(
+                builder: (_) => SanaAlarmScreen(
+                  reminderId: id,
+                  notificationId: 0,
+                  daily: false,
+                ),
+              ),
+            );
+          }
+        });
+      }
     }
   }
 
@@ -2634,13 +2662,7 @@ class _SanaAppState extends State<SanaApp> {
         home: Directionality(
           textDirection:
               language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-          child: (_reminderId != null && _reminderId!.isNotEmpty)
-              ? SanaAlarmScreen(
-                  reminderId: _reminderId!,
-                  notificationId: 0,
-                  daily: false,
-                )
-              : const HomeScreen(),
+          child: const HomeScreen(),
         ),
       ),
     );
@@ -2782,8 +2804,29 @@ class _HomeScreenState extends State<HomeScreen> {
               final data = msg.data;
               if (data == null) return;
               final map = data.dartify();
-              if (map is Map && map['type'] == 'sana-taken') {
+              if (map is! Map) return;
+
+              final type = map['type']?.toString() ?? '';
+              final rid = map['reminder_id']?.toString() ?? '';
+
+              if (type == 'sana-taken') {
                 SanaAlarmService.stopAlarmSound();
+                return;
+              }
+
+              if (type == 'sana-open-reminder' && rid.isNotEmpty) {
+                final nav = navigatorKey.currentState;
+                if (nav == null) return;
+                SanaAlarmService.stopAlarmSound();
+                nav.push(
+                  MaterialPageRoute(
+                    builder: (_) => SanaAlarmScreen(
+                      reminderId: rid,
+                      notificationId: 0,
+                      daily: false,
+                    ),
+                  ),
+                );
               }
             } catch (_) {}
           }.toJS,
@@ -8476,11 +8519,6 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
       return;
     }
 
-    /*
-     * Only pop the alarm screen.
-     *
-     * DO NOT popUntil(isFirst).
-     */
     final nav = Navigator.of(
       context,
       rootNavigator: true,
@@ -8488,15 +8526,15 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
 
     if (nav.canPop()) {
       nav.pop();
+      return;
     }
+
+    nav.pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
   }
 
   Future<void> _closeAlarmScreen() async {
-    /*
-     * Closing is NOT the same as TAKEN.
-     *
-     * Do not cancel tomorrow's daily alarm.
-     */
     await SanaAlarmService.stopAlarmSound(
       notificationId: widget.notificationId,
     );
@@ -8512,7 +8550,12 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
 
     if (nav.canPop()) {
       nav.pop();
+      return;
     }
+
+    nav.pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
   }
 
   @override
