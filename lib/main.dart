@@ -28,6 +28,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'sana_web_push_stub.dart'
     if (dart.library.js_interop) 'sana_web_push_web.dart';
+import 'sana_web_alarm_stub.dart'
+    if (dart.library.js_interop) 'sana_web_alarm_web.dart';
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -387,7 +389,12 @@ class SanaAlarmService {
   }
 
   static Future<void> startAlarmSound() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb) {
+      await SanaWebAlarm.startAlarmSound();
+      return;
+    }
+
+    if (defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
 
@@ -405,7 +412,12 @@ class SanaAlarmService {
   static Future<void> stopAlarmSound({
     int? notificationId,
   }) async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb) {
+      await SanaWebAlarm.stopAlarmSound();
+      return;
+    }
+
+    if (defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
 
@@ -609,6 +621,7 @@ class SanaAlarmService {
     }
 
     if (kIsWeb) {
+      await SanaWebAlarm.scheduleReminder(row);
       return;
     }
 
@@ -821,6 +834,7 @@ class SanaAlarmService {
     String reminderId,
   ) async {
     if (kIsWeb) {
+      await SanaWebAlarm.cancelReminder(reminderId);
       return;
     }
 
@@ -2328,6 +2342,15 @@ void main() async {
   }
 
   runApp(SanaApp(pendingReminderId: pendingReminderId));
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (!kIsWeb) return;
+
+    try {
+      await _reconcileAllReminderAlarms();
+    } catch (e) {
+      debugPrint('Web reminder startup reconciliation failed: $e');
+    }
+  });
 }
 
 // SANA DIAG PANEL
@@ -2759,12 +2782,17 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       if (kIsWeb) {
         if (value) {
+          await SanaWebAlarm.unlockAudio();
+
           final result = await SanaWebPush.enableVerbose(_client);
           if (result != 'OK') {
             throw Exception('Web Push: $result');
           }
+
+          await _reconcileAllReminderAlarms();
         } else {
           await SanaWebPush.disable(_client);
+          await SanaWebAlarm.cancelAllReminders();
         }
       }
 
