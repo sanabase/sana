@@ -2342,15 +2342,7 @@ void main() async {
   }
 
   runApp(SanaApp(pendingReminderId: pendingReminderId));
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-    if (!kIsWeb) return;
-
-    try {
-      await _reconcileAllReminderAlarms();
-    } catch (e) {
-      debugPrint('Web reminder startup reconciliation failed: $e');
-    }
-  });
+  
 }
 
 // SANA DIAG PANEL
@@ -2530,6 +2522,16 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadSession();
     });
     _loadSession();
+
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          await _reconcileAllReminderAlarms();
+        } catch (e) {
+          debugPrint('Web reminder startup reconciliation failed: $e');
+        }
+      });
+    }
   }
 
   Future<void> _loadSession() async {
