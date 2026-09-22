@@ -1054,8 +1054,7 @@ const Map<String, Map<String, String>> _translations = {
     'manual_content':
         '1. Securely manage your health records on the web, and access your data any time, anywhere and from any device.\n2. Add and track daily prescriptions and dosages in Medications.\n3. Keep your doctor contact info and specialty notes handy.\n4. Save your preferred pharmacies with phone and location.\n5. Set multi-time dosage reminders with alerts.\n6. Store medical documents and lab reports with photos.\n7. Keep front and back photos of your insurance cards.\n8. Select and share records with your doctors anytime.\n9. Install the application on your device to get all features and activate medication alarms.\n10. Get your own private, dedicated copy that is invisible to anyone else.',
     'install_sana': 'Install SANA',
-    'pwa_install_hint':
-        'Install SANA on your phone for reliable reminders.',
+    'pwa_install_hint': 'Install SANA on your phone for reliable reminders.',
     'pwa_step_1': 'Tap the Share button at the bottom of Safari.',
     'pwa_step_2': 'Scroll and tap "Add to Home Screen".',
     'pwa_step_3': 'Tap "Add" at the top right.',
@@ -1224,8 +1223,7 @@ const Map<String, Map<String, String>> _translations = {
     'manual_content':
         '1. أدر سجلاتك الصحية بأمان عبر الويب، وتمكّن من الوصول إلى بياناتك في أي وقت ومن أي مكان ومن أي جهاز.\n2. إضافة وتتبع الأدوية اليومية والجرعات.\n3. الاحتفاظ بأرقام الأطباء وتخصصاتهم.\n4. حفظ الصيدليات المفضلة مع العناوين والهواتف.\n5. تعيين تذكيرات بمواعيد تناول الدواء مع التنبيهات.\n6. حفظ المستندات والتقارير الطبية مع الصور.\n7. حفظ صور بطاقات التأمين من الأمام والخلف.\n8. تحديد ومشاركة السجلات مع أطبائك في أي وقت.\n9. ثبّت التطبيق على جهازك للحصول على جميع الميزات وتفعيل منبهات الأدوية.\n10. احصل على نسختك الخاصة والمخصصة، والتي لا يمكن لأي شخص آخر رؤيتها.',
     'install_sana': 'تثبيت SANA',
-    'pwa_install_hint':
-        'ثبّت SANA على هاتفك للحصول على تذكيرات موثوقة.',
+    'pwa_install_hint': 'ثبّت SANA على هاتفك للحصول على تذكيرات موثوقة.',
     'pwa_step_1': 'اضغط على زر المشاركة في أسفل Safari.',
     'pwa_step_2': 'مرّر للأسفل واضغط "إضافة إلى الشاشة الرئيسية".',
     'pwa_step_3': 'اضغط "إضافة" في الأعلى.',
@@ -2383,7 +2381,6 @@ void main() async {
   }
 
   runApp(SanaApp(pendingReminderId: pendingReminderId));
-  
 }
 
 // SANA DIAG PANEL
@@ -3582,7 +3579,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const LanguageButtons(),
                         const SizedBox(height: 12),
-                        SanaInstallBanner(language: language),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -3643,25 +3639,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ),
                                                     ),
                                                     const SizedBox(height: 16),
-                                                    ListTile(
-                                                      leading: const Icon(
-                                                          Icons.install_mobile,
-                                                          color: Colors.teal),
-                                                      title: Text(
-                                                        tr(language,
-                                                            'install_sana'),
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors.teal,
-                                                        ),
-                                                      ),
-                                                      trailing: const Icon(
-                                                          Icons.chevron_right,
-                                                          color: Colors.teal),
-                                                      onTap:
-                                                          _showAdaptiveInstallDialog,
+                                                    SanaInstallBanner(
+                                                      language: language,
                                                     ),
                                                   ],
                                                 ),
