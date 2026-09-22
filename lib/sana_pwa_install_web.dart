@@ -109,4 +109,14 @@ class SanaPwaInstall {
       return 'ERROR: $e';
     }
   }
+
+  static Future<bool> canInstallNow2() async {
+    if (!kIsWeb) return false;
+    try {
+      final prompt = globalContext.getProperty<JSAny?>('__sanaPwaPrompt'.toJS);
+      return prompt != null;
+    } catch (_) {
+      return false;
+    }
+  }
 }
