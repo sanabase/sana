@@ -103,7 +103,7 @@ Deno.serve(async () => {
   try {
     const { data: reminders, error: reminderError } = await supabase
       .from("reminders")
-      .select("id,user_id,name,dosage,reminder_time,reminder_date,is_active")
+      .select("id,user_id,name,dosage,reminder_time,reminder_date,is_active,photo_base64")
       .eq("is_active", true);
 
     if (reminderError) throw reminderError;
@@ -179,13 +179,20 @@ Deno.serve(async () => {
       const tasks = matched
         .filter(({ sub }) => !alreadySent.has(sub.endpoint))
         .map(async ({ sub, match }) => {
-          const payload = {
-            title: "SANA Reminder",
-            body: `${reminder.name ?? ""}${reminder.dosage ? ` — ${reminder.dosage}` : ""}`,
-            reminder_id: String(reminder.id),
-            reminder_time: match.time,
-            reminder_date: String(reminder.reminder_date ?? ""),
-          };
+                  const payload = {
+          title: "SANA Reminder",
+          body: `${reminder.name ?? ""}${reminder.dosage ? ` — ${reminder.dosage}` : ""} — Time to take your medication`,
+          reminder_id: String(reminder.id),
+          reminder_name: String(reminder.name ?? ""),
+          reminder_dosage: String(reminder.dosage ?? ""),
+          reminder_time: match.time,
+          reminder_date: String(reminder.reminder_date ?? ""),
+          reminder_photo: String(reminder.photo_base64 ?? ""),
+          reminder_language: String(
+            (reminder as { user_language?: unknown }).user_language ?? "en",
+          ),
+          actions: ["taken"],
+        };
 
           try {
             await webpush.sendNotification(
