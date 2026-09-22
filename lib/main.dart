@@ -26,14 +26,14 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 import 'sana_web_push_stub.dart'
     if (dart.library.js_interop) 'sana_web_push_web.dart';
 import 'sana_pwa_install_stub.dart'
     if (dart.library.js_interop) 'sana_pwa_install_web.dart';
 import 'sana_web_alarm_stub.dart'
     if (dart.library.js_interop) 'sana_web_alarm_web.dart';
-import 'dart:js_interop';
-import 'package:web/web.dart' as web;
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -2501,7 +2501,7 @@ class _SanaInstallBannerState extends State<SanaInstallBanner> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const SizedBox.shrink();
-    if (_mode == 'installed' || _mode == 'none') {
+    if (_mode == 'installed') {
       return const SizedBox.shrink();
     }
 
@@ -2550,9 +2550,39 @@ class _SanaInstallBannerState extends State<SanaInstallBanner> {
   }
 }
 
-class SanaApp extends StatelessWidget {
+class SanaApp extends StatefulWidget {
   final String? pendingReminderId;
   const SanaApp({super.key, this.pendingReminderId});
+
+  @override
+  State<SanaApp> createState() => _SanaAppState();
+}
+
+class _SanaAppState extends State<SanaApp> {
+  String? _reminderId;
+
+  @override
+  void initState() {
+    super.initState();
+    _reminderId = widget.pendingReminderId;
+
+    if (kIsWeb) {
+      try {
+        web.window.addEventListener(
+          'popstate',
+          (web.Event _) {
+            final id = Uri.base.queryParameters['reminder'];
+            if (mounted) {
+              setState(() {
+                _reminderId = (id != null && id.isNotEmpty) ? id : null;
+              });
+            }
+          }.toJS,
+        );
+      } catch (_) {}
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
@@ -2576,9 +2606,9 @@ class SanaApp extends StatelessWidget {
         home: Directionality(
           textDirection:
               language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-          child: (pendingReminderId != null && pendingReminderId!.isNotEmpty)
+          child: (_reminderId != null && _reminderId!.isNotEmpty)
               ? SanaAlarmScreen(
-                  reminderId: pendingReminderId!,
+                  reminderId: _reminderId!,
                   notificationId: 0,
                   daily: false,
                 )
