@@ -37,8 +37,19 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>sana</title>
+  <title>SANA</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      window.__sanaPwaPrompt = e;
+    });
+    window.addEventListener("appinstalled", function () {
+      window.__sanaPwaPrompt = null;
+      window.__sanaPwaInstalled = true;
+    });
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
