@@ -1,4 +1,4 @@
-﻿// 24==========================================
+// 24==========================================
 // SANA - COMPLETE WORKING CODE v20.10 (FIXED ONLY)
 // FIXED: Tap payment, guest_id removed, Namespace, reminder_date
 // YOUR ORIGINAL CODE PRESERVED
@@ -6327,7 +6327,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
         case 'medications':
           cols = 'id, user_id, guest_id, name, dosage, reminder_time, '
               'reminder_date, reminder_schedule_type, photo_url, '
-              'ringtone_path, notes';
+              'photo_base64, ringtone_path, notes';
           break;
         case 'reminders':
           cols = 'id, user_id, guest_id, medication_id, name, dosage, '
@@ -6638,8 +6638,12 @@ class _RecordListScreenState extends State<RecordListScreen> {
             result['reminder_date'].toString().trim();
       }
 
-      // Medication photo upload is now performed in the background block
-      // below, so the Save button returns immediately.
+      // Keep the original image data in the row so the medication thumbnail
+      // works across the shared guest pool and across devices. Storage is
+      // still uploaded as an additional copy for existing behavior.
+      if (photo != null && photo.toString().trim().isNotEmpty) {
+        cleanPayload['photo_base64'] = photo.toString().trim();
+      }
     }
 
     // (1) Optimistic local row so the UI updates immediately.
@@ -6797,20 +6801,20 @@ class _RecordListScreenState extends State<RecordListScreen> {
       }
     });
 
-    // Only Reminders keep the save Future tracked.
-    // All other record types retain the existing detached behavior.
+    // Wait for every record save to finish before leaving this screen.
+    // The previous detached write could still be uploading/inserting when
+    // the user refreshed or navigated away, so the next load saw no row.
     if (_table == 'reminders') {
       _reminderSaveInFlight = saveFuture;
+    }
 
-      unawaited(
-        saveFuture.whenComplete(() {
-          if (identical(_reminderSaveInFlight, saveFuture)) {
-            _reminderSaveInFlight = null;
-          }
-        }),
-      );
-    } else {
-      unawaited(saveFuture);
+    try {
+      await saveFuture;
+    } finally {
+      if (_table == 'reminders' &&
+          identical(_reminderSaveInFlight, saveFuture)) {
+        _reminderSaveInFlight = null;
+      }
     }
   }
 
@@ -7481,13 +7485,51 @@ class _RecordListScreenState extends State<RecordListScreen> {
                                               Padding(
                                                 padding: const EdgeInsets.only(
                                                     right: 12),
-                                                child: SignedImage(
-                                                  path: row['photo_url']
-                                                      ?.toString(),
-                                                  height: 50,
-                                                  width: 50,
-                                                  fit: BoxFit.cover,
-                                                ),
+                                                child: (() {
+                                                  final base64Photo =
+                                                      row['photo_base64']
+                                                          ?.toString()
+                                                          .trim();
+                                                  final photoPath =
+                                                      row['photo_url']
+                                                          ?.toString()
+                                                          .trim();
+
+                                                  if (base64Photo != null &&
+                                                      base64Photo.isNotEmpty) {
+                                                    return ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(6),
+                                                      child: DisplayImage(
+                                                        base64String:
+                                                            base64Photo,
+                                                        height: 50,
+                                                        width: 50,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  if (photoPath != null &&
+                                                      photoPath.isNotEmpty) {
+                                                    return ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(6),
+                                                      child: SignedImage(
+                                                        path: photoPath,
+                                                        height: 50,
+                                                        width: 50,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  return const Icon(
+                                                    Icons.medication,
+                                                    size: 42,
+                                                    color: Colors.teal,
+                                                  );
+                                                })(),
                                               ),
                                             if (widget.type == 'documents')
                                               Padding(
