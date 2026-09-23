@@ -6232,6 +6232,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
   List<Map<String, dynamic>> _rows = [];
   List<Map<String, dynamic>> _medicationsList = [];
   bool _loading = true;
+  Future<void>? _reminderSaveInFlight;
   final _formKey = GlobalKey<FormState>();
 
   // Insurance card variables - using base64 only (no File for web)
@@ -6296,6 +6297,19 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
   Future<void> _load() async {
     if (!mounted) return;
+
+    // Reminder-only: wait for a save that is still uploading/inserting.
+    // This prevents an immediate refresh from querying Supabase before
+    // the Reminder insert has completed.
+    if (_table == 'reminders') {
+      final pendingSave = _reminderSaveInFlight;
+      if (pendingSave != null) {
+        try {
+          await pendingSave;
+        } catch (_) {}
+      }
+      if (!mounted) return;
+    }
 
     // (1) Show SanaStore cache immediately if present.
     final cached = SanaStore.instance.rows(_table);
@@ -6643,7 +6657,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
     // (2) Fire the Supabase write (and any photo upload) in the background.
     //     _saveRecord returns immediately after the setState above.
-    unawaited(Future(() async {
+    final saveFuture = Future(() async {
       // Track the uploaded Storage path OUTSIDE the try so the catch can
       // delete an orphaned file if the Supabase insert fails after upload.
       String? uploadedPhotoPath;
@@ -6781,7 +6795,23 @@ class _RecordListScreenState extends State<RecordListScreen> {
           );
         }
       }
-    }));
+    });
+
+    // Only Reminders keep the save Future tracked.
+    // All other record types retain the existing detached behavior.
+    if (_table == 'reminders') {
+      _reminderSaveInFlight = saveFuture;
+
+      unawaited(
+        saveFuture.whenComplete(() {
+          if (identical(_reminderSaveInFlight, saveFuture)) {
+            _reminderSaveInFlight = null;
+          }
+        }),
+      );
+    } else {
+      unawaited(saveFuture);
+    }
   }
 
   // FIXED: Document photo upload - uses base64 only (no File for web)
@@ -10262,6 +10292,4 @@ class _SanaInstallHelp extends StatelessWidget {
     );
   }
 }
-
-
 
