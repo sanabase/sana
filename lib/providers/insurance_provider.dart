@@ -1,3 +1,4 @@
+﻿import '../services/guest_identity_service.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -188,7 +189,7 @@ class InsuranceProvider extends ChangeNotifier {
       final cardMap = <String, dynamic>{
         'id': cardId,
         'user_id': user.isAnonymous ? null : user.id,
-        'guest_id': user.isAnonymous ? user.id : null,
+        'guest_id': user.isAnonymous ? GuestIdentityService.sharedGuestId : null,
         'provider_name': card.providerName,
         'policy_number': card.policyNumber,
         'front_image_url': card.frontImageUrl,
@@ -304,3 +305,5 @@ class InsuranceProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+
+

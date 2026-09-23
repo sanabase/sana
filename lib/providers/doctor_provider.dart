@@ -1,4 +1,5 @@
-import 'dart:async';
+﻿import 'dart:async';
+import '../services/guest_identity_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -185,7 +186,7 @@ class DoctorProvider extends ChangeNotifier {
 
       if (user.isAnonymous) {
         doctorMap['user_id'] = null;
-        doctorMap['guest_id'] = user.id;
+        doctorMap['guest_id'] = GuestIdentityService.sharedGuestId;
       } else {
         doctorMap['user_id'] = user.id;
         doctorMap['guest_id'] = null;
@@ -229,7 +230,7 @@ class DoctorProvider extends ChangeNotifier {
 
       if (user.isAnonymous) {
         doctorMap['user_id'] = null;
-        doctorMap['guest_id'] = user.id;
+        doctorMap['guest_id'] = GuestIdentityService.sharedGuestId;
       } else {
         doctorMap['user_id'] = user.id;
         doctorMap['guest_id'] = null;
@@ -302,3 +303,5 @@ class DoctorProvider extends ChangeNotifier {
 
 
 }
+
+

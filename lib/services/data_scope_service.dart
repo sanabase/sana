@@ -1,4 +1,5 @@
-﻿import 'package:supabase_flutter/supabase_flutter.dart';
+import 'guest_identity_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum DataScopeMode {
   guest,
@@ -42,16 +43,19 @@ class DataScopeService {
       throw StateError('No Supabase Auth session exists.');
     }
 
-    return user.id;
+    return user.isAnonymous
+        ? GuestIdentityService.sharedGuestId
+        : user.id;
   }
 
   static Future<String?> guestId() async {
     final user = _db.auth.currentUser;
+
     if (user == null || !user.isAnonymous) {
       return null;
     }
 
-    return user.id;
+    return GuestIdentityService.sharedGuestId;
   }
 
   static Future<Map<String, dynamic>> scope() async {
@@ -68,7 +72,8 @@ class DataScopeService {
               ? DataScopeMode.admin.name
               : DataScopeMode.activeUser.name,
       'user_id': user.isAnonymous ? null : user.id,
-      'guest_id': user.isAnonymous ? user.id : null,
+      'guest_id':
+          user.isAnonymous ? GuestIdentityService.sharedGuestId : null,
     };
   }
 

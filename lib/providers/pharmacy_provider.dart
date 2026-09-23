@@ -1,4 +1,5 @@
-import 'dart:async';
+﻿import 'dart:async';
+import '../services/guest_identity_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/pharmacy.dart';
@@ -90,7 +91,7 @@ class PharmacyProvider extends ChangeNotifier {
 
       if (user.isAnonymous) {
         pharmMap['user_id'] = null;
-        pharmMap['guest_id'] = user.id;
+        pharmMap['guest_id'] = GuestIdentityService.sharedGuestId;
       } else {
         pharmMap['user_id'] = user.id;
         pharmMap['guest_id'] = null;
@@ -132,3 +133,5 @@ class PharmacyProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+
+

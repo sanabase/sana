@@ -1,4 +1,5 @@
-﻿import 'dart:convert';
+﻿import '../services/guest_identity_service.dart';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -279,7 +280,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
       throw StateError('No Supabase Auth session exists.');
     }
     cleanPayload['user_id'] = user.isAnonymous ? null : user.id;
-    cleanPayload['guest_id'] = user.isAnonymous ? user.id : null;
+    cleanPayload['guest_id'] = user.isAnonymous ? GuestIdentityService.sharedGuestId : null;
 
     if (_table == 'medications') {
       cleanPayload['quantity'] =
@@ -341,7 +342,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
       var query = _client.from(_table).delete().eq('id', id);
 
       if (user.isAnonymous) {
-        query = query.eq('guest_id', user.id);
+        query = query.eq('guest_id', GuestIdentityService.sharedGuestId);
       } else {
         query = query.eq('user_id', user.id);
       }
@@ -551,3 +552,5 @@ class _RecordListScreenState extends State<RecordListScreen> {
     );
   }
 }
+
+
