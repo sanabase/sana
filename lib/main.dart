@@ -1,4 +1,4 @@
-// 24==========================================
+﻿// 24==========================================
 // SANA - COMPLETE WORKING CODE v20.10 (FIXED ONLY)
 // FIXED: Tap payment, guest_id removed, Namespace, reminder_date
 // YOUR ORIGINAL CODE PRESERVED
@@ -28,8 +28,8 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'dart:js_interop';
-import 'package:web/web.dart' as web;
+import 'sana_web_events_stub.dart'
+    if (dart.library.js_interop) 'sana_web_events_web.dart';
 import 'sana_web_push_stub.dart'
     if (dart.library.js_interop) 'sana_web_push_web.dart';
 import 'sana_pwa_install_stub.dart'
@@ -162,7 +162,12 @@ class SanaAlarmService {
 
       await androidPlugin?.requestNotificationsPermission();
 
-      await androidPlugin?.requestFullScreenIntentPermission();
+      final fullScreenPermission =
+          await androidPlugin?.requestFullScreenIntentPermission();
+
+      debugPrint(
+        'SANA FULL SCREEN INTENT PERMISSION: $fullScreenPermission',
+      );
     }
   }
 
@@ -200,7 +205,12 @@ class SanaAlarmService {
         final navigator = navigatorKey.currentState;
 
         if (navigator == null) {
-          _flushPendingNativeAlarm();
+          Future<void>.delayed(
+            const Duration(
+              milliseconds: 100,
+            ),
+            _flushPendingNativeAlarm,
+          );
           return;
         }
 
@@ -2629,29 +2639,23 @@ class _SanaAppState extends State<SanaApp> {
     _reminderId = widget.pendingReminderId;
 
     if (kIsWeb) {
-      try {
-        web.window.addEventListener(
-          'popstate',
-          (web.Event _) {
-            final id = Uri.base.queryParameters['reminder'];
-            if (!mounted) return;
-            if (id != null && id.isNotEmpty) {
-              final nav = navigatorKey.currentState;
-              if (nav != null) {
-                nav.push(
-                  MaterialPageRoute(
-                    builder: (_) => SanaAlarmScreen(
-                      reminderId: id,
-                      notificationId: 0,
-                      daily: false,
-                    ),
-                  ),
-                );
-              }
-            }
-          }.toJS,
-        );
-      } catch (_) {}
+      SanaWebEvents.installPopStateListener((id) {
+        if (!mounted) return;
+        if (id != null && id.isNotEmpty) {
+          final nav = navigatorKey.currentState;
+          if (nav != null) {
+            nav.push(
+              MaterialPageRoute(
+                builder: (_) => SanaAlarmScreen(
+                  reminderId: id,
+                  notificationId: 0,
+                  daily: false,
+                ),
+              ),
+            );
+          }
+        }
+      });
 
       if (_reminderId != null && _reminderId!.isNotEmpty) {
         final id = _reminderId!;
@@ -2702,7 +2706,6 @@ class _SanaAppState extends State<SanaApp> {
     );
   }
 }
-
 // ============================================
 // CHAT SCREEN
 // ============================================
@@ -2829,43 +2832,32 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       });
 
-      try {
-        web.window.navigator.serviceWorker.addEventListener(
-          'message',
-          (web.Event event) {
-            try {
-              final msg = event as web.MessageEvent;
-              final data = msg.data;
-              if (data == null) return;
-              final map = data.dartify();
-              if (map is! Map) return;
+      SanaWebEvents.installServiceWorkerMessageListener((map) {
+  try {
+    final type = map['type']?.toString() ?? '';
+    final rid = map['reminder_id']?.toString() ?? '';
 
-              final type = map['type']?.toString() ?? '';
-              final rid = map['reminder_id']?.toString() ?? '';
+    if (type == 'sana-taken') {
+      SanaAlarmService.stopAlarmSound();
+      return;
+    }
 
-              if (type == 'sana-taken') {
-                SanaAlarmService.stopAlarmSound();
-                return;
-              }
-
-              if (type == 'sana-open-reminder' && rid.isNotEmpty) {
-                final nav = navigatorKey.currentState;
-                if (nav == null) return;
-                SanaAlarmService.stopAlarmSound();
-                nav.push(
-                  MaterialPageRoute(
-                    builder: (_) => SanaAlarmScreen(
-                      reminderId: rid,
-                      notificationId: 0,
-                      daily: false,
-                    ),
-                  ),
-                );
-              }
-            } catch (_) {}
-          }.toJS,
-        );
-      } catch (_) {}
+    if (type == 'sana-open-reminder' && rid.isNotEmpty) {
+      final nav = navigatorKey.currentState;
+      if (nav == null) return;
+      SanaAlarmService.stopAlarmSound();
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => SanaAlarmScreen(
+            reminderId: rid,
+            notificationId: 0,
+            daily: false,
+          ),
+        ),
+      );
+    }
+  } catch (_) {}
+});
     }
   }
 
