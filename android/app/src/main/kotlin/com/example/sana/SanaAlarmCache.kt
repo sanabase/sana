@@ -325,10 +325,35 @@ object SanaAlarmCache {
                     },
                     photoBase64 = null
                 )
-            } catch (_: Exception) {
+                        } catch (_: Exception) {
                 // Keep going so one bad legacy record
                 // cannot prevent the other alarms from migrating.
             }
         }
+    }
+
+    @Synchronized
+    fun clearAll(
+        context: Context
+    ) {
+        val directory = directory(context)
+
+        directory.listFiles()
+            ?.filter {
+                it.isFile &&
+                    it.name.startsWith(FILE_PREFIX) &&
+                    it.name.endsWith(FILE_SUFFIX)
+            }
+            ?.forEach {
+                it.delete()
+            }
+
+        context.getSharedPreferences(
+            LEGACY_PREFS,
+            Context.MODE_PRIVATE
+        )
+            .edit()
+            .remove(LEGACY_KEY)
+            .apply()
     }
 }
