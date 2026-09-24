@@ -403,15 +403,23 @@ class SanaAlarmService {
 
       await startAlarmSound();
 
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (_) => SanaAlarmScreen(
-            reminderId: id,
-            notificationId: response.id ?? 0,
-            daily: daily,
-          ),
-        ),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final navigator = navigatorKey.currentState;
+
+        if (navigator == null) {
+          return;
+        }
+
+        navigator.push(
+            MaterialPageRoute(
+              builder: (_) => SanaAlarmScreen(
+                reminderId: id,
+                notificationId: response.id ?? 0,
+                daily: daily,
+              ),
+            ),
+          );
+        });
     } catch (e) {
       debugPrint(
         'Alarm response error: $e',
@@ -2743,9 +2751,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final ownerKey = user == null
           ? 'none'
           : user.isAnonymous
-              ? 'guest:${user.id}'
+              ? 'guest:${GuestIdentityService.sharedGuestId}'
               : 'user:${user.id}';
-
       if (_lastNativeAlarmOwnerKey != ownerKey) {
         await SanaAlarmService.clearAllNativeAlarms();
         _lastNativeAlarmOwnerKey = ownerKey;

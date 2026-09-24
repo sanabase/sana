@@ -109301,7 +109301,7 @@ l=m!=null&&!m.dx
 a4=m
 k=(a4==null?null:a4.dx)===!0?"00000000-0000-0000-0000-000000000001":null
 if(m==null)a5="none"
-else a5=m.dx?"guest:"+m.a:"user:"+m.a
+else a5=m.dx?"guest:00000000-0000-0000-0000-000000000001":"user:"+m.a
 j=a5
 a4=n.x
 a6=j
