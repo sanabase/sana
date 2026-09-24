@@ -127,7 +127,18 @@ class SanaAlarmSoundService : Service() {
                 uri
             )
 
-            isLooping = true
+            isLooping = false
+
+            setOnCompletionListener { completedPlayer ->
+                try {
+                    completedPlayer.seekTo(0)
+
+                    if (player === completedPlayer) {
+                        completedPlayer.start()
+                    }
+                } catch (_: Exception) {
+                }
+            }
 
             prepare()
             start()

@@ -312,6 +312,22 @@ class MainActivity : FlutterActivity() {
                     )
                 }
 
+                "clearAllNativeAlarms" -> {
+                    SanaAlarmReceiver.cancelAll(this)
+
+                    val serviceIntent =
+                        Intent(
+                            this,
+                            SanaAlarmSoundService::class.java
+                        ).setAction(
+                            SanaAlarmSoundService.ACTION_STOP
+                        )
+
+                    startService(serviceIntent)
+
+                    result.success(null)
+                }
+
                 "dismissNativeAlarmNotification" -> {
 
                     val notificationId =

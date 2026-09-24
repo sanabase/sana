@@ -1,9 +1,6 @@
 ﻿import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GuestIdentityService {
-  static const String sharedGuestId =
-      '00000000-0000-0000-0000-000000000001';
-
   static SupabaseClient get _client => Supabase.instance.client;
 
   static User? get currentUser => _client.auth.currentUser;
@@ -13,6 +10,16 @@ class GuestIdentityService {
   static bool get isPermanentUser =>
       currentUser != null && currentUser!.isAnonymous == false;
 
+  static String get sharedGuestId {
+    final user = currentUser;
+
+    if (user == null || !user.isAnonymous) {
+      throw StateError('No Supabase anonymous guest session exists.');
+    }
+
+    return user.id;
+  }
+
   static Future<String?> get sharedGuestIdForCurrentUser async {
     final user = currentUser;
 
@@ -20,7 +27,7 @@ class GuestIdentityService {
       return null;
     }
 
-    return sharedGuestId;
+    return user.id;
   }
 
   static Future<String> getGuestId() async {
@@ -36,7 +43,7 @@ class GuestIdentityService {
       );
     }
 
-    return sharedGuestId;
+    return user.id;
   }
 
   static Future<String> getGuestUserId() => getGuestId();

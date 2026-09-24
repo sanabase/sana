@@ -350,6 +350,59 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             }
         }
 
+        fun cancelAll(
+            context: Context
+        ) {
+
+            val alarmManager =
+                context.getSystemService(
+                    Context.ALARM_SERVICE
+                ) as AlarmManager
+
+            val entries =
+                SanaAlarmCache.all(context)
+
+            for (entry in entries) {
+
+                val intent =
+                    Intent(
+                        context,
+                        SanaAlarmReceiver::class.java
+                    ).apply {
+                        action = ACTION_ALARM
+                    }
+
+                val pendingIntent =
+                    PendingIntent.getBroadcast(
+                        context,
+                        entry.notificationId,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or
+                            PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                alarmManager.cancel(
+                    pendingIntent
+                )
+
+                pendingIntent.cancel()
+
+                val manager =
+                    context.getSystemService(
+                        Context.NOTIFICATION_SERVICE
+                    ) as NotificationManager
+
+                manager.cancel(
+                    entry.notificationId
+                )
+
+                SanaAlarmCache.remove(
+                    context,
+                    entry.notificationId
+                )
+            }
+        }
+
         fun rescheduleAll(
             context: Context
         ) {
