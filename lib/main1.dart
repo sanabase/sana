@@ -1,4 +1,4 @@
-﻿// 24==========================================
+// 24==========================================
 // SANA - COMPLETE WORKING CODE v20.10 (FIXED ONLY)
 // FIXED: Tap payment, guest_id removed, Namespace, reminder_date
 // YOUR ORIGINAL CODE PRESERVED
@@ -403,15 +403,23 @@ class SanaAlarmService {
 
       await startAlarmSound();
 
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (_) => SanaAlarmScreen(
-            reminderId: id,
-            notificationId: response.id ?? 0,
-            daily: daily,
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final navigator = navigatorKey.currentState;
+
+        if (navigator == null) {
+          return;
+        }
+
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => SanaAlarmScreen(
+              reminderId: id,
+              notificationId: response.id ?? 0,
+              daily: daily,
+            ),
           ),
-        ),
-      );
+        );
+      });
     } catch (e) {
       debugPrint(
         'Alarm response error: $e',
@@ -2394,7 +2402,7 @@ class _SanaInstallBannerState extends State<SanaInstallBanner> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text('1. Tap the ⁺ menu at the top right of Chrome.'),
+              Text('1. Tap the ? menu at the top right of Chrome.'),
               SizedBox(height: 8),
               Text('2. Tap "Add to Home screen" or "Install app".'),
               SizedBox(height: 8),
@@ -2737,14 +2745,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final user = _client.auth.currentUser;
       final isRealUser = user != null && user.isAnonymous == false;
 
-      final guestId = user?.isAnonymous == true ? user!.id : null;
+      final guestId =
+          user?.isAnonymous == true ? GuestIdentityService.sharedGuestId : null;
 
       final ownerKey = user == null
           ? 'none'
           : user.isAnonymous
-              ? 'guest:${user.id}'
+              ? 'guest:${GuestIdentityService.sharedGuestId}'
               : 'user:${user.id}';
-
       if (_lastNativeAlarmOwnerKey != ownerKey) {
         await SanaAlarmService.clearAllNativeAlarms();
         _lastNativeAlarmOwnerKey = ownerKey;
@@ -2814,7 +2822,7 @@ class _HomeScreenState extends State<HomeScreen> {
         data = null;
       }
 
-      // 🛡️ ADMIN IS PERMANENTLY EXEMPT FROM DEACTIVATION AND EXPIRY:
+      // ??? ADMIN IS PERMANENTLY EXEMPT FROM DEACTIVATION AND EXPIRY:
       final userEmail = (user.email ?? '').trim().toLowerCase();
       final role = (data?['role'] ?? '').toString().toLowerCase();
 
@@ -2892,8 +2900,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) {
         final fallbackUser = _client.auth.currentUser;
-        final guestId =
-            fallbackUser?.isAnonymous == true ? fallbackUser!.id : null;
+        final guestId = fallbackUser?.isAnonymous == true
+            ? GuestIdentityService.sharedGuestId
+            : null;
         setState(() {
           _profile = null;
           _guestId = guestId;
@@ -3161,326 +3170,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAdaptiveInstallDialog() {
     final language = languageNotifier.value;
-
-    final bool isIos = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-    final bool isAndroid =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-    final bool isWindows =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
-    final bool isMacos =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
-    final bool isLinux =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
-
-    String title;
-    List<String> steps;
-
-    if (isAndroid) {
-      title = switch (language) {
-        'ar' => 'تثبيت SANA على Android',
-        'es' => 'Instalar SANA en Android',
-        'fr' => 'Installer SANA sur Android',
-        'de' => 'SANA auf Android installieren',
-        'tr' => "SANA'yı Android'e yükle",
-        'hi' => 'Android पर SANA इंस्टॉल करें',
-        'zh' => '在 Android 上安装 SANA',
-        _ => 'Install SANA on Android',
-      };
-      steps = switch (language) {
-        'ar' => [
-            'افتح SANA في متصفح Chrome.',
-            'اضغط على قائمة المتصفح (⁺) أعلى اليمين.',
-            'اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
-            'أكّد التثبيت.',
-          ],
-        'es' => [
-            'Abra SANA en el navegador Chrome.',
-            'Toque el menú (⁺) en la esquina superior derecha.',
-            'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
-            'Confirme la instalación.',
-          ],
-        'fr' => [
-            'Ouvrez SANA dans le navigateur Chrome.',
-            'Appuyez sur le menu (⁺) en haut à droite.',
-            "Choisissez \"Installer l'application\" ou \"Ajouter à l'écran d'accueil\".",
-            "Confirmez l'installation.",
-          ],
-        'de' => [
-            'Öffnen Sie SANA im Chrome-Browser.',
-            'Tippen Sie auf das Menü (⁺) oben rechts.',
-            'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
-            'Bestätigen Sie die Installation.',
-          ],
-        'tr' => [
-            "SANA'yı Chrome tarayıcısında açın.",
-            'Sağ üstteki menüye (⁺) dokunun.',
-            '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
-            'Kurulumu onaylayın.',
-          ],
-        'hi' => [
-            'SANA को Chrome ब्राउज़र में खोलें।',
-            'ऊपर दाईं ओर मेनू (⁺) पर टैप करें।',
-            '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
-            'इंस्टॉलेशन की पुष्टि करें।',
-          ],
-        'zh' => [
-            '在 Chrome 浏览器中打开 SANA。',
-            '点击右上角的菜单 (⁺)。',
-            '选择"安装应用"或"添加到主屏幕"。',
-            '确认安装。',
-          ],
-        _ => [
-            'Open SANA in Chrome.',
-            'Tap the browser menu (⁺) at the top right.',
-            'Choose "Install app" or "Add to Home screen".',
-            'Confirm the installation.',
-          ],
-      };
-    } else if (isIos) {
-      title = switch (language) {
-        'ar' => 'تثبيت SANA على iPhone / iPad',
-        'es' => 'Instalar SANA en iPhone / iPad',
-        'fr' => 'Installer SANA sur iPhone / iPad',
-        'de' => 'SANA auf iPhone / iPad installieren',
-        'tr' => "SANA'yı iPhone / iPad'e yükle",
-        'hi' => 'iPhone / iPad पर SANA इंस्टॉल करें',
-        'zh' => '在 iPhone / iPad 上安装 SANA',
-        _ => 'Install SANA on iPhone / iPad',
-      };
-      steps = switch (language) {
-        'ar' => [
-            'افتح SANA في متصفح Safari.',
-            'اضغط على زر المشاركة.',
-            'مرّر للأسفل واختر "إضافة إلى الشاشة الرئيسية".',
-            'أكّد الإضافة.',
-          ],
-        'es' => [
-            'Abra SANA en Safari.',
-            'Toque el botón Compartir.',
-            'Desplace y elija "Añadir a pantalla de inicio".',
-            'Confirme.',
-          ],
-        'fr' => [
-            'Ouvrez SANA dans Safari.',
-            'Appuyez sur le bouton Partager.',
-            "Faites défiler et choisissez \"Ajouter à l'écran d'accueil\".",
-            'Confirmez.',
-          ],
-        'de' => [
-            'Öffnen Sie SANA in Safari.',
-            'Tippen Sie auf die Teilen-Schaltfläche.',
-            'Wählen Sie "Zum Startbildschirm hinzufügen".',
-            'Bestätigen Sie.',
-          ],
-        'tr' => [
-            "SANA'yı Safari'de açın.",
-            'Paylaş düğmesine dokunun.',
-            '"Ana ekrana ekle" seçeneğini seçin.',
-            'Onaylayın.',
-          ],
-        'hi' => [
-            'SANA को Safari में खोलें।',
-            'शेयर बटन पर टैप करें।',
-            '"होम स्क्रीन पर जोड़ें" चुनें।',
-            'पुष्टि करें।',
-          ],
-        'zh' => [
-            '在 Safari 中打开 SANA。',
-            '点击分享按钮。',
-            '选择"添加到主屏幕"。',
-            '确认。',
-          ],
-        _ => [
-            'Open SANA in Safari.',
-            'Tap the Share button.',
-            'Choose "Add to Home Screen".',
-            'Confirm.',
-          ],
-      };
-    } else if (isWindows) {
-      title = switch (language) {
-        'ar' => 'تثبيت SANA على Windows',
-        'es' => 'Instalar SANA en Windows',
-        'fr' => 'Installer SANA sur Windows',
-        'de' => 'SANA auf Windows installieren',
-        'tr' => "SANA'yı Windows'a yükle",
-        'hi' => 'Windows पर SANA इंस्टॉल करें',
-        'zh' => '在 Windows 上安装 SANA',
-        _ => 'Install SANA on Windows',
-      };
-      steps = switch (language) {
-        'ar' => [
-            'افتح SANA في متصفح Edge.',
-            'اضغط على القائمة (…) أعلى اليمين.',
-            'اختر "التطبيقات" ثم "تثبيت هذا الموقع كتطبيق".',
-            'أكّد التثبيت.',
-          ],
-        'es' => [
-            'Abra SANA en Microsoft Edge.',
-            'Haga clic en el menú (…) arriba a la derecha.',
-            'Elija "Aplicaciones" y luego "Instalar este sitio como aplicación".',
-            'Confirme.',
-          ],
-        'fr' => [
-            'Ouvrez SANA dans Microsoft Edge.',
-            'Cliquez sur le menu (…) en haut à droite.',
-            "Choisissez \"Applications\" puis \"Installer ce site en tant qu'application\".",
-            'Confirmez.',
-          ],
-        'de' => [
-            'Öffnen Sie SANA in Microsoft Edge.',
-            'Klicken Sie auf das Menü (…) oben rechts.',
-            'Wählen Sie "Apps" und dann "Diese Website als App installieren".',
-            'Bestätigen Sie.',
-          ],
-        'tr' => [
-            "SANA'yı Microsoft Edge'de açın.",
-            'Sağ üstteki menüye (…) tıklayın.',
-            '"Uygulamalar" ve ardından "Bu siteyi uygulama olarak yükle" seçeneğini seçin.',
-            'Onaylayın.',
-          ],
-        'hi' => [
-            'SANA को Microsoft Edge में खोलें।',
-            'ऊपर दाईं ओर मेनू (…) पर क्लिक करें।',
-            '"ऐप्स" और फिर "इस साइट को ऐप के रूप में इंस्टॉल करें" चुनें।',
-            'पुष्टि करें।',
-          ],
-        'zh' => [
-            '在 Microsoft Edge 中打开 SANA。',
-            '点击右上角的菜单 (…)。',
-            '选择"应用"，然后选择"将此站点作为应用安装"。',
-            '确认。',
-          ],
-        _ => [
-            'Open SANA in Microsoft Edge.',
-            'Click the menu (…) at the top right.',
-            'Choose "Apps" then "Install this site as an app".',
-            'Confirm.',
-          ],
-      };
-    } else if (isMacos) {
-      title = switch (language) {
-        'ar' => 'تثبيت SANA على macOS',
-        'es' => 'Instalar SANA en macOS',
-        'fr' => 'Installer SANA sur macOS',
-        'de' => 'SANA auf macOS installieren',
-        'tr' => "SANA'yı macOS'a yükle",
-        'hi' => 'macOS पर SANA इंस्टॉल करें',
-        'zh' => '在 macOS 上安装 SANA',
-        _ => 'Install SANA on macOS',
-      };
-      steps = switch (language) {
-        'ar' => [
-            'افتح SANA في Safari.',
-            'من قائمة "ملف" اختر "إضافة إلى Dock".',
-            'أكّد الإضافة.',
-          ],
-        'es' => [
-            'Abra SANA en Safari.',
-            'Desde el menú "Archivo" elija "Añadir al Dock".',
-            'Confirme.',
-          ],
-        'fr' => [
-            'Ouvrez SANA dans Safari.',
-            'Dans le menu "Fichier", choisissez "Ajouter au Dock".',
-            'Confirmez.',
-          ],
-        'de' => [
-            'Öffnen Sie SANA in Safari.',
-            'Wählen Sie im Menü "Ablage" die Option "Zum Dock hinzufügen".',
-            'Bestätigen Sie.',
-          ],
-        'tr' => [
-            "SANA'yı Safari'de açın.",
-            '"Dosya" menüsünden "Dock\'a Ekle" seçeneğini seçin.',
-            'Onaylayın.',
-          ],
-        'hi' => [
-            'SANA को Safari में खोलें।',
-            '"फ़ाइल" मेनू से "Dock में जोड़ें" चुनें।',
-            'पुष्टि करें।',
-          ],
-        'zh' => [
-            '在 Safari 中打开 SANA。',
-            '从"文件"菜单中选择"添加到 Dock"。',
-            '确认。',
-          ],
-        _ => [
-            'Open SANA in Safari.',
-            'From the "File" menu choose "Add to Dock".',
-            'Confirm.',
-          ],
-      };
-    } else {
-      title = switch (language) {
-        'ar' => 'تثبيت SANA على Linux',
-        'es' => 'Instalar SANA en Linux',
-        'fr' => 'Installer SANA sur Linux',
-        'de' => 'SANA auf Linux installieren',
-        'tr' => "SANA'yı Linux'a yükle",
-        'hi' => 'Linux पर SANA इंस्टॉल करें',
-        'zh' => '在 Linux 上安装 SANA',
-        _ => 'Install SANA on Linux',
-      };
-      steps = switch (language) {
-        'ar' => [
-            'افتح SANA في المتصفح.',
-            'من قائمة المتصفح اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
-            'أكّد الإضافة.',
-          ],
-        'es' => [
-            'Abra SANA en el navegador.',
-            'Elija "Instalar aplicación" o "Añadir a pantalla de inicio".',
-            'Confirme.',
-          ],
-        'fr' => [
-            'Ouvrez SANA dans le navigateur.',
-            "Choisissez \"Installer l'application\" ou \"Ajouter à l'écran d'accueil\".",
-            'Confirmez.',
-          ],
-        'de' => [
-            'Öffnen Sie SANA im Browser.',
-            'Wählen Sie "App installieren" oder "Zum Startbildschirm hinzufügen".',
-            'Bestätigen Sie.',
-          ],
-        'tr' => [
-            "SANA'yı tarayıcıda açın.",
-            '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğini seçin.',
-            'Onaylayın.',
-          ],
-        'hi' => [
-            'SANA को ब्राउज़र में खोलें।',
-            '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" चुनें।',
-            'पुष्टि करें।',
-          ],
-        'zh' => [
-            '在浏览器中打开 SANA。',
-            '选择"安装应用"或"添加到主屏幕"。',
-            '确认。',
-          ],
-        _ => [
-            'Open SANA in your browser.',
-            'Choose "Install app" or "Add to Home screen".',
-            'Confirm.',
-          ],
-      };
-    }
-
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(title),
+          title: Text(tr(language, 'install_app')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < steps.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text('${i + 1}. ${steps[i]}'),
-                  ),
+                Text('1. ${tr(language, 'install_step_1')}'),
+                const SizedBox(height: 8),
+                Text('2. ${tr(language, 'install_step_2')}'),
+                const SizedBox(height: 8),
+                Text('3. ${tr(language, 'install_step_3')}'),
               ],
             ),
           ),
@@ -5117,10 +4821,11 @@ class StorageHelper {
 
     final fileId = _uuid.v4();
 
-    // IMPORTANT:
-    // Storage ownership is based on auth.uid().
-    final filePath = 'medications/${user.id}/$fileId.$extension';
-
+    // Storage ownership: registered users use their own uuid;
+    // guests share the fixed guest folder so every device can read.
+    final storageOwner =
+        user.isAnonymous ? GuestIdentityService.sharedGuestId : user.id;
+    final filePath = 'medications/$storageOwner/$fileId.$extension';
     await _client.storage.from(_bucket).uploadBinary(
           filePath,
           bytes,
@@ -8871,9 +8576,9 @@ class _ShareScreenState extends State<ShareScreen> {
                   tr(language, 'record'))
               .toString();
 
-          textBuffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━');
+          textBuffer.writeln('------------------------');
           textBuffer.writeln('${tr(language, type).toUpperCase()}: $title');
-          textBuffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━');
+          textBuffer.writeln('------------------------');
 
           final cleanEntries = _getCleanDisplayEntries(language, row);
           for (final e in cleanEntries.entries) {
@@ -9809,7 +9514,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                       ),
                                       DataCell(
                                         Text(
-                                          (u['password_plain'] ?? '—')
+                                          (u['password_plain'] ?? '�')
                                               .toString(),
                                         ),
                                       ),
@@ -9835,7 +9540,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                       ),
                                       DataCell(
                                         isAdmin
-                                            ? const Text('—')
+                                            ? const Text('�')
                                             : Checkbox(
                                                 value: u['is_paid'] == true,
                                                 onChanged: (v) {
@@ -9848,15 +9553,15 @@ class _AdminScreenState extends State<AdminScreen> {
                                         Builder(
                                           builder: (_) {
                                             if (isAdmin) {
-                                              return const Text('—');
+                                              return const Text('�');
                                             }
                                             if (u['is_paid'] != true) {
-                                              return const Text('—');
+                                              return const Text('�');
                                             }
                                             final rawExp = u['expiry_date'] ??
                                                 u['paid_at'];
                                             if (rawExp == null)
-                                              return const Text('—');
+                                              return const Text('�');
                                             try {
                                               DateTime expDate;
                                               if (u['expiry_date'] != null) {
@@ -9883,7 +9588,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                                 ),
                                               );
                                             } catch (_) {
-                                              return const Text('—');
+                                              return const Text('�');
                                             }
                                           },
                                         ),
@@ -9900,7 +9605,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                                 .toString()
                                                 .trim()
                                                 .isEmpty
-                                            ? const Text('—')
+                                            ? const Text('�')
                                             : InkWell(
                                                 onTap: () {
                                                   showDialog<void>(
@@ -10072,113 +9777,8 @@ class _SanaInstallHelp extends StatelessWidget {
   final String language;
   const _SanaInstallHelp({required this.language});
 
-  String _t(String key) {
-    const map = <String, Map<String, String>>{
-      'en': {
-        'android_title': 'Install SANA on Android',
-        'android_1': 'Tap the ⁺ menu at the top right of Chrome.',
-        'android_2': 'Tap "Install app" or "Add to Home screen".',
-        'android_3': 'Tap "Install" to confirm.',
-        'ios_title': 'Install SANA on iPhone / iPad',
-        'ios_1': 'Open SANA in Safari.',
-        'ios_2': 'Tap the Share button.',
-        'ios_3': 'Tap "Add to Home Screen".',
-        'ios_4': 'Tap "Add".',
-      },
-      'ar': {
-        'android_title': 'تثبيت SANA على Android',
-        'android_1': 'اضغط على قائمة ⁺ في أعلى يمين Chrome.',
-        'android_2': 'اضغط "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".',
-        'android_3': 'اضغط "تثبيت" للتأكيد.',
-        'ios_title': 'تثبيت SANA على iPhone / iPad',
-        'ios_1': 'افتح SANA في Safari.',
-        'ios_2': 'اضغط على زر المشاركة.',
-        'ios_3': 'اضغط "إضافة إلى الشاشة الرئيسية".',
-        'ios_4': 'اضغط "إضافة".',
-      },
-      'es': {
-        'android_title': 'Instalar SANA en Android',
-        'android_1': 'Toca el menú ⁺ arriba a la derecha de Chrome.',
-        'android_2':
-            'Toca "Instalar aplicación" o "Añadir a pantalla de inicio".',
-        'android_3': 'Toca "Instalar" para confirmar.',
-        'ios_title': 'Instalar SANA en iPhone / iPad',
-        'ios_1': 'Abre SANA en Safari.',
-        'ios_2': 'Toca el botón Compartir.',
-        'ios_3': 'Toca "Añadir a pantalla de inicio".',
-        'ios_4': 'Toca "Añadir".',
-      },
-      'fr': {
-        'android_title': 'Installer SANA sur Android',
-        'android_1': 'Appuyez sur le menu ⁺ en haut à droite de Chrome.',
-        'android_2':
-            'Appuyez sur "Installer l\'application" ou "Ajouter à l\'écran d\'accueil".',
-        'android_3': 'Appuyez sur "Installer" pour confirmer.',
-        'ios_title': 'Installer SANA sur iPhone / iPad',
-        'ios_1': 'Ouvrez SANA dans Safari.',
-        'ios_2': 'Appuyez sur le bouton Partager.',
-        'ios_3': 'Appuyez sur "Sur l\'écran d\'accueil".',
-        'ios_4': 'Appuyez sur "Ajouter".',
-      },
-      'de': {
-        'android_title': 'SANA auf Android installieren',
-        'android_1': 'Tippen Sie oben rechts in Chrome auf das ⁺ Menü.',
-        'android_2':
-            'Tippen Sie auf "App installieren" oder "Zum Startbildschirm hinzufügen".',
-        'android_3': 'Tippen Sie auf "Installieren".',
-        'ios_title': 'SANA auf iPhone / iPad installieren',
-        'ios_1': 'Öffnen Sie SANA in Safari.',
-        'ios_2': 'Tippen Sie auf Teilen.',
-        'ios_3': 'Tippen Sie auf "Zum Home-Bildschirm".',
-        'ios_4': 'Tippen Sie auf "Hinzufügen".',
-      },
-      'tr': {
-        'android_title': 'SANA\'yı Android\'e yükle',
-        'android_1': 'Chrome\'un sağ üstündeki ⁺ menüsüne dokunun.',
-        'android_2':
-            '"Uygulamayı yükle" veya "Ana ekrana ekle" seçeneğine dokunun.',
-        'android_3': 'Onaylamak için "Yükle" düğmesine dokunun.',
-        'ios_title': 'SANA\'yı iPhone / iPad\'e yükle',
-        'ios_1': 'SANA\'yı Safari\'de açın.',
-        'ios_2': 'Paylaş düğmesine dokunun.',
-        'ios_3': '"Ana Ekrana Ekle" seçeneğine dokunun.',
-        'ios_4': '"Ekle" düğmesine dokunun.',
-      },
-      'hi': {
-        'android_title': 'Android पर SANA इंस्टॉल करें',
-        'android_1': 'Chrome के ऊपर दाईं ओर ⁺ मेनू पर टैप करें।',
-        'android_2':
-            '"ऐप इंस्टॉल करें" या "होम स्क्रीन पर जोड़ें" पर टैप करें।',
-        'android_3': 'पुष्टि के लिए "इंस्टॉल" पर टैप करें।',
-        'ios_title': 'iPhone / iPad पर SANA इंस्टॉल करें',
-        'ios_1': 'Safari में SANA खोलें।',
-        'ios_2': 'शेयर बटन पर टैप करें।',
-        'ios_3': '"होम स्क्रीन पर जोड़ें" पर टैप करें।',
-        'ios_4': '"जोड़ें" पर टैप करें।',
-      },
-      'zh': {
-        'android_title': '在 Android 上安装 SANA',
-        'android_1': '点击 Chrome 右上角的 ⁺ 菜单。',
-        'android_2': '点击"安装应用"或"添加到主屏幕"。',
-        'android_3': '点击"安装"以确认。',
-        'ios_title': '在 iPhone / iPad 上安装 SANA',
-        'ios_1': '在 Safari 中打开 SANA。',
-        'ios_2': '点击分享按钮。',
-        'ios_3': '点击"添加到主屏幕"。',
-        'ios_4': '点击"添加"。',
-      },
-    };
-    return map[language]?[key] ?? map['en']![key] ?? key;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-    final title = isIos ? _t('ios_title') : _t('android_title');
-    final steps = isIos
-        ? [_t('ios_1'), _t('ios_2'), _t('ios_3'), _t('ios_4')]
-        : [_t('android_1'), _t('android_2'), _t('android_3')];
-
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(12),
@@ -10196,7 +9796,7 @@ class _SanaInstallHelp extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  title,
+                  tr(language, 'install_app'),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -10206,11 +9806,11 @@ class _SanaInstallHelp extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          for (var i = 0; i < steps.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text('${i + 1}. ${steps[i]}'),
-            ),
+          Text('1. ${tr(language, 'install_step_1')}'),
+          const SizedBox(height: 6),
+          Text('2. ${tr(language, 'install_step_2')}'),
+          const SizedBox(height: 6),
+          Text('3. ${tr(language, 'install_step_3')}'),
         ],
       ),
     );
