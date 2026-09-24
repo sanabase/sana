@@ -947,9 +947,6 @@ const Map<String, Map<String, String>> _translations = {
     'pwa_step_2': 'Scroll and tap "Add to Home Screen".',
     'pwa_step_3': 'Tap "Add" at the top right.',
     'install_app': 'Install App',
-    'install_step_1': 'Open SANA in your browser.',
-    'install_step_2': 'Open the browser menu and choose Install app or Add to Home screen.',
-    'install_step_3': 'Confirm the installation.',
     'help': 'Help',
     'call': 'Call',
     'chat': 'Chat',
@@ -3166,21 +3163,326 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAdaptiveInstallDialog() {
     final language = languageNotifier.value;
+
+    final bool isIos = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final bool isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final bool isWindows =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+    final bool isMacos =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+    final bool isLinux =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
+
+    String title;
+    List<String> steps;
+
+    if (isAndroid) {
+      title = switch (language) {
+        'ar' => '????? SANA ??? Android',
+        'es' => 'Instalar SANA en Android',
+        'fr' => 'Installer SANA sur Android',
+        'de' => 'SANA auf Android installieren',
+        'tr' => "SANA'yi Android'e y�kle",
+        'hi' => 'Android ?? SANA ??????? ????',
+        'zh' => '? Android ??? SANA',
+        _ => 'Install SANA on Android',
+      };
+      steps = switch (language) {
+        'ar' => [
+            '???? SANA ?? ????? Chrome.',
+            '???? ??? ????? ??????? (?) ???? ??????.',
+            '???? "????? ???????" ?? "????? ??? ?????? ????????".',
+            '???? ???????.',
+          ],
+        'es' => [
+            'Abra SANA en el navegador Chrome.',
+            'Toque el men� (?) en la esquina superior derecha.',
+            'Elija "Instalar aplicaci�n" o "A�adir a pantalla de inicio".',
+            'Confirme la instalaci�n.',
+          ],
+        'fr' => [
+            'Ouvrez SANA dans le navigateur Chrome.',
+            'Appuyez sur le menu (?) en haut � droite.',
+            "Choisissez \"Installer l'application\" ou \"Ajouter � l'�cran d'accueil\".",
+            "Confirmez l'installation.",
+          ],
+        'de' => [
+            '�ffnen Sie SANA im Chrome-Browser.',
+            'Tippen Sie auf das Men� (?) oben rechts.',
+            'W�hlen Sie "App installieren" oder "Zum Startbildschirm hinzuf�gen".',
+            'Best�tigen Sie die Installation.',
+          ],
+        'tr' => [
+            "SANA'yi Chrome tarayicisinda a�in.",
+            'Sag �stteki men�ye (?) dokunun.',
+            '"Uygulamayi y�kle" veya "Ana ekrana ekle" se�enegini se�in.',
+            'Kurulumu onaylayin.',
+          ],
+        'hi' => [
+            'SANA ?? Chrome ???????? ??? ??????',
+            '??? ???? ?? ???? (?) ?? ??? ?????',
+            '"?? ??????? ????" ?? "??? ??????? ?? ??????" ??????',
+            '?????????? ?? ?????? ?????',
+          ],
+        'zh' => [
+            '? Chrome ?????? SANA?',
+            '???????? (?)?',
+            '??"????"?"??????"?',
+            '?????',
+          ],
+        _ => [
+            'Open SANA in Chrome.',
+            'Tap the browser menu (?) at the top right.',
+            'Choose "Install app" or "Add to Home screen".',
+            'Confirm the installation.',
+          ],
+      };
+    } else if (isIos) {
+      title = switch (language) {
+        'ar' => '????? SANA ??? iPhone / iPad',
+        'es' => 'Instalar SANA en iPhone / iPad',
+        'fr' => 'Installer SANA sur iPhone / iPad',
+        'de' => 'SANA auf iPhone / iPad installieren',
+        'tr' => "SANA'yi iPhone / iPad'e y�kle",
+        'hi' => 'iPhone / iPad ?? SANA ??????? ????',
+        'zh' => '? iPhone / iPad ??? SANA',
+        _ => 'Install SANA on iPhone / iPad',
+      };
+      steps = switch (language) {
+        'ar' => [
+            '???? SANA ?? ????? Safari.',
+            '???? ??? ?? ????????.',
+            '???? ?????? ????? "????? ??? ?????? ????????".',
+            '???? ???????.',
+          ],
+        'es' => [
+            'Abra SANA en Safari.',
+            'Toque el bot�n Compartir.',
+            'Desplace y elija "A�adir a pantalla de inicio".',
+            'Confirme.',
+          ],
+        'fr' => [
+            'Ouvrez SANA dans Safari.',
+            'Appuyez sur le bouton Partager.',
+            "Faites d�filer et choisissez \"Ajouter � l'�cran d'accueil\".",
+            'Confirmez.',
+          ],
+        'de' => [
+            '�ffnen Sie SANA in Safari.',
+            'Tippen Sie auf die Teilen-Schaltfl�che.',
+            'W�hlen Sie "Zum Startbildschirm hinzuf�gen".',
+            'Best�tigen Sie.',
+          ],
+        'tr' => [
+            "SANA'yi Safari'de a�in.",
+            'Paylas d�gmesine dokunun.',
+            '"Ana ekrana ekle" se�enegini se�in.',
+            'Onaylayin.',
+          ],
+        'hi' => [
+            'SANA ?? Safari ??? ??????',
+            '???? ??? ?? ??? ?????',
+            '"??? ??????? ?? ??????" ??????',
+            '?????? ?????',
+          ],
+        'zh' => [
+            '? Safari ??? SANA?',
+            '???????',
+            '??"??????"?',
+            '???',
+          ],
+        _ => [
+            'Open SANA in Safari.',
+            'Tap the Share button.',
+            'Choose "Add to Home Screen".',
+            'Confirm.',
+          ],
+      };
+    } else if (isWindows) {
+      title = switch (language) {
+        'ar' => '????? SANA ??? Windows',
+        'es' => 'Instalar SANA en Windows',
+        'fr' => 'Installer SANA sur Windows',
+        'de' => 'SANA auf Windows installieren',
+        'tr' => "SANA'yi Windows'a y�kle",
+        'hi' => 'Windows ?? SANA ??????? ????',
+        'zh' => '? Windows ??? SANA',
+        _ => 'Install SANA on Windows',
+      };
+      steps = switch (language) {
+        'ar' => [
+            '???? SANA ?? ????? Edge.',
+            '???? ??? ??????? (�) ???? ??????.',
+            '???? "?????????" ?? "????? ??? ?????? ??????".',
+            '???? ???????.',
+          ],
+        'es' => [
+            'Abra SANA en Microsoft Edge.',
+            'Haga clic en el men� (�) arriba a la derecha.',
+            'Elija "Aplicaciones" y luego "Instalar este sitio como aplicaci�n".',
+            'Confirme.',
+          ],
+        'fr' => [
+            'Ouvrez SANA dans Microsoft Edge.',
+            'Cliquez sur le menu (�) en haut � droite.',
+            "Choisissez \"Applications\" puis \"Installer ce site en tant qu'application\".",
+            'Confirmez.',
+          ],
+        'de' => [
+            '�ffnen Sie SANA in Microsoft Edge.',
+            'Klicken Sie auf das Men� (�) oben rechts.',
+            'W�hlen Sie "Apps" und dann "Diese Website als App installieren".',
+            'Best�tigen Sie.',
+          ],
+        'tr' => [
+            "SANA'yi Microsoft Edge'de a�in.",
+            'Sag �stteki men�ye (�) tiklayin.',
+            '"Uygulamalar" ve ardindan "Bu siteyi uygulama olarak y�kle" se�enegini se�in.',
+            'Onaylayin.',
+          ],
+        'hi' => [
+            'SANA ?? Microsoft Edge ??? ??????',
+            '??? ???? ?? ???? (�) ?? ????? ?????',
+            '"????" ?? ??? "?? ???? ?? ?? ?? ??? ??? ??????? ????" ??????',
+            '?????? ?????',
+          ],
+        'zh' => [
+            '? Microsoft Edge ??? SANA?',
+            '???????? (�)?',
+            '??"??",????"??????????"?',
+            '???',
+          ],
+        _ => [
+            'Open SANA in Microsoft Edge.',
+            'Click the menu (�) at the top right.',
+            'Choose "Apps" then "Install this site as an app".',
+            'Confirm.',
+          ],
+      };
+    } else if (isMacos) {
+      title = switch (language) {
+        'ar' => '????? SANA ??? macOS',
+        'es' => 'Instalar SANA en macOS',
+        'fr' => 'Installer SANA sur macOS',
+        'de' => 'SANA auf macOS installieren',
+        'tr' => "SANA'yi macOS'a y�kle",
+        'hi' => 'macOS ?? SANA ??????? ????',
+        'zh' => '? macOS ??? SANA',
+        _ => 'Install SANA on macOS',
+      };
+      steps = switch (language) {
+        'ar' => [
+            '???? SANA ?? Safari.',
+            '?? ????? "???" ???? "????? ??? Dock".',
+            '???? ???????.',
+          ],
+        'es' => [
+            'Abra SANA en Safari.',
+            'Desde el men� "Archivo" elija "A�adir al Dock".',
+            'Confirme.',
+          ],
+        'fr' => [
+            'Ouvrez SANA dans Safari.',
+            'Dans le menu "Fichier", choisissez "Ajouter au Dock".',
+            'Confirmez.',
+          ],
+        'de' => [
+            '�ffnen Sie SANA in Safari.',
+            'W�hlen Sie im Men� "Ablage" die Option "Zum Dock hinzuf�gen".',
+            'Best�tigen Sie.',
+          ],
+        'tr' => [
+            "SANA'yi Safari'de a�in.",
+            '"Dosya" men�s�nden "Dock\'a Ekle" se�enegini se�in.',
+            'Onaylayin.',
+          ],
+        'hi' => [
+            'SANA ?? Safari ??? ??????',
+            '"?????" ???? ?? "Dock ??? ??????" ??????',
+            '?????? ?????',
+          ],
+        'zh' => [
+            '? Safari ??? SANA?',
+            '?"??"?????"??? Dock"?',
+            '???',
+          ],
+        _ => [
+            'Open SANA in Safari.',
+            'From the "File" menu choose "Add to Dock".',
+            'Confirm.',
+          ],
+      };
+    } else {
+      title = switch (language) {
+        'ar' => '????? SANA ??? Linux',
+        'es' => 'Instalar SANA en Linux',
+        'fr' => 'Installer SANA sur Linux',
+        'de' => 'SANA auf Linux installieren',
+        'tr' => "SANA'yi Linux'a y�kle",
+        'hi' => 'Linux ?? SANA ??????? ????',
+        'zh' => '? Linux ??? SANA',
+        _ => 'Install SANA on Linux',
+      };
+      steps = switch (language) {
+        'ar' => [
+            '???? SANA ?? ???????.',
+            '?? ????? ??????? ???? "????? ???????" ?? "????? ??? ?????? ????????".',
+            '???? ???????.',
+          ],
+        'es' => [
+            'Abra SANA en el navegador.',
+            'Elija "Instalar aplicaci�n" o "A�adir a pantalla de inicio".',
+            'Confirme.',
+          ],
+        'fr' => [
+            'Ouvrez SANA dans le navigateur.',
+            "Choisissez \"Installer l'application\" ou \"Ajouter � l'�cran d'accueil\".",
+            'Confirmez.',
+          ],
+        'de' => [
+            '�ffnen Sie SANA im Browser.',
+            'W�hlen Sie "App installieren" oder "Zum Startbildschirm hinzuf�gen".',
+            'Best�tigen Sie.',
+          ],
+        'tr' => [
+            "SANA'yi tarayicida a�in.",
+            '"Uygulamayi y�kle" veya "Ana ekrana ekle" se�enegini se�in.',
+            'Onaylayin.',
+          ],
+        'hi' => [
+            'SANA ?? ???????? ??? ??????',
+            '"?? ??????? ????" ?? "??? ??????? ?? ??????" ??????',
+            '?????? ?????',
+          ],
+        'zh' => [
+            '??????? SANA?',
+            '??"????"?"??????"?',
+            '???',
+          ],
+        _ => [
+            'Open SANA in your browser.',
+            'Choose "Install app" or "Add to Home screen".',
+            'Confirm.',
+          ],
+      };
+    }
+
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(tr(language, 'install_app')),
+          title: Text(title),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('1. ${tr(language, 'install_step_1')}'),
-                const SizedBox(height: 8),
-                Text('2. ${tr(language, 'install_step_2')}'),
-                const SizedBox(height: 8),
-                Text('3. ${tr(language, 'install_step_3')}'),
+                for (var i = 0; i < steps.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text('${i + 1}. ${steps[i]}'),
+                  ),
               ],
             ),
           ),
@@ -8572,13 +8874,13 @@ class _ShareScreenState extends State<ShareScreen> {
                   tr(language, 'record'))
               .toString();
 
-          textBuffer.writeln('????????????????????????');
+          textBuffer.writeln('------------------------');
           textBuffer.writeln('${tr(language, type).toUpperCase()}: $title');
-          textBuffer.writeln('????????????????????????');
+          textBuffer.writeln('------------------------');
 
           final cleanEntries = _getCleanDisplayEntries(language, row);
           for (final e in cleanEntries.entries) {
-            textBuffer.writeln('� ${e.key}: ${e.value}');
+            textBuffer.writeln('• ${e.key}: ${e.value}');
           }
           textBuffer.writeln('');
 
@@ -9093,7 +9395,7 @@ class _ShareScreenState extends State<ShareScreen> {
                                                   vertical: 2,
                                                 ),
                                                 child: Text(
-                                                  '� ${e.key}: ${e.value}',
+                                                  '• ${e.key}: ${e.value}',
                                                   style: const TextStyle(
                                                     fontSize: 13,
                                                     color: Colors.black87,
@@ -9773,8 +10075,132 @@ class _SanaInstallHelp extends StatelessWidget {
   final String language;
   const _SanaInstallHelp({required this.language});
 
+  String _t(String key) {
+    const map = <String, Map<String, String>>{
+      'en': {
+        'android_title': 'Install SANA on Android',
+        'android_1': 'Tap the Ã¢â€¹Â® menu at the top right of Chrome.',
+        'android_2': 'Tap "Install app" or "Add to Home screen".',
+        'android_3': 'Tap "Install" to confirm.',
+        'ios_title': 'Install SANA on iPhone / iPad',
+        'ios_1': 'Open SANA in Safari.',
+        'ios_2': 'Tap the Share button.',
+        'ios_3': 'Tap "Add to Home Screen".',
+        'ios_4': 'Tap "Add".',
+      },
+      'ar': {
+        'android_title': 'Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª SANA Ã˜Â¹Ã™â€žÃ™â€° Android',
+        'android_1':
+            'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· Ã˜Â¹Ã™â€žÃ™â€° Ã™â€šÃ˜Â§Ã˜Â¦Ã™â€¦Ã˜Â© Ã¢â€¹Â® Ã™ÂÃ™Å  Ã˜Â£Ã˜Â¹Ã™â€žÃ™â€° Ã™Å Ã™â€¦Ã™Å Ã™â€  Chrome.',
+        'android_2':
+            'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· "Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š" Ã˜Â£Ã™Ë† "Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â§Ã˜Â´Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©".',
+        'android_3':
+            'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· "Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª" Ã™â€žÃ™â€žÃ˜ÂªÃ˜Â£Ã™Æ’Ã™Å Ã˜Â¯.',
+        'ios_title': 'Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª SANA Ã˜Â¹Ã™â€žÃ™â€° iPhone / iPad',
+        'ios_1': 'Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â­ SANA Ã™ÂÃ™Å  Safari.',
+        'ios_2':
+            'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â²Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â´Ã˜Â§Ã˜Â±Ã™Æ’Ã˜Â©.',
+        'ios_3':
+            'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· "Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â§Ã˜Â´Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©".',
+        'ios_4': 'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· "Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â©".',
+      },
+      'es': {
+        'android_title': 'Instalar SANA en Android',
+        'android_1': 'Toca el menÃƒÂº Ã¢â€¹Â® arriba a la derecha de Chrome.',
+        'android_2':
+            'Toca "Instalar aplicaciÃƒÂ³n" o "AÃƒÂ±adir a pantalla de inicio".',
+        'android_3': 'Toca "Instalar" para confirmar.',
+        'ios_title': 'Instalar SANA en iPhone / iPad',
+        'ios_1': 'Abre SANA en Safari.',
+        'ios_2': 'Toca el botÃƒÂ³n Compartir.',
+        'ios_3': 'Toca "AÃƒÂ±adir a pantalla de inicio".',
+        'ios_4': 'Toca "AÃƒÂ±adir".',
+      },
+      'fr': {
+        'android_title': 'Installer SANA sur Android',
+        'android_1':
+            'Appuyez sur le menu Ã¢â€¹Â® en haut ÃƒÂ  droite de Chrome.',
+        'android_2':
+            'Appuyez sur "Installer lÃ¢â‚¬â„¢application" ou "Ajouter ÃƒÂ  lÃ¢â‚¬â„¢ÃƒÂ©cran dÃ¢â‚¬â„¢accueil".',
+        'android_3': 'Appuyez sur "Installer" pour confirmer.',
+        'ios_title': 'Installer SANA sur iPhone / iPad',
+        'ios_1': 'Ouvrez SANA dans Safari.',
+        'ios_2': 'Appuyez sur le bouton Partager.',
+        'ios_3': 'Appuyez sur "Sur lÃ¢â‚¬â„¢ÃƒÂ©cran dÃ¢â‚¬â„¢accueil".',
+        'ios_4': 'Appuyez sur "Ajouter".',
+      },
+      'de': {
+        'android_title': 'SANA auf Android installieren',
+        'android_1':
+            'Tippen Sie oben rechts in Chrome auf das Ã¢â€¹Â® MenÃƒÂ¼.',
+        'android_2':
+            'Tippen Sie auf "App installieren" oder "Zum Startbildschirm hinzufÃƒÂ¼gen".',
+        'android_3': 'Tippen Sie auf "Installieren".',
+        'ios_title': 'SANA auf iPhone / iPad installieren',
+        'ios_1': 'Ãƒâ€“ffnen Sie SANA in Safari.',
+        'ios_2': 'Tippen Sie auf Teilen.',
+        'ios_3': 'Tippen Sie auf "Zum Home-Bildschirm".',
+        'ios_4': 'Tippen Sie auf "HinzufÃƒÂ¼gen".',
+      },
+      'tr': {
+        'android_title': 'SANAÃ¢â‚¬â„¢yÃ„Â± AndroidÃ¢â‚¬â„¢e yÃƒÂ¼kle',
+        'android_1':
+            'ChromeÃ¢â‚¬â„¢un saÃ„Å¸ ÃƒÂ¼stÃƒÂ¼ndeki Ã¢â€¹Â® menÃƒÂ¼sÃƒÂ¼ne dokunun.',
+        'android_2':
+            '"UygulamayÃ„Â± yÃƒÂ¼kle" veya "Ana ekrana ekle" seÃƒÂ§eneÃ„Å¸ine dokunun.',
+        'android_3': 'Onaylamak iÃƒÂ§in "YÃƒÂ¼kle" dÃƒÂ¼Ã„Å¸mesine dokunun.',
+        'ios_title': 'SANAÃ¢â‚¬â„¢yÃ„Â± iPhone / iPadÃ¢â‚¬â„¢e yÃƒÂ¼kle',
+        'ios_1': 'SANAÃ¢â‚¬â„¢yÃ„Â± SafariÃ¢â‚¬â„¢de aÃƒÂ§Ã„Â±n.',
+        'ios_2': 'PaylaÃ…Å¸ dÃƒÂ¼Ã„Å¸mesine dokunun.',
+        'ios_3': '"Ana Ekrana Ekle" seÃƒÂ§eneÃ„Å¸ine dokunun.',
+        'ios_4': '"Ekle" dÃƒÂ¼Ã„Å¸mesine dokunun.',
+      },
+      'hi': {
+        'android_title':
+            'Android Ã Â¤ÂªÃ Â¤Â° SANA Ã Â¤â€¡Ã Â¤â€šÃ Â¤Â¸Ã Â¥ÂÃ Â¤Å¸Ã Â¥â€°Ã Â¤Â² Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€š',
+        'android_1':
+            'Chrome Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Å Ã Â¤ÂªÃ Â¤Â° Ã Â¤Â¦Ã Â¤Â¾Ã Â¤Ë†Ã Â¤â€š Ã Â¤â€œÃ Â¤Â° Ã¢â€¹Â® Ã Â¤Â®Ã Â¥â€¡Ã Â¤Â¨Ã Â¥â€š Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Âª Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+        'android_2':
+            '"Ã Â¤ÂÃ Â¤Âª Ã Â¤â€¡Ã Â¤â€šÃ Â¤Â¸Ã Â¥ÂÃ Â¤Å¸Ã Â¥â€°Ã Â¤Â² Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€š" Ã Â¤Â¯Ã Â¤Â¾ "Ã Â¤Â¹Ã Â¥â€¹Ã Â¤Â® Ã Â¤Â¸Ã Â¥ÂÃ Â¤â€¢Ã Â¥ÂÃ Â¤Â°Ã Â¥â‚¬Ã Â¤Â¨ Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å“Ã Â¥â€¹Ã Â¤Â¡Ã Â¤Â¼Ã Â¥â€¡Ã Â¤â€š" Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Âª Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+        'android_3':
+            'Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â·Ã Â¥ÂÃ Â¤Å¸Ã Â¤Â¿ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â "Ã Â¤â€¡Ã Â¤â€šÃ Â¤Â¸Ã Â¥ÂÃ Â¤Å¸Ã Â¥â€°Ã Â¤Â²" Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Âª Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+        'ios_title':
+            'iPhone / iPad Ã Â¤ÂªÃ Â¤Â° SANA Ã Â¤â€¡Ã Â¤â€šÃ Â¤Â¸Ã Â¥ÂÃ Â¤Å¸Ã Â¥â€°Ã Â¤Â² Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€š',
+        'ios_1':
+            'Safari Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š SANA Ã Â¤â€“Ã Â¥â€¹Ã Â¤Â²Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+        'ios_2':
+            'Ã Â¤Â¶Ã Â¥â€¡Ã Â¤Â¯Ã Â¤Â° Ã Â¤Â¬Ã Â¤Å¸Ã Â¤Â¨ Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Âª Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+        'ios_3':
+            '"Ã Â¤Â¹Ã Â¥â€¹Ã Â¤Â® Ã Â¤Â¸Ã Â¥ÂÃ Â¤â€¢Ã Â¥ÂÃ Â¤Â°Ã Â¥â‚¬Ã Â¤Â¨ Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å“Ã Â¥â€¹Ã Â¤Â¡Ã Â¤Â¼Ã Â¥â€¡Ã Â¤â€š" Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Âª Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+        'ios_4':
+            '"Ã Â¤Å“Ã Â¥â€¹Ã Â¤Â¡Ã Â¤Â¼Ã Â¥â€¡Ã Â¤â€š" Ã Â¤ÂªÃ Â¤Â° Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Âª Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤',
+      },
+      'zh': {
+        'android_title': 'Ã¥Å“Â¨ Android Ã¤Â¸Å Ã¥Â®â€°Ã¨Â£â€¦ SANA',
+        'android_1':
+            'Ã§â€šÂ¹Ã¥â€¡Â» Chrome Ã¥ÂÂ³Ã¤Â¸Å Ã¨Â§â€™Ã§Å¡â€ž Ã¢â€¹Â® Ã¨ÂÅ“Ã¥Ââ€¢Ã£â‚¬â€š',
+        'android_2':
+            'Ã§â€šÂ¹Ã¥â€¡Â»"Ã¥Â®â€°Ã¨Â£â€¦Ã¥Âºâ€Ã§â€Â¨"Ã¦Ë†â€“"Ã¦Â·Â»Ã¥Å Â Ã¥Ë†Â°Ã¤Â¸Â»Ã¥Â±ÂÃ¥Â¹â€¢"Ã£â‚¬â€š',
+        'android_3': 'Ã§â€šÂ¹Ã¥â€¡Â»"Ã¥Â®â€°Ã¨Â£â€¦"Ã¤Â»Â¥Ã§Â¡Â®Ã¨Â®Â¤Ã£â‚¬â€š',
+        'ios_title': 'Ã¥Å“Â¨ iPhone / iPad Ã¤Â¸Å Ã¥Â®â€°Ã¨Â£â€¦ SANA',
+        'ios_1': 'Ã¥Å“Â¨ Safari Ã¤Â¸Â­Ã¦â€°â€œÃ¥Â¼â‚¬ SANAÃ£â‚¬â€š',
+        'ios_2': 'Ã§â€šÂ¹Ã¥â€¡Â»Ã¥Ë†â€ Ã¤ÂºÂ«Ã¦Å’â€°Ã©â€™Â®Ã£â‚¬â€š',
+        'ios_3':
+            'Ã§â€šÂ¹Ã¥â€¡Â»"Ã¦Â·Â»Ã¥Å Â Ã¥Ë†Â°Ã¤Â¸Â»Ã¥Â±ÂÃ¥Â¹â€¢"Ã£â‚¬â€š',
+        'ios_4': 'Ã§â€šÂ¹Ã¥â€¡Â»"Ã¦Â·Â»Ã¥Å Â "Ã£â‚¬â€š',
+      },
+    };
+    return map[language]?[key] ?? map['en']![key] ?? key;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final title = isIos ? _t('ios_title') : _t('android_title');
+    final steps = isIos
+        ? [_t('ios_1'), _t('ios_2'), _t('ios_3'), _t('ios_4')]
+        : [_t('android_1'), _t('android_2'), _t('android_3')];
+
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(12),
@@ -9792,7 +10218,7 @@ class _SanaInstallHelp extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  tr(language, 'install_app'),
+                  title,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -9802,11 +10228,11 @@ class _SanaInstallHelp extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text('1. ${tr(language, 'install_step_1')}'),
-          const SizedBox(height: 6),
-          Text('2. ${tr(language, 'install_step_2')}'),
-          const SizedBox(height: 6),
-          Text('3. ${tr(language, 'install_step_3')}'),
+          for (var i = 0; i < steps.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text('${i + 1}. ${steps[i]}'),
+            ),
         ],
       ),
     );
