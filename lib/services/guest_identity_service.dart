@@ -10,40 +10,14 @@ class GuestIdentityService {
   static bool get isPermanentUser =>
       currentUser != null && currentUser!.isAnonymous == false;
 
-  static String get sharedGuestId {
-    final user = currentUser;
-
-    if (user == null || !user.isAnonymous) {
-      throw StateError('No Supabase anonymous guest session exists.');
-    }
-
-    return user.id;
-  }
+  static const String sharedGuestId = '00000000-0000-0000-0000-000000000001';
 
   static Future<String?> get sharedGuestIdForCurrentUser async {
-    final user = currentUser;
-
-    if (user == null || !user.isAnonymous) {
-      return null;
-    }
-
-    return user.id;
+    return sharedGuestId;
   }
 
   static Future<String> getGuestId() async {
-    final user = currentUser;
-
-    if (user == null) {
-      throw StateError('No Supabase Auth session exists.');
-    }
-
-    if (!user.isAnonymous) {
-      throw StateError(
-        'Current Supabase user is permanent, not anonymous.',
-      );
-    }
-
-    return user.id;
+    return sharedGuestId;
   }
 
   static Future<String> getGuestUserId() => getGuestId();

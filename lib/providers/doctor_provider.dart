@@ -251,7 +251,9 @@ class DoctorProvider extends ChangeNotifier {
       if (index >= 0) {
         _doctors[index] = doctor.copyWith(
           userId: user.isAnonymous ? null : user.id,
-          guestId: user.isAnonymous ? user.id : '',
+          guestId: user.isAnonymous
+    ? GuestIdentityService.sharedGuestId
+    : '',
         );
       }
 
