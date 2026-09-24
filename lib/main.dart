@@ -914,13 +914,13 @@ class SanaAlarmService {
 
 const Map<String, String> _languageNames = {
   'en': 'English',
-  'ar': 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©',
-  'es': 'EspaÃƒÂ±ol',
-  'fr': 'FranÃƒÂ§ais',
+  'ar': 'العربية',
+  'es': 'Español',
+  'fr': 'Français',
   'de': 'Deutsch',
-  'tr': 'TÃƒÂ¼rkÃƒÂ§e',
-  'hi': 'Ã Â¤Â¹Ã Â¤Â¿Ã Â¤Â¨Ã Â¥ÂÃ Â¤Â¦Ã Â¥â‚¬',
-  'zh': 'Ã¤Â¸Â­Ã¦â€“â€¡',
+  'tr': 'Türkçe',
+  'hi': 'हिन्दी',
+  'zh': '中文',
 };
 
 const Map<String, Map<String, String>> _translations = {
