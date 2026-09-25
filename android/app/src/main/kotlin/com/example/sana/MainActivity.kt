@@ -328,6 +328,12 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
 
+                "knownNativeReminderIds" -> {
+                    result.success(
+                        SanaAlarmCache.knownReminderIds(this)
+                    )
+                }
+
                 "dismissNativeAlarmNotification" -> {
 
                     val notificationId =

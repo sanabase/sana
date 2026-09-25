@@ -264,72 +264,23 @@ object SanaAlarmCache {
     fun migrateLegacyAlarms(
         context: Context
     ) {
+        context.getSharedPreferences(
+            LEGACY_PREFS,
+            Context.MODE_PRIVATE
+        )
+            .edit()
+            .remove(LEGACY_KEY)
+            .apply()
+    }
 
-        val legacy =
-            context.getSharedPreferences(
-                LEGACY_PREFS,
-                Context.MODE_PRIVATE
-            )
-
-        val stored =
-            legacy.getStringSet(
-                LEGACY_KEY,
-                emptySet()
-            ) ?: emptySet()
-
-        for (value in stored) {
-
-            val parts =
-                value.split("|")
-
-            if (parts.size != 4) {
-                continue
-            }
-
-            val notificationId =
-                parts[0].toIntOrNull()
-                    ?: continue
-
-            val reminderId =
-                parts[1]
-
-            val triggerAtMillis =
-                parts[2].toLongOrNull()
-                    ?: continue
-
-            val daily =
-                parts[3].toBoolean()
-
-            if (read(
-                    context,
-                    notificationId
-                ) != null
-            ) {
-                continue
-            }
-
-            try {
-                save(
-                    context = context,
-                    notificationId = notificationId,
-                    reminderId = reminderId,
-                    triggerAtMillis = triggerAtMillis,
-                    daily = daily,
-                    name = "",
-                    dosage = "",
-                    reminderTime = "",
-                    reminderDate = if (daily) {
-                        "daily"
-                    } else {
-                        ""
-                    },
-                    photoBase64 = null
-                )
-                        } catch (_: Exception) {
-                // Keep going so one bad legacy record
-                // cannot prevent the other alarms from migrating.
-            }
-        }
+    @Synchronized
+    fun knownReminderIds(
+        context: Context
+    ): List<String> {
+        return all(context)
+            .map { it.reminderId }
+            .filter { it.isNotEmpty() }
+            .distinct()
     }
 
     @Synchronized

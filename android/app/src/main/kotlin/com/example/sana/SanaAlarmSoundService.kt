@@ -52,17 +52,16 @@ class SanaAlarmSoundService : Service() {
         startId: Int
     ): Int {
 
-        when (intent?.action) {
+        val action = intent?.action
 
-            ACTION_START -> {
-                startAlarm()
-            }
+        if (action == ACTION_STOP) {
+            stopAlarm()
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
-            ACTION_STOP -> {
-                stopAlarm()
-                stopSelf()
-                return START_NOT_STICKY
-            }
+        if (action == ACTION_START || action == null) {
+            startAlarm()
         }
 
         return START_STICKY
@@ -108,6 +107,15 @@ class SanaAlarmSoundService : Service() {
         }
 
         if (player?.isPlaying == true) {
+            handler.removeCallbacks(
+                stopAlarmRunnable
+            )
+
+            handler.postDelayed(
+                stopAlarmRunnable,
+                15_000L
+            )
+
             return
         }
 
@@ -128,7 +136,10 @@ class SanaAlarmSoundService : Service() {
                         AudioAttributes.USAGE_ALARM
                     )
                     .setContentType(
-                        AudioAttributes.CONTENT_TYPE_SONIFICATION
+                        AudioAttributes.CONTENT_TYPE_MUSIC
+                    )
+                    .setLegacyStreamType(
+                        android.media.AudioManager.STREAM_ALARM
                     )
                     .build()
             )
@@ -148,7 +159,7 @@ class SanaAlarmSoundService : Service() {
 
         handler.postDelayed(
             stopAlarmRunnable,
-            20_000L
+            15_000L
         )
     }
 
@@ -161,7 +172,16 @@ class SanaAlarmSoundService : Service() {
         } catch (_: Exception) {
         }
 
-        player?.release()
+        try {
+            player?.reset()
+        } catch (_: Exception) {
+        }
+
+        try {
+            player?.release()
+        } catch (_: Exception) {
+        }
+
         player = null
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

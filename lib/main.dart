@@ -360,6 +360,30 @@ class SanaAlarmService {
     }
   }
 
+  static Future<List<String>> knownNativeReminderIds() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return <String>[];
+    }
+
+    try {
+      final result = await _alarmChannel.invokeMethod<List<dynamic>>(
+        'knownNativeReminderIds',
+      );
+
+      if (result == null) return <String>[];
+
+      return result
+          .map((e) => e?.toString() ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+    } catch (e) {
+      debugPrint(
+        'Known native reminder ids error: $e',
+      );
+      return <String>[];
+    }
+  }
+
   static Future<void> dismissNativeAlarmNotification(
     int notificationId,
   ) async {
@@ -691,6 +715,9 @@ class SanaAlarmService {
       );
 
       if (minutes == null) {
+        debugPrint(
+          'SANA schedule skip: unparsable time "$time" for reminder $id',
+        );
         continue;
       }
 
@@ -744,8 +771,10 @@ class SanaAlarmService {
           );
 
           if (status == 'FAILED' || status == 'INVALID') {
-            throw StateError(
-              'Native alarm scheduling failed for $id',
+            debugPrint(
+              'SANA native schedule failed for $id '
+              '(status=$status, notificationId=$notificationId, '
+              'trigger=${scheduled.millisecondsSinceEpoch})',
             );
           }
         } else {
@@ -807,8 +836,10 @@ class SanaAlarmService {
           );
 
           if (status == 'FAILED' || status == 'INVALID') {
-            throw StateError(
-              'Native alarm scheduling failed for $id',
+            debugPrint(
+              'SANA native schedule failed for $id '
+              '(status=$status, notificationId=$notificationId, '
+              'trigger=${scheduled.millisecondsSinceEpoch})',
             );
           }
         } else {
@@ -3102,12 +3133,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final List<dynamic> list = response as List<dynamic>;
 
+      final liveIds = <String>{};
+
       for (final item in list) {
         final row = Map<String, dynamic>.from(item as Map);
+        final id = row['id']?.toString();
+        if (id == null || id.isEmpty) continue;
+        liveIds.add(id);
+
         try {
           await SanaAlarmService.scheduleReminder(row);
         } catch (e) {
           debugPrint('Reconcile reminder failed: $e');
+        }
+      }
+
+      final known = await SanaAlarmService.knownNativeReminderIds();
+
+      for (final id in known) {
+        if (!liveIds.contains(id)) {
+          try {
+            await SanaAlarmService.cancelReminder(id);
+          } catch (e) {
+            debugPrint('Stale alarm cancel failed: $e');
+          }
         }
       }
     } catch (e) {
