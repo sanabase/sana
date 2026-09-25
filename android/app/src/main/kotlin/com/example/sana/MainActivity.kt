@@ -109,7 +109,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun configureFlutterEngine(
-        flutterEngine: io.flutter.embedding.engine.FlutterEngine
+        flutterEngine: FlutterEngine
     ) {
 
         super.configureFlutterEngine(
