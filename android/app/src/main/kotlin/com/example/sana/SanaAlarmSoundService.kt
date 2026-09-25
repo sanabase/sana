@@ -8,7 +8,9 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.core.app.NotificationCompat
 
 class SanaAlarmSoundService : Service() {
@@ -29,6 +31,15 @@ class SanaAlarmSoundService : Service() {
     }
 
     private var player: MediaPlayer? = null
+
+    private val handler =
+        Handler(Looper.getMainLooper())
+
+    private val stopAlarmRunnable =
+        Runnable {
+            stopAlarm()
+            stopSelf()
+        }
 
     override fun onCreate() {
         super.onCreate()
@@ -127,25 +138,23 @@ class SanaAlarmSoundService : Service() {
                 uri
             )
 
-            isLooping = false
-
-            setOnCompletionListener { completedPlayer ->
-                try {
-                    completedPlayer.seekTo(0)
-
-                    if (player === completedPlayer) {
-                        completedPlayer.start()
-                    }
-                } catch (_: Exception) {
-                }
-            }
+            isLooping = true
 
             prepare()
             start()
         }
+
+        handler.removeCallbacks(stopAlarmRunnable)
+
+        handler.postDelayed(
+            stopAlarmRunnable,
+            20_000L
+        )
     }
 
     private fun stopAlarm() {
+
+        handler.removeCallbacks(stopAlarmRunnable)
 
         try {
             player?.stop()

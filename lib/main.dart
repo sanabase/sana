@@ -411,15 +411,15 @@ class SanaAlarmService {
         }
 
         navigator.push(
-            MaterialPageRoute(
-              builder: (_) => SanaAlarmScreen(
-                reminderId: id,
-                notificationId: response.id ?? 0,
-                daily: daily,
-              ),
+          MaterialPageRoute(
+            builder: (_) => SanaAlarmScreen(
+              reminderId: id,
+              notificationId: response.id ?? 0,
+              daily: daily,
             ),
-          );
-        });
+          ),
+        );
+      });
     } catch (e) {
       debugPrint(
         'Alarm response error: $e',
@@ -2754,6 +2754,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? 'guest:${GuestIdentityService.sharedGuestId}'
               : 'user:${user.id}';
       if (_lastNativeAlarmOwnerKey != ownerKey) {
+        await SanaAlarmService._notifications.cancelAll();
         await SanaAlarmService.clearAllNativeAlarms();
         _lastNativeAlarmOwnerKey = ownerKey;
       }
@@ -3032,6 +3033,15 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_isGuest) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('sana_guest_reminders_enabled', value);
+
+        if (!kIsWeb) {
+          if (value) {
+            await _reconcileAllReminderAlarms();
+          } else {
+            await _cancelAllReminderAlarms();
+          }
+        }
+
         return;
       }
 
@@ -3962,6 +3972,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SanaStore.instance.reset();
                   if (isLoggedIn) {
                     await _client.auth.signOut();
+                    await _client.auth.signInAnonymously();
                     StorageHelper.clearCache();
                     await _loadSession();
                   } else {
@@ -8274,155 +8285,137 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
   Widget build(
     BuildContext context,
   ) {
-    final language = languageNotifier.value;
+    return ValueListenableBuilder<String>(
+      valueListenable: languageNotifier,
+      builder: (context, language, child) {
+        final reminder = _reminder;
 
-    final reminder = _reminder;
+        final name = reminder?['name']?.toString() ?? '';
 
-    final name = reminder?['name']?.toString() ?? '';
+        final dosage = reminder?['dosage']?.toString() ?? '';
 
-    final dosage = reminder?['dosage']?.toString() ?? '';
+        final times = SanaAlarmService.parseTimes(
+          reminder?['reminder_time'],
+        );
 
-    final times = SanaAlarmService.parseTimes(
-      reminder?['reminder_time'],
-    );
+        final photo = reminder?['photo_base64']?.toString();
 
-    final photo = reminder?['photo_base64']?.toString();
-
-    return Directionality(
-      textDirection: language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: _loading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(
-                      24,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          tr(
-                            language,
-                            'alarm',
-                          ),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
+        return Directionality(
+          textDirection:
+              language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: SafeArea(
+              child: _loading
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(
+                          24,
                         ),
-                        const SizedBox(
-                          height: 24,
-                        ),
-                        if (photo != null && photo.trim().isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              20,
-                            ),
-                            child: DisplayImage(
-                              base64String: photo,
-                              height: 260,
-                              width: 260,
-                              fit: BoxFit.contain,
-                            ),
-                          )
-                        else
-                          const Icon(
-                            Icons.medication,
-                            color: Colors.white,
-                            size: 180,
-                          ),
-                        const SizedBox(
-                          height: 24,
-                        ),
-                        Text(
-                          name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (dosage.isNotEmpty) ...[
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            dosage,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 22,
-                            ),
-                          ),
-                        ],
-                        if (times.isNotEmpty) ...[
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            times.join(
-                              ' - ',
-                            ),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(
-                          height: 40,
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 70,
-                          child: FilledButton(
-                            onPressed: _taken ? null : _markTaken,
-                            child: Text(
-                              tr(language, 'taken'),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              tr(
+                                language,
+                                'alarm',
                               ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 70,
-                          child: OutlinedButton(
-                            onPressed: _taken ? null : _closeAlarmScreen,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 color: Colors.white,
-                                width: 2,
-                              ),
-                            ),
-                            child: Text(
-                              tr(language, 'close'),
-                              style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: 30,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ),
+                            const SizedBox(
+                              height: 24,
+                            ),
+                            if (photo != null && photo.trim().isNotEmpty)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  20,
+                                ),
+                                child: DisplayImage(
+                                  base64String: photo,
+                                  height: 260,
+                                  width: 260,
+                                  fit: BoxFit.contain,
+                                ),
+                              )
+                            else
+                              const Icon(
+                                Icons.medication,
+                                color: Colors.white,
+                                size: 180,
+                              ),
+                            const SizedBox(
+                              height: 24,
+                            ),
+                            Text(
+                              name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (dosage.isNotEmpty) ...[
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                dosage,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ],
+                            if (times.isNotEmpty) ...[
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                times.join(
+                                  ' - ',
+                                ),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(
+                              height: 40,
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 70,
+                              child: FilledButton(
+                                onPressed: _taken ? null : _markTaken,
+                                child: Text(
+                                  tr(language, 'taken'),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
