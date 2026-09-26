@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import java.util.Calendar
@@ -19,7 +21,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             "com.example.sana.action.MEDICATION_ALARM"
 
         private const val CHANNEL_ID =
-            "sana_native_alarm"
+            "sana_native_alarm_v2"
 
         fun schedule(
             context: Context,
@@ -724,30 +726,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             broadcast
         )
 
-        /*
-         * Start the existing alarm sound service.
-         */
-        val soundIntent =
-            Intent(
-                context,
-                SanaAlarmSoundService::class.java
-            ).apply {
-                action =
-                    SanaAlarmSoundService.ACTION_START
-            }
 
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.O
-        ) {
-            context.startForegroundService(
-                soundIntent
-            )
-        } else {
-            context.startService(
-                soundIntent
-            )
-        }
 
         /*
          * Full-screen activity PendingIntent.
@@ -876,7 +855,6 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 )
                 .setOngoing(true)
                 .setAutoCancel(false)
-                .setSilent(true)
 
         /*
          * Android 14+ can revoke/restrict full-screen intent access.
@@ -908,6 +886,41 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             cached.notificationId,
             builder.build()
         )
+
+        /*
+         * Start the alarm sound service AFTER the notification
+         * has been posted. A failure to start the service must
+         * never prevent the notification from being delivered.
+         */
+        val soundIntent =
+            Intent(
+                context,
+                SanaAlarmSoundService::class.java
+            ).apply {
+                action =
+                    SanaAlarmSoundService.ACTION_START
+            }
+
+        try {
+            if (
+                Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.O
+            ) {
+                context.startForegroundService(
+                    soundIntent
+                )
+            } else {
+                context.startService(
+                    soundIntent
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(
+                "SANA",
+                "Unable to start alarm sound service",
+                e
+            )
+        }
 
         /*
          * Daily reminders continue automatically.
@@ -966,9 +979,6 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 NotificationManager::class.java
             )
 
-        /*
-         * KEEP THE EXISTING CHANNEL ID.
-         */
         val channel =
             NotificationChannel(
                 CHANNEL_ID,
@@ -976,14 +986,36 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 NotificationManager.IMPORTANCE_HIGH
             )
 
+        val alarmSound =
+            RingtoneManager.getDefaultUri(
+                RingtoneManager.TYPE_ALARM
+            ) ?: RingtoneManager.getDefaultUri(
+                RingtoneManager.TYPE_NOTIFICATION
+            )
+
+        val audioAttributes =
+            AudioAttributes.Builder()
+                .setUsage(
+                    AudioAttributes.USAGE_ALARM
+                )
+                .setContentType(
+                    AudioAttributes.CONTENT_TYPE_SONIFICATION
+                )
+                .build()
+
         channel.setSound(
-            null,
-            null
+            alarmSound,
+            audioAttributes
         )
 
-        channel.enableVibration(
-            false
-        )
+        channel.enableVibration(true)
+
+        channel.vibrationPattern =
+            longArrayOf(
+                0L,
+                500L,
+                500L
+            )
 
         manager.createNotificationChannel(
             channel

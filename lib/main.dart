@@ -2724,6 +2724,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _lastNativeAlarmOwnerKey;
   bool _guestRemindersEnabled = true;
   StreamSubscription<AuthState>? _authSubscription;
+  Future<void> _sessionLoadQueue = Future<void>.value();
+  int _sessionGeneration = 0;
 
   @override
   void initState() {
@@ -2771,7 +2773,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _loadSession() async {
+  Future<void> _loadSession() {
+    _sessionLoadQueue = _sessionLoadQueue.then(
+      (_) => _loadSessionNow(),
+    );
+
+    return _sessionLoadQueue;
+  }
+
+  Future<void> _loadSessionNow() async {
+    final myGeneration = ++_sessionGeneration;
+
     try {
       final user = _client.auth.currentUser;
       final isRealUser = user != null && user.isAnonymous == false;
@@ -2784,11 +2796,15 @@ class _HomeScreenState extends State<HomeScreen> {
           : user.isAnonymous
               ? 'guest:${GuestIdentityService.sharedGuestId}'
               : 'user:${user.id}';
-      if (_lastNativeAlarmOwnerKey != ownerKey) {
-        await SanaAlarmService._notifications.cancelAll();
-        await SanaAlarmService.clearAllNativeAlarms();
-        _lastNativeAlarmOwnerKey = ownerKey;
-      }
+      /*
+       * Every session load (login, logout, account switch, or app
+       * refresh) starts from a clean local alarm state. Prevents
+       * Guest / User A / User B alarms from mixing or duplicating,
+       * and prevents same-user refresh from resurrecting stale alarms.
+       */
+      await SanaAlarmService._notifications.cancelAll();
+      await SanaAlarmService.clearAllNativeAlarms();
+      _lastNativeAlarmOwnerKey = ownerKey;
 
       if (mounted) {
         setState(() {
@@ -2835,8 +2851,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
 
         if (_guestRemindersEnabled) {
-          unawaited(
-            _reconcileAllReminderAlarms(),
+          await _reconcileAllReminderAlarms(
+            generation: myGeneration,
           );
         }
 
@@ -2918,8 +2934,8 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       if (data?['reminders_enabled'] != false) {
-        unawaited(
-          _reconcileAllReminderAlarms(),
+        await _reconcileAllReminderAlarms(
+          generation: myGeneration,
         );
       }
 
@@ -3121,15 +3137,38 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _guestRemindersEnabled = value);
   }
 
-  Future<void> _reconcileAllReminderAlarms() async {
+  Future<void> _reconcileAllReminderAlarms({
+    int? generation,
+  }) async {
+    final myGeneration = generation ?? _sessionGeneration;
+
     try {
+      final expectedGuest = _isGuest;
       final ownerId = _ownerId;
       if (ownerId == null) return;
 
+      final expectedOwnerKey = expectedGuest
+          ? 'guest:${GuestIdentityService.sharedGuestId}'
+          : 'user:$ownerId';
+
       final query = _client.from('reminders').select();
-      final dynamic response = _isGuest
+      final dynamic response = expectedGuest
           ? await query.eq('guest_id', GuestIdentityService.sharedGuestId)
           : await query.eq('user_id', ownerId);
+
+      /*
+       * Guard 1 — after network query.
+       * Primary: generation token.
+       * Secondary: owner key.
+       */
+      if (myGeneration != _sessionGeneration) {
+        return;
+      }
+
+      if (_lastNativeAlarmOwnerKey != null &&
+          _lastNativeAlarmOwnerKey != expectedOwnerKey) {
+        return;
+      }
 
       final List<dynamic> list = response as List<dynamic>;
 
@@ -3140,23 +3179,62 @@ class _HomeScreenState extends State<HomeScreen> {
         final id = row['id']?.toString();
         if (id == null || id.isEmpty) continue;
         liveIds.add(id);
-
-        try {
-          await SanaAlarmService.scheduleReminder(row);
-        } catch (e) {
-          debugPrint('Reconcile reminder failed: $e');
-        }
       }
 
+      /*
+       * Fetch current native alarm IDs BEFORE the mutation phase.
+       */
       final known = await SanaAlarmService.knownNativeReminderIds();
 
+      /*
+       * Guard 2 — after knownNativeReminderIds().
+       * That call crosses the platform channel; the session could
+       * have changed during it.
+       */
+      if (myGeneration != _sessionGeneration) {
+        return;
+      }
+
+      /*
+       * Mutation phase 1 — cancel stale alarms.
+       */
       for (final id in known) {
+        if (myGeneration != _sessionGeneration) {
+          return;
+        }
+
         if (!liveIds.contains(id)) {
           try {
             await SanaAlarmService.cancelReminder(id);
           } catch (e) {
             debugPrint('Stale alarm cancel failed: $e');
           }
+        }
+      }
+
+      /*
+       * Guard 3 — before scheduling live alarms.
+       */
+      if (myGeneration != _sessionGeneration) {
+        return;
+      }
+
+      /*
+       * Mutation phase 2 — schedule live alarms.
+       */
+      for (final item in list) {
+        if (myGeneration != _sessionGeneration) {
+          return;
+        }
+
+        final row = Map<String, dynamic>.from(item as Map);
+        final id = row['id']?.toString();
+        if (id == null || id.isEmpty) continue;
+
+        try {
+          await SanaAlarmService.scheduleReminder(row);
+        } catch (e) {
+          debugPrint('Reconcile reminder failed: $e');
         }
       }
     } catch (e) {
@@ -8296,29 +8374,10 @@ class _SanaAlarmScreenState extends State<SanaAlarmScreen> {
     );
   }
 
-  Future<void> _closeAlarmScreen() async {
-    await SanaAlarmService.stopAlarmSound(
-      notificationId: widget.notificationId,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    final nav = Navigator.of(
-      context,
-      rootNavigator: true,
-    );
-
-    if (nav.canPop()) {
-      nav.pop();
-      return;
-    }
-
-    nav.pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
-  }
+  /*
+   * Close button removed by design.
+   * The only action on the alarm screen is TAKEN.
+   */
 
   @override
   void dispose() {

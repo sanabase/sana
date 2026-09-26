@@ -8,9 +8,8 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 
 class SanaAlarmSoundService : Service() {
@@ -31,15 +30,6 @@ class SanaAlarmSoundService : Service() {
     }
 
     private var player: MediaPlayer? = null
-
-    private val handler =
-        Handler(Looper.getMainLooper())
-
-    private val stopAlarmRunnable =
-        Runnable {
-            stopAlarm()
-            stopSelf()
-        }
 
     override fun onCreate() {
         super.onCreate()
@@ -86,7 +76,6 @@ class SanaAlarmSoundService : Service() {
                 .setPriority(
                     NotificationCompat.PRIORITY_MAX
                 )
-                .setSilent(true)
                 .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -107,15 +96,6 @@ class SanaAlarmSoundService : Service() {
         }
 
         if (player?.isPlaying == true) {
-            handler.removeCallbacks(
-                stopAlarmRunnable
-            )
-
-            handler.postDelayed(
-                stopAlarmRunnable,
-                15_000L
-            )
-
             return
         }
 
@@ -128,44 +108,48 @@ class SanaAlarmSoundService : Service() {
 
         player?.release()
 
-        player = MediaPlayer().apply {
+        try {
+            player = MediaPlayer().apply {
 
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(
-                        AudioAttributes.USAGE_ALARM
-                    )
-                    .setContentType(
-                        AudioAttributes.CONTENT_TYPE_MUSIC
-                    )
-                    .setLegacyStreamType(
-                        android.media.AudioManager.STREAM_ALARM
-                    )
-                    .build()
+                setWakeMode(
+                    applicationContext,
+                    PowerManager.PARTIAL_WAKE_LOCK
+                )
+
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(
+                            AudioAttributes.USAGE_ALARM
+                        )
+                        .setContentType(
+                            AudioAttributes.CONTENT_TYPE_MUSIC
+                        )
+                        .setLegacyStreamType(
+                            android.media.AudioManager.STREAM_ALARM
+                        )
+                        .build()
+                )
+
+                setDataSource(
+                    this@SanaAlarmSoundService,
+                    uri
+                )
+
+                isLooping = true
+
+                prepare()
+                start()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(
+                "SANA",
+                "MediaPlayer alarm start error",
+                e
             )
-
-            setDataSource(
-                this@SanaAlarmSoundService,
-                uri
-            )
-
-            isLooping = true
-
-            prepare()
-            start()
         }
-
-        handler.removeCallbacks(stopAlarmRunnable)
-
-        handler.postDelayed(
-            stopAlarmRunnable,
-            15_000L
-        )
     }
 
     private fun stopAlarm() {
-
-        handler.removeCallbacks(stopAlarmRunnable)
 
         try {
             player?.stop()
@@ -210,9 +194,15 @@ class SanaAlarmSoundService : Service() {
                 NotificationChannel(
                     CHANNEL_ID,
                     "SANA Alarm",
-                    NotificationManager.IMPORTANCE_HIGH
+                    NotificationManager.IMPORTANCE_LOW
                 )
 
+            /*
+             * Foreground-service placeholder channel.
+             * Audio is produced by MediaPlayer, not by this channel.
+             * Kept silent and low-importance so it does not compete
+             * with the real alarm notification.
+             */
             channel.setSound(null, null)
             channel.enableVibration(false)
 
