@@ -21,12 +21,13 @@ class SanaAlarmReceiver : BroadcastReceiver() {
             "com.example.sana.action.MEDICATION_ALARM"
 
         private const val CHANNEL_ID =
-            "sana_native_alarm_v2"
+            "sana_native_alarm_v3"
 
         fun schedule(
             context: Context,
             notificationId: Int,
             reminderId: String,
+            ownerKey: String,
             triggerAtMillis: Long,
             daily: Boolean,
             name: String,
@@ -234,6 +235,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                         context = context,
                         notificationId = notificationId,
                         reminderId = reminderId,
+                        ownerKey = ownerKey,
                         triggerAtMillis = triggerAtMillis,
                         daily = daily,
                         name = name,
@@ -435,6 +437,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                         context = context,
                         notificationId = entry.notificationId,
                         reminderId = entry.reminderId,
+                        ownerKey = entry.ownerKey,
                         triggerAtMillis = next,
                         daily = true,
                         name = entry.name,
@@ -459,6 +462,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                         context = context,
                         notificationId = entry.notificationId,
                         reminderId = entry.reminderId,
+                        ownerKey = entry.ownerKey,
                         triggerAtMillis = entry.triggerAtMillis,
                         daily = false,
                         name = entry.name,
@@ -658,6 +662,28 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 context,
                 notificationId
             ) ?: return
+
+        /*
+         * The cache is the authority, and it also records
+         * which session owns this alarm. If the active
+         * session does not match, drop the alarm.
+         */
+        val activeOwnerKey =
+            SanaNativeOwner.read(
+                context
+            )
+
+        if (
+            cached.ownerKey.isBlank() ||
+            activeOwnerKey.isBlank() ||
+            cached.ownerKey != activeOwnerKey
+        ) {
+            SanaAlarmCache.remove(
+                context,
+                notificationId
+            )
+            return
+        }
 
         val reminderId =
             cached.reminderId
@@ -941,6 +967,7 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 context = context,
                 notificationId = cached.notificationId,
                 reminderId = cached.reminderId,
+                ownerKey = cached.ownerKey,
                 triggerAtMillis = next,
                 daily = true,
                 name = cached.name,
@@ -986,26 +1013,13 @@ class SanaAlarmReceiver : BroadcastReceiver() {
                 NotificationManager.IMPORTANCE_HIGH
             )
 
-        val alarmSound =
-            RingtoneManager.getDefaultUri(
-                RingtoneManager.TYPE_ALARM
-            ) ?: RingtoneManager.getDefaultUri(
-                RingtoneManager.TYPE_NOTIFICATION
-            )
-
-        val audioAttributes =
-            AudioAttributes.Builder()
-                .setUsage(
-                    AudioAttributes.USAGE_ALARM
-                )
-                .setContentType(
-                    AudioAttributes.CONTENT_TYPE_SONIFICATION
-                )
-                .build()
-
+        /*
+         * SanaAlarmSoundService owns the alarm audio.
+         * The channel must be silent so the two do not race.
+         */
         channel.setSound(
-            alarmSound,
-            audioAttributes
+            null,
+            null
         )
 
         channel.enableVibration(true)

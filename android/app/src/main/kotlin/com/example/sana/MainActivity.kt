@@ -78,18 +78,37 @@ class MainActivity : FlutterActivity() {
             savedInstanceState
         )
 
-        ContextCompat.registerReceiver(
-            this,
-            alarmReceiver,
-            IntentFilter(
-                ACTION_NATIVE_ALARM
-            ),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-
         handleAlarmIntent(
             intent
         )
+    }
+
+        override fun onStart() {
+        super.onStart()
+
+        try {
+            ContextCompat.registerReceiver(
+                this,
+                alarmReceiver,
+                IntentFilter(
+                    ACTION_NATIVE_ALARM
+                ),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        } catch (_: Exception) {
+        }
+    }
+
+    override fun onStop() {
+
+        try {
+            unregisterReceiver(
+                alarmReceiver
+            )
+        } catch (_: Exception) {
+        }
+
+        super.onStop()
     }
 
     override fun onNewIntent(
@@ -203,6 +222,11 @@ class MainActivity : FlutterActivity() {
                                     "reminderId"
                                 )
 
+                        val ownerKey =
+                            call.argument<String>(
+                                "ownerKey"
+                            ) ?: ""
+
                         val triggerAtMillis =
                             call.argument<Long>(
                                 "triggerAtMillis"
@@ -246,6 +270,7 @@ class MainActivity : FlutterActivity() {
                                 context = this,
                                 notificationId = notificationId,
                                 reminderId = reminderId,
+                                ownerKey = ownerKey,
                                 triggerAtMillis = triggerAtMillis,
                                 daily = daily,
                                 name = name,
@@ -267,6 +292,23 @@ class MainActivity : FlutterActivity() {
                             null
                         )
                     }
+                }
+
+                "setNativeAlarmOwner" -> {
+
+                    val ownerKey =
+                        call.argument<String>(
+                            "ownerKey"
+                        ) ?: ""
+
+                    SanaNativeOwner.write(
+                        this,
+                        ownerKey
+                    )
+
+                    result.success(
+                        null
+                    )
                 }
 
                 "cancelNativeAlarm" -> {
@@ -565,14 +607,6 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
-
-        try {
-            unregisterReceiver(
-                alarmReceiver
-            )
-        } catch (_: Exception) {
-        }
-
         super.onDestroy()
     }
 }

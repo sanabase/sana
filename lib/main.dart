@@ -90,6 +90,8 @@ class SanaAlarmService {
 
   static Map<String, dynamic>? _pendingNativeAlarm;
 
+  static String? _nativeOwnerKey;
+
   static String? _lastNativeAlarmKey;
 
   static DateTime? _lastNativeAlarmAt;
@@ -286,6 +288,7 @@ class SanaAlarmService {
   static Future<String?> scheduleNativeAlarm({
     required int notificationId,
     required String reminderId,
+    required String ownerKey,
     required DateTime scheduledDate,
     required bool daily,
     required String name,
@@ -303,6 +306,7 @@ class SanaAlarmService {
       {
         'notificationId': notificationId,
         'reminderId': reminderId,
+        'ownerKey': ownerKey,
         'triggerAtMillis': scheduledDate.millisecondsSinceEpoch,
         'daily': daily,
         'name': name,
@@ -361,6 +365,31 @@ class SanaAlarmService {
       );
     }
   }
+
+  static Future<void> setNativeAlarmOwner(
+    String ownerKey,
+  ) async {
+    _nativeOwnerKey = ownerKey;
+
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    try {
+      await _alarmChannel.invokeMethod(
+        'setNativeAlarmOwner',
+        {
+          'ownerKey': ownerKey,
+        },
+      );
+    } catch (e) {
+      debugPrint(
+        'Set native alarm owner error: $e',
+      );
+    }
+  }
+
+  static String get nativeOwnerKey => _nativeOwnerKey ?? '';
 
   static Future<List<String>> knownNativeReminderIds() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
@@ -763,6 +792,7 @@ class SanaAlarmService {
           final status = await SanaAlarmService.scheduleNativeAlarm(
             notificationId: notificationId,
             reminderId: id,
+            ownerKey: SanaAlarmService.nativeOwnerKey,
             scheduledDate: scheduled,
             daily: true,
             name: name,
@@ -828,6 +858,7 @@ class SanaAlarmService {
           final status = await SanaAlarmService.scheduleNativeAlarm(
             notificationId: notificationId,
             reminderId: id,
+            ownerKey: SanaAlarmService.nativeOwnerKey,
             scheduledDate: scheduled,
             daily: false,
             name: name,
@@ -2818,6 +2849,9 @@ class _HomeScreenState extends State<HomeScreen> {
        */
       await SanaAlarmService._notifications.cancelAll();
       await SanaAlarmService.clearAllNativeAlarms();
+      await SanaAlarmService.setNativeAlarmOwner(
+        ownerKey,
+      );
       _lastNativeAlarmOwnerKey = ownerKey;
 
       if (mounted) {

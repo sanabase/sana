@@ -53,6 +53,7 @@ object SanaAlarmCache {
         context: Context,
         notificationId: Int,
         reminderId: String,
+        ownerKey: String,
         triggerAtMillis: Long,
         daily: Boolean,
         name: String,
@@ -81,6 +82,11 @@ object SanaAlarmCache {
         json.put(
             "reminderId",
             reminderId
+        )
+
+        json.put(
+            "ownerKey",
+            ownerKey
         )
 
         json.put(
@@ -180,6 +186,10 @@ object SanaAlarmCache {
                 ),
                 reminderId = json.getString(
                     "reminderId"
+                ),
+                ownerKey = json.optString(
+                    "ownerKey",
+                    ""
                 ),
                 triggerAtMillis = json.getLong(
                     "triggerAtMillis"
