@@ -238,7 +238,9 @@ class SanaAlarmService {
 
         final photoBase64 = data['photoBase64']?.toString() ?? '';
 
-        final key = '$reminderId:$notificationId';
+        final source = data['source']?.toString() ?? 'broadcast';
+
+        final key = '$reminderId:$notificationId:$source';
 
         final now = DateTime.now();
 
@@ -2738,7 +2740,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (kIsWeb) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
-          await _reconcileAllReminderAlarms();
+          final startupUser = _client.auth.currentUser;
+
+          if (startupUser != null && startupUser.isAnonymous == false) {
+            await _reconcileAllReminderAlarms(
+              guestMode: false,
+              ownerId: startupUser.id,
+            );
+          } else {
+            await _reconcileAllReminderAlarms(
+              guestMode: true,
+              ownerId: GuestIdentityService.sharedGuestId,
+            );
+          }
         } catch (e) {
           debugPrint('Web reminder startup reconciliation failed: $e');
         }
@@ -2853,6 +2867,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (_guestRemindersEnabled) {
           await _reconcileAllReminderAlarms(
             generation: myGeneration,
+            guestMode: true,
+            ownerId: GuestIdentityService.sharedGuestId,
           );
         }
 
@@ -2936,6 +2952,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (data?['reminders_enabled'] != false) {
         await _reconcileAllReminderAlarms(
           generation: myGeneration,
+          guestMode: false,
+          ownerId: user.id,
         );
       }
 
@@ -3070,7 +3088,19 @@ class _HomeScreenState extends State<HomeScreen> {
             throw Exception('Web Push: $result');
           }
 
-          await _reconcileAllReminderAlarms();
+          final webUser = _client.auth.currentUser;
+
+          if (webUser != null && webUser.isAnonymous == false) {
+            await _reconcileAllReminderAlarms(
+              guestMode: false,
+              ownerId: webUser.id,
+            );
+          } else {
+            await _reconcileAllReminderAlarms(
+              guestMode: true,
+              ownerId: GuestIdentityService.sharedGuestId,
+            );
+          }
         } else {
           await SanaWebPush.disable(_client);
           await SanaWebAlarm.cancelAllReminders();
@@ -3083,7 +3113,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (!kIsWeb) {
           if (value) {
-            await _reconcileAllReminderAlarms();
+            await _reconcileAllReminderAlarms(
+              guestMode: true,
+              ownerId: GuestIdentityService.sharedGuestId,
+            );
           } else {
             await _cancelAllReminderAlarms();
           }
@@ -3099,7 +3132,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (!kIsWeb) {
           if (value) {
-            await _reconcileAllReminderAlarms();
+            await _reconcileAllReminderAlarms(
+              guestMode: false,
+              ownerId: user.id,
+            );
           } else {
             await _cancelAllReminderAlarms();
           }
@@ -3139,13 +3175,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _reconcileAllReminderAlarms({
     int? generation,
+    required bool guestMode,
+    required String ownerId,
   }) async {
     final myGeneration = generation ?? _sessionGeneration;
 
     try {
-      final expectedGuest = _isGuest;
-      final ownerId = _ownerId;
-      if (ownerId == null) return;
+      final expectedGuest = guestMode;
 
       final expectedOwnerKey = expectedGuest
           ? 'guest:${GuestIdentityService.sharedGuestId}'

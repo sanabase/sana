@@ -56,7 +56,8 @@ class MainActivity : FlutterActivity() {
 
                 val data =
                     alarmDataFromIntent(
-                        intent
+                        intent,
+                        "broadcast"
                     )
 
                 if (data != null) {
@@ -451,7 +452,8 @@ class MainActivity : FlutterActivity() {
 
         val data =
             alarmDataFromIntent(
-                intent
+                intent,
+                "tap"
             )
 
         if (data != null) {
@@ -465,7 +467,8 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun alarmDataFromIntent(
-        intent: Intent
+        intent: Intent,
+        source: String
     ): Map<String, Any>? {
 
         val notificationId =
@@ -534,7 +537,10 @@ class MainActivity : FlutterActivity() {
                 reminderDate,
 
             "photoBase64" to
-                photoBase64
+                photoBase64,
+
+            "source" to
+                source
         )
     }
 
